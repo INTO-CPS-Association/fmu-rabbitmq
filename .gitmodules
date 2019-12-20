@@ -1,0 +1,18 @@
+[submodule "thirdparty/rapidjson"]
+	path = thirdparty/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "thirdparty/amqp-cpp"]
+	path = thirdparty/amqp-cpp
+	url = https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git
+[submodule "thirdparty/xerces-c"]
+	path = thirdparty/xerces-c
+	url = https://github.com/apache/xerces-c.git
+[submodule "thirdparty/fmi"]
+	path = thirdparty/fmi
+	url = https://github.com/INTO-CPS-Association/fmi
+[submodule "thirdparty/googletest"]
+	path = thirdparty/googletest
+	url = https://github.com/google/googletest.git
+[submodule "thirdparty/rabbitmq-c"]
+	path = thirdparty/rabbitmq-c/rabbitmq-c
+	url = https://github.com/alanxz/rabbitmq-c.git
