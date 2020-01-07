@@ -16,6 +16,7 @@ build_xercersc()
  $1 make -C$2 install
 }
 
+set +e
 # darwin
 lib_install_dir=$lib/darwin-x86_64
 if [ ! -d $lib_install_dir ]
@@ -34,6 +35,8 @@ build_dir=build-darwin-x64
 install_dir=${build_dir}-install
 
 build_xercersc ./darwin-x64-dockcross $build_dir $install_dir
+
+set -e
 
 mkdir -p $lib_install_dir
 mv $install_dir/* $lib_install_dir
