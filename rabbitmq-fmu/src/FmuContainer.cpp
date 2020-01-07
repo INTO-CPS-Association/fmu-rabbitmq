@@ -97,7 +97,7 @@ bool FmuContainer::initialize() {
     auto routingKey = stringMap[RABBITMQ_FMU_ROUTING_KEY];
     auto startTimeStamp = stringMap[RABBITMQ_FMU_START_TIMESTAMP];
 
-    this->startOffsetTime = Iso8601::parseIso8601(startTimeStamp);
+    this->startOffsetTime = Iso8601::parseIso8601ToMilliseconds(startTimeStamp);
 
     if (this->startOffsetTime == 0) {
         FmuContainer_LOG(fmi2Error, "logError",
@@ -141,12 +141,13 @@ bool FmuContainer::initialize() {
 
 bool FmuContainer::terminate() { return true; }
 
+#define secondsToMs(value) (value*1000)
 
 fmi2ComponentEnvironment FmuContainer::getComponentEnvironment() { return (fmi2ComponentEnvironment) this; }
 
 bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicationStepSize) {
 
-    std::time_t simulationTime = currentCommunicationPoint + communicationStepSize;
+    std::time_t simulationTime = secondsToMs(currentCommunicationPoint + communicationStepSize);
 
     if (!this->rabbitMqHandler) {
         FmuContainer_LOG(fmi2Fatal, "logAll", "Rabbitmq handle not initialized%s", "");
@@ -159,7 +160,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
-        std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+//        std::time_t end_time = std::chrono::system_clock::to_time_t(end);
         if (elapsed_seconds.count() >= this->communicationTimeout) {
             FmuContainer_LOG(fmi2Fatal, "logError",
                              "Rabbitmq communication timeout requiring another message with later timestamp%s",

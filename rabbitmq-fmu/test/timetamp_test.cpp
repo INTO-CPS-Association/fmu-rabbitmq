@@ -50,15 +50,17 @@ namespace {
         const char *timeString = "2019-12-10T19:01:41+00:00";
         std::cout << "Time is: " << timeString << std::endl;
 
-        std::time_t t = Iso8601::parseIso8601(std::string(timeString));
+        std::time_t tms = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
-        std::tm *ptm = std::localtime(&t);
+        std::time_t t = tms/1000;
+
+        std::tm *ptm = std::gmtime(&t);
         char buffer2[32];
 // Format: Mo, 15.06.2009 20:20:00
         std::strftime(buffer2, 32, "%a, %d.%m.%Y %H:%M:%S", ptm);
 
         std::cout << "Time is: " << buffer2 << std::endl;
-        ASSERT_STREQ("Sun, 06.08.51911 22:03:20",buffer2);
+        ASSERT_STREQ("Tue, 10.12.2019 19:01:41",buffer2);
     }
 
 
@@ -100,19 +102,19 @@ namespace {
 //            }
 //        }
 
-        std::tm t = {};
-        std::istringstream ss("Sun, 06.08.2011 22:03:20");
-        ss.imbue(std::locale("en_US.UTF-8"));
-        ss >> std::get_time(&t, "%a, %d.%m.%Y %H:%M:%S");
-        if (ss.fail()) {
-            std::cout << "Parse failed\n";
-        } else {
-            std::cout << std::put_time(&t, "%c") << '\n';
-
-
-            std::time_t end_time = std::mktime(&t);
-            cout << "Time in epic "<< end_time<<endl;
-        }
+//        std::tm t = {};
+//        std::istringstream ss("Sun, 06.08.2011 22:03:20");
+//        ss.imbue(std::locale("en_US.UTF-8"));
+//        ss >> std::get_time(&t, "%a, %d.%m.%Y %H:%M:%S");
+//        if (ss.fail()) {
+//            std::cout << "Parse failed\n";
+//        } else {
+//            std::cout << std::put_time(&t, "%c") << '\n';
+//
+//
+//            std::time_t end_time = std::mktime(&t);
+//            cout << "Time in epic "<< end_time<<endl;
+//        }
 
 
 //        auto start = std::chrono::system_clock::now();

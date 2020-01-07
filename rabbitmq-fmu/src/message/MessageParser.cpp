@@ -32,9 +32,12 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
             const char *timeString = d["time"].GetString();
           //  std::cout << "Time is: " << timeString << std::endl;
 
-            result.time = Iso8601::parseIso8601(std::string(timeString));
+            result.time = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
-            std::tm *ptm = std::localtime(&result.time);
+            auto t = result.time/1000;
+
+
+            std::tm *ptm = std::gmtime(&t);
             char buffer2[32];
 // Format: Mo, 15.06.2009 20:20:00
             std::strftime(buffer2, 32, "%a, %d.%m.%Y %H:%M:%S", ptm);

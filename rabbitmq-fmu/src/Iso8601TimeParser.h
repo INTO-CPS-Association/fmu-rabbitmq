@@ -13,7 +13,7 @@ namespace Iso8601 {
 
 
 
-    std::time_t parseIso8601(const std::string &input) ;
+    std::time_t parseIso8601ToMilliseconds(const std::string &input) ;
 }
 
 #endif //RABBITMQFMUPROJECT_ISO8601TIMEPARSER_H

@@ -4,12 +4,16 @@
 
 #include "Iso8601TimeParser.h"
 
+#ifdef _WIN32
+#define timegm _mkgmtime
+#endif
+
 namespace Iso8601 {
     static inline int ParseInt(const char *value) {
         return std::strtol(value, nullptr, 10);
     }
 
-    std::time_t parseIso8601(const std::string &input) {
+    std::time_t parseIso8601ToMilliseconds(const std::string &input) {
         constexpr const size_t expectedLength = sizeof("1234-12-12T12:12:12Z") - 1;
         static_assert(expectedLength == 20, "Unexpected ISO 8601 date/time length");
 
