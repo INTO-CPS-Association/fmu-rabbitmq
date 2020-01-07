@@ -35,11 +35,11 @@ build_xercersc()
 #install_dir=${build_dir}-install
 #
 #build_xercersc ./darwin-x64-dockcross $build_dir $install_dir
-
-mkdir -p $lib_install_dir
-mv $install_dir/* $lib_install_dir
-
-fi
+#
+#mkdir -p $lib_install_dir
+#mv $install_dir/* $lib_install_dir
+#
+#fi
 
 # linux
 lib_install_dir=$lib/linux-x86_64
