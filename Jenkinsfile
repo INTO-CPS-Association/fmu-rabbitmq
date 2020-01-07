@@ -8,13 +8,10 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([
-        $class: 'GitSCM',
-        branches: scm.branches,
-        doGenerateSubmoduleConfigurations: true,
-        extensions: scm.extensions + [[$class: 'SubmoduleOption', parentCredentials: true]],
-        userRemoteConfigs: scm.userRemoteConfigs
-    ])
+              checkout scm
+
+     sh label: '', script: 'git submodule update --init --recursive'
+
          }
         }
 
