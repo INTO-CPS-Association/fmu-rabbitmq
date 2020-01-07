@@ -15,6 +15,20 @@ pipeline {
          }
         }
 
+      stage('Compile Dependencies') {
+            steps {
+                script {
+
+                    dir("thirdparty") {
+                        sh label: '', script: './build_dependencies.sh'
+                    }
+
+                }
+            }
+        }
+
+
+
         stage('Compile') {
             steps {
                 script {
