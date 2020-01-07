@@ -20,11 +20,13 @@ using namespace std;
 using namespace xercesc;
 using SvType = ModelDescriptionParser::ScalarVariable::SvType;
 
+#define MD_FILE_ENCODING "utf-8"
+
 char *getAttributeValue(const DOMNode *n, const char *name) {
     if (n->hasAttributes()) {
         auto valueAttribute = n->getAttributes()->getNamedItem(XMLString::transcode(name));
         if (valueAttribute != nullptr) {
-            return (char *) TranscodeToStr(valueAttribute->getNodeValue(), "utf-8").str();
+            return (char *) TranscodeToStr(valueAttribute->getNodeValue(), MD_FILE_ENCODING).str();
         }
     }
     return nullptr;
@@ -67,7 +69,7 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
 
             auto version = TranscodeToStr(result->getNodeValue()->getAttributes()->getNamedItem(
                     XMLString::transcode("fmiVersion"))->getNodeValue(),
-                                          "ascii").str();
+                                          MD_FILE_ENCODING).str();
 //            cout << version << endl;
             auto versionString = string((char *) version);
 //            cout << versionString << endl;
@@ -101,17 +103,17 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
                  endl;
         } else {
 //            cout << TranscodeToStr(n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue(),
-//                                   "ascii").str() << endl;
+//                                  MD_FILE_ENCODING).str() << endl;
 
             auto nameTagValue = TranscodeToStr(
                     n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue(),
-                    "ascii").str();
+                    MD_FILE_ENCODING).str();
 
             auto key = string((char *) nameTagValue);
 
             auto valueTag = TranscodeToStr(
                     n->getAttributes()->getNamedItem(XMLString::transcode("valueReference"))->getNodeValue(),
-                    "ascii").str();
+                    MD_FILE_ENCODING).str();
 
             stringstream strValue;
             strValue << valueTag;
@@ -129,7 +131,7 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
                 auto childrens = n->getChildNodes();
                 for (XMLSize_t childIndex = 0; childIndex < childrens->getLength(); childIndex++) {
                     auto child = childrens->item(childIndex);
-                    auto typeName = string((char *) TranscodeToStr(child->getNodeName(), "utf-8").str());
+                    auto typeName = string((char *) TranscodeToStr(child->getNodeName(), MD_FILE_ENCODING).str());
 
                     if (string("#text") == typeName) {
                         continue;
