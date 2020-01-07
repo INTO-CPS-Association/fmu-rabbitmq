@@ -16,27 +16,25 @@ build_xercersc()
  $1 make -C$2 install
 }
 
-set +e
+
 # darwin
-lib_install_dir=$lib/darwin-x86_64
-if [ ! -d $lib_install_dir ]
-then
-docker run --rm dockcross/darwin-x64:latest > ./darwin-x64-dockcross
-chmod +x ./darwin-x64-dockcross
-#mkdir $lib/darwin-x64
-#build_xercersc ./darwin-x64-dockcross build-darwin-x64 darwin-x64-install
-#./darwin-x64-dockcross cmake -Bbuild-darwin-x64 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_INSTALL_PREFIX=darwin-x64-install -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -H.
-#./darwin-x64-dockcross make -Cbuild-darwin-x64 -j8
-#./darwin-x64-dockcross make -Cbuild-darwin-x64 install
-#mkdir -p $lib/darwin-x64
-#mv darwin-x64-install/* $lib/darwin-x86_64
-
-build_dir=build-darwin-x64
-install_dir=${build_dir}-install
-
-build_xercersc ./darwin-x64-dockcross $build_dir $install_dir
-
-set -e
+#lib_install_dir=$lib/darwin-x86_64
+#if [ ! -d $lib_install_dir ]
+#then
+#docker run --rm dockcross/darwin-x64:latest > ./darwin-x64-dockcross
+#chmod +x ./darwin-x64-dockcross
+##mkdir $lib/darwin-x64
+##build_xercersc ./darwin-x64-dockcross build-darwin-x64 darwin-x64-install
+##./darwin-x64-dockcross cmake -Bbuild-darwin-x64 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_INSTALL_PREFIX=darwin-x64-install -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -H.
+##./darwin-x64-dockcross make -Cbuild-darwin-x64 -j8
+##./darwin-x64-dockcross make -Cbuild-darwin-x64 install
+##mkdir -p $lib/darwin-x64
+##mv darwin-x64-install/* $lib/darwin-x86_64
+#
+#build_dir=build-darwin-x64
+#install_dir=${build_dir}-install
+#
+#build_xercersc ./darwin-x64-dockcross $build_dir $install_dir
 
 mkdir -p $lib_install_dir
 mv $install_dir/* $lib_install_dir
