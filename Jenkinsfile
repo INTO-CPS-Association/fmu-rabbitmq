@@ -10,7 +10,7 @@ pipeline {
             steps {
               checkout scm
 
-     sh label: '', script: 'git submodule update --init --recursive'
+     sh label: '', script: 'git submodule update --init'
 
          }
         }
