@@ -1,9 +1,6 @@
 [submodule "thirdparty/rapidjson"]
 	path = thirdparty/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
-[submodule "thirdparty/amqp-cpp"]
-	path = thirdparty/amqp-cpp
-	url = https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git
 [submodule "thirdparty/xerces-c"]
 	path = thirdparty/xerces-c
 	url = https://github.com/apache/xerces-c.git
