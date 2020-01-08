@@ -115,6 +115,17 @@ endif ()
 
 list(FILTER CPP_FILES EXCLUDE REGEX ".*src\\/main\\.cpp")
 
+if(NOT ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}"))
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data.json
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data_modeldescription.json
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/sample.xml
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 
 # ------------------------------- UNIT TESTS ----------------------------------
 file(GLOB CPP_TEST_FILES test/*.cpp)

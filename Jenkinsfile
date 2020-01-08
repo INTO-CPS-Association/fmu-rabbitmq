@@ -42,9 +42,6 @@ pipeline {
 
         stage('Test') {
                     steps {
-
-                    sh label: '', script: 'cp rabbitmq-fmu/modelDescription.xml build/linux-x64/rabbitmq-fmu/'
-                    sh label: '', script: 'cp rabbitmq-fmu/data* build/linux-x64/rabbitmq-fmu/'
                     dir("build/linux-x64/rabbitmq-fmu") {
                         script {
 
