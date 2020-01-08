@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-            cleanWs()
+         //   cleanWs()
               checkout scm
 
      sh label: '', script: 'git submodule update --init'
