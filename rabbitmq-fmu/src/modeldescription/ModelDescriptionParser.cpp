@@ -20,20 +20,19 @@ using namespace std;
 using namespace xercesc;
 using SvType = ModelDescriptionParser::ScalarVariable::SvType;
 
-#define MD_FILE_ENCODING "utf-8"
 
 char *getAttributeValue(const DOMNode *n, const char *name) {
     if (n->hasAttributes()) {
         auto valueAttribute = n->getAttributes()->getNamedItem(XMLString::transcode(name));
         if (valueAttribute != nullptr) {
-            return (char *) TranscodeToStr(valueAttribute->getNodeValue(), MD_FILE_ENCODING).str();
+            return XMLString::transcode(valueAttribute->getNodeValue());
         }
     }
     return nullptr;
 }
 
 
-map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::parse(string path) {
+map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::parse(string path) {
 
     if (access(path.c_str(), 0) != 0) {
         throw "Invalid file path";
@@ -52,6 +51,7 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
     // get the root element
     DOMElement *root = doc->getDocumentElement();
 
+
     {
         DOMXPathResult *result = doc->evaluate(
                 XMLString::transcode("/fmiModelDescription"),
@@ -67,11 +67,11 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
             throw std::runtime_error(std::string("Not a valid model description: ") + path);
         } else {
 
-            auto version = TranscodeToStr(result->getNodeValue()->getAttributes()->getNamedItem(
-                    XMLString::transcode("fmiVersion"))->getNodeValue(),
-                                          MD_FILE_ENCODING).str();
+            auto version = XMLString::transcode(result->getNodeValue()->getAttributes()->getNamedItem(
+                    XMLString::transcode("fmiVersion"))->getNodeValue());
 //            cout << version << endl;
-            auto versionString = string((char *) version);
+            auto versionString = string(version);
+            XMLString::release(&version);
 //            cout << versionString << endl;
             if (string("2.0").compare(versionString)) {
                 throw std::runtime_error(std::string("Model description version not supported: ") + versionString);
@@ -90,7 +90,7 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
             NULL);
 
 
-    map<string, ModelDescriptionParser::ScalarVariable> svNameRefMap;
+    map <string, ModelDescriptionParser::ScalarVariable> svNameRefMap;
 
     XMLSize_t nLength = result->getSnapshotLength();
     for (XMLSize_t i = 0; i < nLength; i++) {
@@ -105,18 +105,18 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
 //            cout << TranscodeToStr(n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue(),
 //                                  MD_FILE_ENCODING).str() << endl;
 
-            auto nameTagValue = TranscodeToStr(
-                    n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue(),
-                    MD_FILE_ENCODING).str();
+            auto nameTagValue = XMLString::transcode(
+                    n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue());
 
-            auto key = string((char *) nameTagValue);
+            auto key = string(nameTagValue);
+            XMLString::release(&nameTagValue);
 
-            auto valueTag = TranscodeToStr(
-                    n->getAttributes()->getNamedItem(XMLString::transcode("valueReference"))->getNodeValue(),
-                    MD_FILE_ENCODING).str();
+            auto valueTag = XMLString::transcode(
+                    n->getAttributes()->getNamedItem(XMLString::transcode("valueReference"))->getNodeValue());
 
             stringstream strValue;
             strValue << valueTag;
+            XMLString::release(&valueTag);
 
             unsigned int intValue;
             strValue >> intValue;
@@ -125,13 +125,17 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
             sv.name = key;
             sv.valueReference = intValue;
 
-            bool isOutput = string(getAttributeValue(n, "causality")) == "output";
+            auto causality = getAttributeValue(n, "causality");
+            bool isOutput = string(causality) == "output";
+            XMLString::release(&causality);
 
             if (n->hasChildNodes()) {
                 auto childrens = n->getChildNodes();
                 for (XMLSize_t childIndex = 0; childIndex < childrens->getLength(); childIndex++) {
                     auto child = childrens->item(childIndex);
-                    auto typeName = string((char *) TranscodeToStr(child->getNodeName(), MD_FILE_ENCODING).str());
+                    auto tmp = XMLString::transcode(child->getNodeName());
+                    auto typeName = string(tmp);
+                    XMLString::release(&tmp);
 
                     if (string("#text") == typeName) {
                         continue;
@@ -203,7 +207,7 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
                                 break;
                         }
 
-
+                        XMLString::release(&stringVal);
                     }
                 }
             }
@@ -217,7 +221,7 @@ map<string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::pars
     return svNameRefMap;
 }
 
-DataPoint ModelDescriptionParser::extractDataPoint(map<string, ScalarVariable> svs) {
+DataPoint ModelDescriptionParser::extractDataPoint(map <string, ScalarVariable> svs) {
     DataPoint dp;
 
     dp.time = 0;
