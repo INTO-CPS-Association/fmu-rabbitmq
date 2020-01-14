@@ -7,15 +7,15 @@ pipeline {
 
     stages {
 
-//         stage('Checkout') {
-//             steps {
-//                 cleanWs()
-//                 checkout scm
-//
-//                 sh label: '', script: 'git submodule update --init'
-//
-//             }
-//         }
+        stage('Checkout') {
+            steps {
+                cleanWs()
+                checkout scm
+
+                sh label: '', script: 'git submodule update --init'
+
+            }
+        }
 
         stage('XCompile native code') {
 
