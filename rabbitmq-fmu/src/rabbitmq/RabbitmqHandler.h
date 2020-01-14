@@ -7,6 +7,11 @@
 
 #include <string>
 
+#ifdef _WIN32
+#include <time.h>
+#include <sys/time.h>
+#endif
+#include <amqp.h>
 extern "C"
 {
 #include <stdint.h>
@@ -14,7 +19,7 @@ extern "C"
 #include <stdlib.h>
 #include <string.h>
 
-#include <amqp.h>
+
 #include <amqp_tcp_socket.h>
 }
 

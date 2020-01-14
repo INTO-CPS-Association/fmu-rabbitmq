@@ -26,11 +26,13 @@
 #define access _access_s
 #else
 
+
+
+#endif
+
 #include <unistd.h>
 #include <string>
 #include <vector>
-
-#endif
 
 #include "modeldescription/ModelDescriptionParser.h"
 
@@ -64,14 +66,7 @@ static void notimplemented(fmi2Component c, fmi2String message) {
     }
 }
 
-void sleepcp(int milliseconds)  // cross-platform sleep function
-{
-#ifdef WIN32
-    Sleep(milliseconds);
-#else
-    usleep(milliseconds * 1000);
-#endif  // win32
-}
+
 
 
 

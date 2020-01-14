@@ -74,6 +74,10 @@ endif (XercesC_FOUND)
 include_directories(${XercesC_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_definitions(-DFMI_COSIMULATION)
 
+if (NOT BUILD_SHARED_LIBS)
+    add_definitions(-DAMQP_STATIC)
+endif()
+
 
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
 file(GLOB C_FILES src/*.c)

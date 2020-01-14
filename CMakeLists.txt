@@ -46,6 +46,10 @@ endif ()
 
 set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}-${arch})
 
+IF (WIN32)
+    set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/external/win-x86_64/cmake")
+endif ()
+
 message("Third parties libraries will use search path: ${THIRD_PARTY_LIBRARIES_ROOT}")
 
 
