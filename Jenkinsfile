@@ -20,7 +20,7 @@ pipeline {
                 }
 
 
-                state('Xcompile linux32') {
+                stage('Xcompile linux32') {
                     steps {
                         checkout scm
                         sh 'git submodule update --init'
@@ -51,7 +51,7 @@ pipeline {
                 }
 
                 stage('Xcompile win64') {
-                    step {
+                    steps {
                         scheckout scm
                         sh 'git submodule update --init'
                         sh "./script/win64_build.sh"
