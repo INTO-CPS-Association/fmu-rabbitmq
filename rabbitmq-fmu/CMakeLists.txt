@@ -98,17 +98,19 @@ if (UNIX AND NOT APPLE)
 endif ()
 
 
-foreach (LETTER ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+#foreach (LETTER ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+#
+#    if (EXISTS "${LETTER}/libstdc++.a")
+#           message (STATUS "${LETTER}")
+#        set(STDCPP_LIBRARY "${LETTER}/libstdc++.a")
+#    else ()
+#        #  message (STATUS "${LETTER} ---- not these")
+#    endif ()
+#endforeach ()
+#message(STATUS "Static linking with libstdc++.a in ${STDCPP_LIBRARY}")
+#target_link_libraries(rabbitmqfmu ${STDCPP_LIBRARY})
 
-    if (EXISTS "${LETTER}/libstdc++.a")
-        #   message (STATUS "${LETTER}")
-        set(STDCPP_LIBRARY "${LETTER}/libstdc++.a")
-    else ()
-        #  message (STATUS "${LETTER} ---- not these")
-    endif ()
-endforeach ()
-message(STATUS "Static linking with libstdc++.a in ${STDCPP_LIBRARY}")
-target_link_libraries(rabbitmqfmu ${STDCPP_LIBRARY})
+string(APPEND CMAKE_SHARED_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 
 if (WIN32)
     #windows

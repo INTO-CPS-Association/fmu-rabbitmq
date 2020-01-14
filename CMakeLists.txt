@@ -43,16 +43,12 @@ if (NOT DEFINED THIRD_PARTY_LIBRARIES_ROOT)
         ELSE ()
             set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}/linux)
         ENDIF ()
+        set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}-${arch})
     ELSEIF (WIN32)
-        set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}/win)
+        set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/external/win-${arch}/cmake")
     ENDIF ()
 endif ()
 
-set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}-${arch})
-
-IF (WIN32)
-    set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/external/win-x86_64/cmake")
-endif ()
 
 message("Third parties libraries will use search path: ${THIRD_PARTY_LIBRARIES_ROOT}")
 
