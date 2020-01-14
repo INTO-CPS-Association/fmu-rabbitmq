@@ -16,14 +16,14 @@ pipeline {
         			sh "./script/darwin64_build.sh"
         			stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dylib', name: 'rabbitmqfmu-darwin'
         		}
-        	}: {
+        	}, {
         		node('Xcompile linux32') {
          			checkout scm
            			sh 'git submodule update --init'
            			sh "./script/linux32_build.sh"
            			stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.so', name: 'rabbitmqfmu-linux32'
         		}
-        	}: {
+        	}, {
         		node('Xcompile linux64') {
          			checkout scm
            			sh 'git submodule update --init'
@@ -35,14 +35,14 @@ pipeline {
                         }
                     }
         		}
-        	}: {
+        	}, {
         		node('Xcompile win32') {
                 	checkout scm
            			sh 'git submodule update --init'
  //          			sh "./script/win32_build.sh"
  //          			stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dll', name: 'rabbitmqfmu-win32'
         		}
-        	}: {
+        	}, {
         		node('Xcompile win64') {
                 	checkout scm
            			sh 'git submodule update --init'
