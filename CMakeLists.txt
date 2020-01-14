@@ -7,6 +7,10 @@ set(CMAKE_PROJECT_VERSION_MAJOR "")
 set(CMAKE_PROJECT_VERSION_MINOR "")
 set(CMAKE_PROJECT_VERSION_PATCH "")
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
+
+message("FMU will be installed to: ${CMAKE_INSTALL_PREFIX}")
+
 #include(toolchains/clang-format.cmake)
 # You can tweak some common (for all subprojects) stuff here. For example:
 

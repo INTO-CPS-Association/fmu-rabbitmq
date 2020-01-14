@@ -76,7 +76,7 @@ add_definitions(-DFMI_COSIMULATION)
 
 if (NOT BUILD_SHARED_LIBS)
     add_definitions(-DAMQP_STATIC)
-endif()
+endif ()
 
 
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
@@ -86,29 +86,29 @@ add_executable(${PROJECT_NAME} ${C_FILES} ${CPP_FILES})
 target_link_libraries(${PROJECT_NAME} XercesC::XercesC rabbitmq-static)
 
 
-
-add_library(${PROJECT_NAME}-fmu SHARED ${C_FILES} ${CPP_FILES})
-target_link_libraries(${PROJECT_NAME}-fmu XercesC::XercesC rabbitmq-static)
-set_target_properties(${PROJECT_NAME}-fmu
+add_library(rabbitmqfmu SHARED ${C_FILES} ${CPP_FILES})
+target_link_libraries(rabbitmqfmu XercesC::XercesC rabbitmq-static)
+set_target_properties(rabbitmqfmu
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(rabbitmqfmu PROPERTIES PREFIX "")
 
-if(UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix
-    target_link_libraries (${PROJECT_NAME}-fmu dl)
-endif()
+    target_link_libraries(rabbitmqfmu dl)
+endif ()
 
 
-foreach(LETTER ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+foreach (LETTER ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
 
-    if(EXISTS "${LETTER}/libstdc++.a")
+    if (EXISTS "${LETTER}/libstdc++.a")
         #   message (STATUS "${LETTER}")
         set(STDCPP_LIBRARY "${LETTER}/libstdc++.a")
-    else()
+    else ()
         #  message (STATUS "${LETTER} ---- not these")
-    endif()
-endforeach()
+    endif ()
+endforeach ()
 message(STATUS "Static linking with libstdc++.a in ${STDCPP_LIBRARY}")
-target_link_libraries(${PROJECT_NAME}-fmu ${STDCPP_LIBRARY})
+target_link_libraries(rabbitmqfmu ${STDCPP_LIBRARY})
 
 if (WIN32)
     #windows
@@ -119,7 +119,7 @@ endif ()
 
 list(FILTER CPP_FILES EXCLUDE REGEX ".*src\\/main\\.cpp")
 
-if(NOT ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}"))
+if (NOT ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}"))
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data.json
@@ -128,7 +128,7 @@ if(NOT ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}"))
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/sample.xml
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endif()
+endif ()
 
 
 # ------------------------------- UNIT TESTS ----------------------------------
@@ -159,11 +159,40 @@ target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbit
 #endif ()
 
 
+#################################### INSTALL targets ####################################
+target_architecture(arch)
+message(${arch})
+
+set(FMU_OS "unknown")
+
+
+if (UNIX)
+    if (APPLE)
+        set(FMU_OS "darwin")
+    ELSE ()
+        set(FMU_OS "linux")
+    ENDIF ()
+ELSEIF (WIN32)
+    set(FMU_OS "win")
+ENDIF ()
+
+
+if (${arch} STREQUAL "x86_64")
+    set(FMU_OS "${FMU_OS}64")
+ELSE ()
+    set(FMU_OS "${FMU_OS}32")
+ENDIF ()
+
+
+install(TARGETS rabbitmqfmu DESTINATION "rabbitmqfmu/binaries/${FMU_OS}")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml" DESTINATION "rabbitmqfmu/resources")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml" DESTINATION "rabbitmqfmu")
+
 #################################### Custom targets ####################################
 
 add_custom_target(fmu
 
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/mkFmu.sh $<TARGET_FILE:${PROJECT_NAME}-fmu> ${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/mkFmu.sh $<TARGET_FILE:rabbitmqfmu> ${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml
         COMMENT "Building fmu"
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         )
