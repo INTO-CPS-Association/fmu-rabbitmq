@@ -4,7 +4,7 @@
 [submodule "thirdparty/xerces-c"]
 	path = thirdparty/xerces-c
 	url = https://github.com/apache/xerces-c.git
-	branch = xerces-3.1
+	branch = xerces-3.2.2
 [submodule "thirdparty/fmi"]
 	path = thirdparty/fmi
 	url = https://github.com/INTO-CPS-Association/fmi
