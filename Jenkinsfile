@@ -24,7 +24,7 @@ pipeline {
                     steps {
 //                         checkout scm
 //                         sh 'git submodule update --init'
-                        sh "script/darwin64_build.sh"
+                        sh "./scripts/darwin64_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dylib', name: 'rabbitmqfmu-darwin'
                     }
                 }
@@ -34,7 +34,7 @@ pipeline {
                     steps {
 //                         checkout scm
 //                         sh 'git submodule update --init'
-                        sh "script/linux32_build.sh"
+                        sh "./scripts/linux32_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.so', name: 'rabbitmqfmu-linux32'
                     }
                 }
@@ -42,7 +42,7 @@ pipeline {
                     steps {
 //                         checkout scm
 //                         sh 'git submodule update --init'
-                        sh "script/linux64_build.sh"
+                        sh "./scripts/linux64_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu', name: 'rabbitmqfmu-linux64'
                         dir("build/linux-x64/rabbitmq-fmu") {
                             script {
@@ -64,7 +64,7 @@ pipeline {
                     steps {
 //                         scheckout scm
 //                         sh 'git submodule update --init'
-                        sh "script/win64_build.sh"
+                        sh "./scripts/win64_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dll', name: 'rabbitmqfmu-win64'
                     }
                 }
