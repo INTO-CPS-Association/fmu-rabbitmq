@@ -32,8 +32,8 @@ pipeline {
 
                 stage('Xcompile linux32') {
                     steps {
-//                        checkout scm
-//                        sh 'git submodule update --init'
+                       checkout scm
+                       sh 'git submodule update --init'
                         sh "./script/linux32_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.so', name: 'rabbitmqfmu-linux32'
                     }
