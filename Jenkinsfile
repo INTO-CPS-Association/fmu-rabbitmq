@@ -7,13 +7,23 @@ pipeline {
 
     stages {
 
+        stage('Checkout') {
+            steps {
+                //   cleanWs()
+                checkout scm
+
+                sh label: '', script: 'git submodule update --init'
+
+            }
+        }
+
         stage('XCompile native code') {
 
             parallel {
                 stage('Xcompile darwin:') {
                     steps {
-                        checkout scm
-                        sh 'git submodule update --init'
+//                        checkout scm
+//                        sh 'git submodule update --init'
                         sh "./script/darwin64_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dylib', name: 'rabbitmqfmu-darwin'
                     }
@@ -22,16 +32,16 @@ pipeline {
 
                 stage('Xcompile linux32') {
                     steps {
-                        checkout scm
-                        sh 'git submodule update --init'
+//                        checkout scm
+//                        sh 'git submodule update --init'
                         sh "./script/linux32_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.so', name: 'rabbitmqfmu-linux32'
                     }
                 }
                 stage('Xcompile linux64') {
                     steps {
-                        checkout scm
-                        sh 'git submodule update --init'
+//                        checkout scm
+//                        sh 'git submodule update --init'
                         sh "./script/linux64_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu', name: 'rabbitmqfmu-linux64'
                         dir("build/linux-x64/rabbitmq-fmu") {
@@ -41,19 +51,19 @@ pipeline {
                         }
                     }
                 }
-                stage('Xcompile win32') {
-                    steps {
-                        checkout scm
-                        sh 'git submodule update --init'
-                        //          			sh "./script/win32_build.sh"
-                        //          			stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dll', name: 'rabbitmqfmu-win32'
-                    }
-                }
+//                stage('Xcompile win32') {
+//                    steps {
+////                        checkout scm
+////                        sh 'git submodule update --init'
+//                        //          			sh "./script/win32_build.sh"
+//                        //          			stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dll', name: 'rabbitmqfmu-win32'
+//                    }
+//                }
 
                 stage('Xcompile win64') {
                     steps {
-                        scheckout scm
-                        sh 'git submodule update --init'
+//                        scheckout scm
+//                        sh 'git submodule update --init'
                         sh "./script/win64_build.sh"
                         stash includes: '/work/build/install/rabbitmqfmu/binaries/**/.dll', name: 'rabbitmqfmu-win64'
                     }
