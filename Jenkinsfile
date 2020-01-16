@@ -123,6 +123,28 @@ pipeline {
                 }
             }
         }
+
+        stage('Publish') {
+            sshPublisher(
+                    publishers: [sshPublisherDesc(
+                            configName: 'overture.au.dk - into-cps',
+                            transfers: [sshTransfer(
+                                    cleanRemote: false,
+                                    excludes: '',
+                                    execCommand: '~/update-latest.sh web/into-cps/rabbitmqfmu',
+                                    execTimeout: 120000,
+                                    flatten: true,
+                                    makeEmptyDirs: false,
+                                    noDefaultExcludes: false,
+                                    patternSeparator: '[, ]+',
+                                    remoteDirectory: '\'rabbitmqfmu/Build-${BUILD_NUMBER}_\'yyyy-MM-dd_HH-mm',
+                                    remoteDirectorySDF: true,
+                                    removePrefix: '',
+                                    sourceFiles: '**/*.fmu')],
+                            usePromotionTimestamp: false,
+                            useWorkspaceInPromotion: false,
+                            verbose: false)])
+        }
     }
 }
 
