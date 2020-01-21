@@ -54,7 +54,7 @@ Make sure that docker is installed and that the current user has sufficient perm
 Prepare dockcross helper scripts
 ```bash
 # darwin
-docker run --rm dockcross/darwin-x64:latest > ./darwin-x64-dockcross
+docker run --rm docker.sweng.au.dk/dockcross-darwin-x64:latest > ./darwin-x64-dockcross
 chmod +x ./darwin-x64-dockcross
 
 # linux
