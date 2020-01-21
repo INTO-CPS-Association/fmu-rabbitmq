@@ -74,7 +74,7 @@ add_subdirectory(thirdparty/googletest)
 #set(ENABLE_SSL_SUPPORT OFF CACHE BOOL "" FORCE)
 #set(BUILD_TOOLS_DOCS OFF CACHE BOOL "" FORCE)
 add_subdirectory(thirdparty/rabbitmq-c)
-add_subdirectory(thirdparty/date/date)
+add_subdirectory(thirdparty/date)
 add_subdirectory(rabbitmq-fmu)
 
 

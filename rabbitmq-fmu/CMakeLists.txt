@@ -83,11 +83,11 @@ file(GLOB_RECURSE CPP_FILES src/*.cpp)
 file(GLOB C_FILES src/*.c)
 
 add_executable(${PROJECT_NAME} ${C_FILES} ${CPP_FILES})
-target_link_libraries(${PROJECT_NAME} XercesC::XercesC rabbitmq-static)
+target_link_libraries(${PROJECT_NAME} XercesC::XercesC rabbitmq-static tz)
 
 
 add_library(rabbitmqfmu SHARED ${C_FILES} ${CPP_FILES})
-target_link_libraries(rabbitmqfmu XercesC::XercesC rabbitmq-static)
+target_link_libraries(rabbitmqfmu XercesC::XercesC rabbitmq-static tz)
 set_target_properties(rabbitmqfmu
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(rabbitmqfmu PROPERTIES PREFIX "")
@@ -109,8 +109,11 @@ endif ()
 #endforeach ()
 #message(STATUS "Static linking with libstdc++.a in ${STDCPP_LIBRARY}")
 #target_link_libraries(rabbitmqfmu ${STDCPP_LIBRARY})
-
-string(APPEND CMAKE_SHARED_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+message("Compiler is clang not adding -static-libgcc")
+else ()
+    string(APPEND CMAKE_SHARED_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+endif ()
 
 if (WIN32)
     #windows
@@ -138,7 +141,7 @@ file(GLOB CPP_TEST_FILES test/*.cpp)
 list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
 
 add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static)
+target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz)
 
 if (WIN32)
     add_test(unit-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
@@ -152,7 +155,7 @@ file(GLOB CPP_TEST_FILES test/*.cpp)
 list(FILTER CPP_TEST_FILES INCLUDE REGEX ".*_it.cpp")
 
 add_executable(it-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static)
+target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz)
 
 #if (WIN32)
 #    add_test(it-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
