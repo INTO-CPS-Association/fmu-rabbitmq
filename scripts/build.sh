@@ -50,7 +50,7 @@ echo Running CMake
 
 echo Compiling
 
-./$script make -C$working_dir
+./$script make -C$working_dir -j8
 ./$script make -C$working_dir/rabbitmq-fmu install
 cd $current_dir
 
