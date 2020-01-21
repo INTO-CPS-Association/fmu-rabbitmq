@@ -33,10 +33,13 @@ public :
     RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
     ~RabbitmqHandler();
 
-bool open();
-void close();
-void bind();
-bool consume(string & json);
+    virtual bool open();
+
+    virtual void close();
+
+    virtual void bind();
+
+    virtual bool consume(string & json);
 void publish(const string & routingkey, const string &message);
 
 private:

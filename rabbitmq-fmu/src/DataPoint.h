@@ -14,11 +14,12 @@
     { \
         this->mapName[pair.first]=pair.second; \
     }
+#include "date/date.h"
 
 using namespace std;
 
 struct DataPoint {
-    std::time_t time;
+    date::sys_time<std::chrono::milliseconds> time;
 
     std::map<unsigned int, int> integerValues;
     std::map<unsigned int, double> doubleValues;

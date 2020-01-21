@@ -11,15 +11,11 @@
 #include "xercesc/util/TransService.hpp"
 #include "xercesc/parsers/XercesDOMParser.hpp"
 #include <unistd.h>
-
-
-#include <iostream>
 #include <sstream>
 
 using namespace std;
 using namespace xercesc;
 using SvType = ModelDescriptionParser::ScalarVariable::SvType;
-
 
 char *getAttributeValue(const DOMNode *n, const char *name) {
     if (n->hasAttributes()) {
@@ -102,8 +98,6 @@ map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::par
             cout << "There is no result for the provided XPath " <<
                  endl;
         } else {
-//            cout << TranscodeToStr(n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue(),
-//                                  MD_FILE_ENCODING).str() << endl;
 
             auto nameTagValue = XMLString::transcode(
                     n->getAttributes()->getNamedItem(XMLString::transcode("name"))->getNodeValue());
@@ -224,12 +218,9 @@ map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::par
 DataPoint ModelDescriptionParser::extractDataPoint(map <string, ScalarVariable> svs) {
     DataPoint dp;
 
-    dp.time = 0;
     for (const auto &pair : svs) {
 
         auto sv = pair.second;
-//        cout << sv.valueReference << "->" << sv.name << " type " << sv.type << " has start value " << sv.hasStartValue
-//             << endl;
 
         if (!sv.hasStartValue) {
             continue;

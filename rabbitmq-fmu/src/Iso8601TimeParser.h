@@ -7,13 +7,14 @@
 
 #include <iostream>
 #include <ctime>
+#include "date/date.h"
 using namespace std;
+using namespace std::chrono;
+using namespace date;
 
 namespace Iso8601 {
 
-
-
-    std::time_t parseIso8601ToMilliseconds(const std::string &input) ;
+    date::sys_time<std::chrono::milliseconds> parseIso8601ToMilliseconds(const std::string input) ;
 }
 
 #endif //RABBITMQFMUPROJECT_ISO8601TIMEPARSER_H

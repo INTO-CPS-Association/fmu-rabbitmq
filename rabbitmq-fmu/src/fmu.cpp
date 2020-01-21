@@ -163,18 +163,16 @@ extern "C" fmi2Status fmi2SetupExperiment(
 }
 
 extern "C" fmi2Status fmi2EnterInitializationMode(fmi2Component c) {
-    return fmi2OK;
-}
-
-extern "C" fmi2Status fmi2ExitInitializationMode(fmi2Component c) {
-
     FmuContainer *fmu = getFmuContainer(c);
 
     if (fmu != nullptr && fmu->initialize()) {
         return fmi2OK;
     }
-
     return fmi2Fatal;
+}
+
+extern "C" fmi2Status fmi2ExitInitializationMode(fmi2Component c) {
+    return fmi2OK;
 }
 
 extern "C" fmi2Status fmi2Terminate(fmi2Component c) {

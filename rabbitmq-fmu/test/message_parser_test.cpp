@@ -12,12 +12,7 @@ namespace {
 
     void printDataPoint(DataPoint dp) {
         cout << "###################################" << endl << "Data point info" << endl;
-        std::tm *ptm = std::localtime(&dp.time);
-        char buffer2[32];
-// Format: Mo, 15.06.2009 20:20:00
-        std::strftime(buffer2, 32, "%a, %d.%m.%Y %H:%M:%S", ptm);
 
-        std::cout << "Time is: " << buffer2 << std::endl;
 
         for (auto &it : dp.doubleValues) {
             cout <<"Double " <<it.first << " = " << it.second << endl;

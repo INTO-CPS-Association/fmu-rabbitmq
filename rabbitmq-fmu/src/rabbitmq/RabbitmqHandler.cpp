@@ -154,7 +154,7 @@ void RabbitmqHandler::bind() {
                     amqp_cstring_bytes(this->queueBindinngKey.c_str()), amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
-    amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, 0, 1, 0,
+    amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, 0, 0, 1,
                        amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
