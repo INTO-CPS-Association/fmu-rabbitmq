@@ -46,7 +46,7 @@ pipeline {
 //                        stash includes: '/work/build/install/rabbitmqfmu', name: 'rabbitmqfmu-linux64'
                         dir("build/linux-x64/rabbitmq-fmu") {
                             script {
-                                sh label: '', script: './unit-test-rabbitmq-fmu'
+                                sh label: '', script: './unit-test-rabbitmq'
                             }
                         }
                     }
