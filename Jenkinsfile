@@ -116,7 +116,7 @@ pipeline {
 //                    unstash 'rabbitmqfmu-win64'
 
                     dir("build/install/rabbitmqfmu") {
-                        sh label: '', script: 'zip -r ../rabbitmq.fmu .'
+                        sh label: '', script: "zip -r ../rabbitmq.fmu . -i '*.dylib' '*.so' '*.xml' '*.dll'"
                     }
 
 
