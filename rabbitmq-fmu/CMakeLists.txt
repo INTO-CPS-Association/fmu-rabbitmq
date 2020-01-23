@@ -82,19 +82,19 @@ endif ()
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
 file(GLOB C_FILES src/*.c)
 
-add_executable(${PROJECT_NAME} ${C_FILES} ${CPP_FILES})
-target_link_libraries(${PROJECT_NAME} XercesC::XercesC rabbitmq-static tz)
+add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES})
+target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz)
 
 
-add_library(rabbitmqfmu SHARED ${C_FILES} ${CPP_FILES})
-target_link_libraries(rabbitmqfmu XercesC::XercesC rabbitmq-static tz)
-set_target_properties(rabbitmqfmu
+add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
+target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz)
+set_target_properties(rabbitmq
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(rabbitmqfmu PROPERTIES PREFIX "")
+set_target_properties(rabbitmq PROPERTIES PREFIX "")
 
 if (UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix
-    target_link_libraries(rabbitmqfmu dl)
+    target_link_libraries(rabbitmq dl)
 endif ()
 
 
@@ -189,7 +189,7 @@ ELSE ()
 ENDIF ()
 
 
-install(TARGETS rabbitmqfmu DESTINATION "rabbitmqfmu/binaries/${FMU_OS}")
+install(TARGETS rabbitmq DESTINATION "rabbitmqfmu/binaries/${FMU_OS}")
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml" DESTINATION "rabbitmqfmu/resources")
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml" DESTINATION "rabbitmqfmu")
 
@@ -197,7 +197,7 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml" DESTINATION "ra
 
 add_custom_target(fmu
 
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/mkFmu.sh $<TARGET_FILE:rabbitmqfmu> ${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/mkFmu.sh $<TARGET_FILE:rabbitmq> ${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml
         COMMENT "Building fmu"
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         )
