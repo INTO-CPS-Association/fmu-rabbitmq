@@ -20,28 +20,25 @@
         </ScalarVariable>
 
 
-        <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter">
+        <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>
         </ScalarVariable>
-        <ScalarVariable name="config.port" valueReference="1" variability="fixed" causality="parameter">
+        <ScalarVariable name="config.port" valueReference="1" variability="fixed" causality="parameter" initial="exact">
             <Integer start="5672"/>
         </ScalarVariable>
-        <ScalarVariable name="config.username" valueReference="2" variability="fixed" causality="parameter">
+        <ScalarVariable name="config.username" valueReference="2" variability="fixed" causality="parameter" initial="exact">
             <String start="guest"/>
         </ScalarVariable>
-        <ScalarVariable name="config.password" valueReference="3" variability="fixed" causality="parameter">
+        <ScalarVariable name="config.password" valueReference="3" variability="fixed" causality="parameter" initial="exact">
             <String start="guest"/>
         </ScalarVariable>
 
 
-        <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter">
+        <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter" initial="exact">
             <String start="linefollower"/>
         </ScalarVariable>
-        <ScalarVariable name="config.starttimestamp" valueReference="5" variability="fixed" causality="parameter">
-            <String start="2019-01-04T16:41:25+0200"/>
-        </ScalarVariable>
 
-        <ScalarVariable name="config.communicationtimeout" valueReference="6" variability="fixed" causality="parameter" description="Network read time out in seconds">
+        <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
             <Integer start="60"/>
         </ScalarVariable>
 
