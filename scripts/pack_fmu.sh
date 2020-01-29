@@ -4,7 +4,7 @@ repo=$(git rev-parse --show-toplevel)
 current_dir=$(pwd)
 cd $repo
 
-cd build/install/rabbitmq-fmu
+cd build/install/rabbitmqfmu
 zip -r ../../rabbitmq.fmu .
 
 cd $current_dir
