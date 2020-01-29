@@ -32,7 +32,7 @@ public:
     const string m_name;
 
 
-    FmuContainer(const fmi2CallbackFunctions *mFunctions, const char *mName,
+    FmuContainer(const fmi2CallbackFunctions *mFunctions,bool loggingOn, const char *mName,
                  map<string, ModelDescriptionParser::ScalarVariable> nameToValueReference, DataPoint initialDataPoint);
 
     ~FmuContainer();
@@ -67,6 +67,8 @@ public:
 
     bool initialize();
 
+    bool isLoggingOn();
+
 private:
     date::sys_time<std::chrono::milliseconds> startOffsetTime;
     int communicationTimeout;
@@ -83,6 +85,8 @@ private:
     std::chrono::milliseconds messageTimeToSim( date::sys_time<std::chrono::milliseconds> messageTime);
 
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
+
+    const bool loggingOn;
 
 };
 

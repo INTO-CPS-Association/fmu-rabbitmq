@@ -23,13 +23,13 @@
   }
 
 
-FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, const char *mName,
+FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginOn, const char *mName,
                            map<string, ModelDescriptionParser::ScalarVariable> nameToValueReference,
                            DataPoint initialDataPoint)
         : m_functions(mFunctions), m_name(mName), nameToValueReference(std::move(nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30) {
+          communicationTimeout(30), loggingOn(logginOn) {
 }
 
 FmuContainer::~FmuContainer() {
@@ -37,6 +37,11 @@ FmuContainer::~FmuContainer() {
         this->rabbitMqHandler->close();
         delete this->rabbitMqHandler;
     }
+}
+
+
+bool FmuContainer::isLoggingOn() {
+    return this->loggingOn;
 }
 
 /*####################################################

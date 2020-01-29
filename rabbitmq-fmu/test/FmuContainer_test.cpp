@@ -42,9 +42,9 @@ namespace {
 
     class TestFmuContainer : public FmuContainer {
     public:
-        TestFmuContainer(const fmi2CallbackFunctions *mFunctions, const char *mName,
+        TestFmuContainer(const fmi2CallbackFunctions *mFunctions,bool loggingOn, const char *mName,
                          map<string, ModelDescriptionParser::ScalarVariable> &nameToValueReference,
-                         DataPoint &initialDataPoint) : FmuContainer(mFunctions, mName,
+                         DataPoint &initialDataPoint) : FmuContainer(mFunctions,loggingOn, mName,
                                                                      nameToValueReference, initialDataPoint) {}
 
     private:
@@ -92,7 +92,7 @@ namespace {
         dp.integerValues[1] = 8;
         dp.integerValues[5] = 1;
 
-        TestFmuContainer c(NULL, "m", svNameRefMap, dp);
+        TestFmuContainer c(NULL, true,"m", svNameRefMap, dp);
 
         c.initialize();
         c.setup(0);
