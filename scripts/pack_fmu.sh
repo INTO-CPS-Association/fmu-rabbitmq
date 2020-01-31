@@ -5,7 +5,7 @@ current_dir=$(pwd)
 cd $repo
 
 cd build/install/rabbitmqfmu
-zip -r ../../rabbitmq.fmu .
+zip -r ../../rabbitmq.fmu . -i '*.dylib' '*.so' '*.xml' '*.dll'
 
 cd $current_dir
 
