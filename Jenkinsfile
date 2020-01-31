@@ -119,6 +119,8 @@ pipeline {
                         sh label: '', script: 'zip -r ../rabbitmq.fmu .'
                     }
 
+		   sh label: 'packing', script: './scripts/pack_fmu.sh'
+
 
                 }
             }
