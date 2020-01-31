@@ -143,7 +143,7 @@ pipeline {
                                         remoteDirectory: '\'rabbitmqfmu/Build-${BUILD_NUMBER}_\'yyyy-MM-dd_HH-mm',
                                         remoteDirectorySDF: true,
                                         removePrefix: '',
-                                        sourceFiles: '**/*.fmu')],
+                                        sourceFiles: 'build/*.fmu')],
                                 usePromotionTimestamp: false,
                                 useWorkspaceInPromotion: false,
                                 verbose: false)])
