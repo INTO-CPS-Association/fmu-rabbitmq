@@ -41,7 +41,9 @@
         <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
             <Integer start="60"/>
         </ScalarVariable>
-
+        <ScalarVariable name="config.precision" valueReference="6" variability="fixed" causality="parameter" description="Communication step comparison precision. Number of decimals to consider" initial="exact">
+            <Integer start="10"/>
+        </ScalarVariable>
 
 
     </ModelVariables>

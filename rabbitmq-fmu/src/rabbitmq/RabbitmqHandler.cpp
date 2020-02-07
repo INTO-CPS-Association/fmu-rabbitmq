@@ -195,7 +195,6 @@ bool RabbitmqHandler::consume(string &payload) {
 
     amqp_destroy_envelope(&envelope);
 
-
     return true;
 
 }

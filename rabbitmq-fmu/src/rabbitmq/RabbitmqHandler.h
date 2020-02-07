@@ -64,7 +64,6 @@ private:
     void declareExchange();
     void throw_on_error(int x, char const *context);
 
-
 };
 
 

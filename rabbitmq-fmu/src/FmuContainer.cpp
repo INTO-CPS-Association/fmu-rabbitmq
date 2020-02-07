@@ -29,7 +29,7 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
         : m_functions(mFunctions), m_name(mName), nameToValueReference(std::move(nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30), loggingOn(logginOn) {
+          communicationTimeout(30), loggingOn(logginOn), precision(10) {
 }
 
 FmuContainer::~FmuContainer() {
@@ -77,7 +77,8 @@ bool FmuContainer::initialize() {
     }
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_PORT, "port"),
-                       std::make_pair(RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, "communicationtimeout")};
+                       std::make_pair(RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, "communicationtimeout"),
+                       std::make_pair(RABBITMQ_FMU_PRECISION, "precision")};
 
     for (auto const &value: intConfigs) {
         auto vRef = value.first;
@@ -103,11 +104,22 @@ bool FmuContainer::initialize() {
 
     auto port = this->currentData.integerValues[RABBITMQ_FMU_PORT];
     this->communicationTimeout = this->currentData.integerValues[RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT];
+    auto precisionDecimalPlaces = this->currentData.integerValues[RABBITMQ_FMU_PRECISION];
+
+    if (precisionDecimalPlaces < 1) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Precision must be a positive number %d",
+                         precisionDecimalPlaces);
+        return false;
+    }
+
+    this->precision = pow(10, precisionDecimalPlaces);
+
 
     FmuContainer_LOG(fmi2OK, "logAll",
-                     "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s",
+                     "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d)",
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
-                     this->communicationTimeout);
+                     this->communicationTimeout,this->precision,precisionDecimalPlaces);
 
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
                                                        routingKey);
@@ -188,16 +200,10 @@ bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutO
 
                 auto result = MessageParser::parse(&this->nameToValueReference, json.c_str());
 
-                // cout << "parse completed" << endl;
                 std::stringstream startTimeStamp;
                 startTimeStamp << result.time;
 
-
                 FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str());
-
-
-//                cout << "Got message from server:" << json << " Decoded time: " << result.time << endl;
-//                cout << flush;
 
                 *dataPoint = result;
                 *timeoutOccurred = false;
@@ -207,7 +213,7 @@ bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutO
         }
 
     } catch (exception &e) {
-        cout << "Standard exception: " << e.what() << endl;
+        FmuContainer_LOG(fmi2Fatal, "logFatal", "Read message exception '%s'", e.what());
         throw e;
     }
 
@@ -217,10 +223,11 @@ bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutO
 }
 
 bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicationStepSize) {
-
     auto simulationTime = secondsToMs(currentCommunicationPoint + communicationStepSize);
-    cout << "Step time " << currentCommunicationPoint + communicationStepSize << " s converted time " << simulationTime
-         << " ms" << endl;
+//    cout << "Step time " << currentCommunicationPoint + communicationStepSize << " s converted time " << simulationTime
+//         << " ms" << endl;
+
+    simulationTime = round(simulationTime * precision) / precision;
 
 
     if (!this->rabbitMqHandler) {
@@ -232,19 +239,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         return true;
     }
 
-    if (!data.empty()) {
-        cout << "Queue " << data.size() << " ";
-        for (auto const &pair : data) {
-            cout << "'" << pair.time << "==>" << messageTimeToSim(this->data.front().time).count() << " <= "
-                 << simulationTime << "', ";
-        }
-        cout << " done" << endl << flush;
-    }
 
     while (!this->data.empty() && messageTimeToSim(this->data.front().time).count() <= simulationTime) {
 
-        cout << "Merging previously received message with relative time " << messageTimeToSim(this->data.front().time)
-             << " Target time is " << simulationTime << endl;
         this->currentData.merge(this->data.front());
         this->data.pop_front();
 
@@ -257,9 +254,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     while (readMessage(&newMessage, this->communicationTimeout, &timeoutOccurred)) {
         auto msgSimTime = messageTimeToSim(newMessage.time).count();
 
-        cout << "Read message time is " << msgSimTime << "ms in simulation time. Simulation time is "
-             << simulationTime << " ms" << endl;
-        if (msgSimTime > simulationTime) {
+               if (msgSimTime > simulationTime) {
 
             //ok this message is for the future.
             //queue current read message for newt step
@@ -271,18 +266,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
             break;
         } else {
             //ok the message defined the values for this step so merge it
-            cout << "Merging" << endl;
             this->currentData.merge(newMessage);
         }
-    }
-
-
-    if (!data.empty()) {
-        cout << "After Queue";
-        for (auto const &pair : data) {
-            cout << pair.time << ", ";
-        }
-        cout << " done" << endl << flush;
     }
 
 

@@ -23,6 +23,7 @@
 #define RABBITMQ_FMU_PWD 3
 #define RABBITMQ_FMU_ROUTING_KEY 4
 #define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
+#define RABBITMQ_FMU_PRECISION 6
 
 using namespace std;
 
@@ -87,6 +88,8 @@ private:
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
 
     const bool loggingOn;
+
+    unsigned long precision;
 
 };
 
