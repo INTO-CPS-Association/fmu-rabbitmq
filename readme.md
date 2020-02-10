@@ -2,7 +2,22 @@
 
 This project builds a FMU which uses a rabbitmq server feed live or log data into a simulation.
 
-The FMU is configured using a script TBD for the output variables that are model specific.
+The FMU is configured using a script TBD for the output variables that are model specific or manually by:
+* adding all model outputs as:
+```xml
+<ModelVariables>
+  <ScalarVariable name="level" valueReference="20" variability="continuous" causality="output">
+    <Real />
+  </ScalarVariable>
+</ModelVariables>
+<ModelStructure>
+  <Outputs>
+    <Unknown index="1"/>
+  </Outputs>
+</ModelStructure>
+```
+remember to add the outputs before the configuration variables
+* add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
 It can be configured by setting the following parameters:
 
@@ -22,11 +37,11 @@ It can be configured by setting the following parameters:
 <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter">
     <String start="linefollower"/>
 </ScalarVariable>
-<ScalarVariable name="config.starttimestamp" valueReference="5" variability="fixed" causality="parameter">
-    <String start="2019-01-04T16:41:25+0200"/>
-</ScalarVariable>
-<ScalarVariable name="config.communicationtimeout" valueReference="6" variability="fixed" causality="parameter" description="Network read time out in seconds">
+<ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
     <Integer start="60"/>
+</ScalarVariable>
+<ScalarVariable name="config.precision" valueReference="6" variability="fixed" causality="parameter" description="Communication step comparison precision. Number of decimals to consider" initial="exact">
+    <Integer start="10"/>
 </ScalarVariable>
 ```
 
@@ -54,7 +69,7 @@ Make sure that docker is installed and that the current user has sufficient perm
 Prepare dockcross helper scripts
 ```bash
 # darwin
-docker run --rm docker.sweng.au.dk/dockcross-darwin-x64:latest > ./darwin-x64-dockcross
+docker run --rm docker.sweng.au.dk/dockcross-darwin-x64-clang:latest > ./darwin-x64-dockcross
 chmod +x ./darwin-x64-dockcross
 
 # linux
