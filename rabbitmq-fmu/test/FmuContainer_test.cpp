@@ -190,6 +190,7 @@ namespace {
         dp.stringValues[4] = "";
         dp.integerValues[1] = 8;
         dp.integerValues[5] = 1;
+        dp.integerValues[6] = 5;
 
         TestFmuContainer c(NULL, true, "m", svNameRefMap, dp);
 
