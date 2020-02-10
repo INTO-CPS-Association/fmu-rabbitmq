@@ -61,6 +61,7 @@ pipeline {
             }
         }
 
+
         stage('Publish') {
             steps {
                 sshPublisher(
