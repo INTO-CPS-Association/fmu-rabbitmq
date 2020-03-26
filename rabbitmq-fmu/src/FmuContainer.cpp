@@ -123,7 +123,7 @@ bool FmuContainer::initialize() {
         return false;
     }
 
-    this->precision = pow(10, precisionDecimalPlaces);
+    this->precision = std::pow(10, precisionDecimalPlaces);
 
 
     FmuContainer_LOG(fmi2OK, "logAll",
@@ -296,7 +296,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 //    cout << "Step time " << currentCommunicationPoint + communicationStepSize << " s converted time " << simulationTime
 //         << " ms" << endl;
 
-    simulationTime = round(simulationTime * precision) / precision;
+    simulationTime = std::round(simulationTime * precision) / precision;
 
 
     if (!this->rabbitMqHandler) {

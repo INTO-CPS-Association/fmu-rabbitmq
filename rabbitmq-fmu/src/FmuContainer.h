@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <cmath>
 #include "fmi2Functions.h"
 #include "DataPoint.h"
 #include "modeldescription/ModelDescriptionParser.h"

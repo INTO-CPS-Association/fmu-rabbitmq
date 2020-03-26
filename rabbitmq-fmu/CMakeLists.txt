@@ -6,39 +6,19 @@ include(CheckCXXCompilerFlag)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
 
-if (COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
-else ()
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif ()
-
-
-#CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-#CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 #if (COMPILER_SUPPORTS_CXX11)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#elseif (COMPILER_SUPPORTS_CXX0X)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+#
 #else ()
 #    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 #endif ()
 
 
-#add_definitions(-DSOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
-#set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-pthread")
-
-
-#get_cmake_property(_variableNames VARIABLES)
-#list (SORT _variableNames)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
 
 #add_dependencies(rapidjson)
 #include_directories(${libshmfmu_INCLUDE_DIRS})
@@ -80,10 +60,17 @@ endif ()
 
 
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
+list(FILTER CPP_FILES EXCLUDE REGEX "TlaTester.cpp")
+list(FILTER CPP_FILES EXCLUDE REGEX "main.cpp")
 file(GLOB C_FILES src/*.c)
 
-add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES})
+# Main
+add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz)
+
+# TLA tester
+add_executable(${PROJECT_NAME}-tla ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/tla/TlaTester.cpp)
+target_link_libraries(${PROJECT_NAME}-tla XercesC::XercesC rabbitmq-static tz)
 
 
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})

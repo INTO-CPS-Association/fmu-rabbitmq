@@ -67,9 +67,9 @@ union ScalarVariableBaseValue {
         }
     }
 
-    inline bool operator!=( const ScalarVariableBaseValue& rhs){ return !(this == &rhs); }
+    inline bool operator!=( const ScalarVariableBaseValue& rhs) const { return !(this == &rhs); }
 
-    bool operator==(const ScalarVariableBaseValue& other)
+    bool operator==(const ScalarVariableBaseValue& other) const
     {
         // This is safe.
         switch (other.i.type) {
