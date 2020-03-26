@@ -30,6 +30,16 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
           communicationTimeout(30), loggingOn(logginOn), precision(10) {
+
+    std::map<FmuContainerCore::ScalarVariableId, int> lookahead;
+
+    for (auto &pair: nameToValueReference) {
+        lookahead[pair.second.valueReference] = 1;
+    }
+
+    std::chrono::milliseconds maxAge = std::chrono::milliseconds(0);
+
+    this->core = new FmuContainerCore(maxAge, lookahead);
 }
 
 FmuContainer::~FmuContainer() {
@@ -119,7 +129,7 @@ bool FmuContainer::initialize() {
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d)",
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
-                     this->communicationTimeout,this->precision,precisionDecimalPlaces);
+                     this->communicationTimeout, this->precision, precisionDecimalPlaces);
 
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
                                                        routingKey);
@@ -144,23 +154,12 @@ bool FmuContainer::initialize() {
         return false;
     }
 
-    DataPoint zeroTimeDt;
-    bool timeoutOccurred;
-    if (!readMessage(&zeroTimeDt, this->communicationTimeout, &timeoutOccurred)) {
-        FmuContainer_LOG(fmi2Fatal, "logAll",
-                         "Did not receive initial message withing %d seconds", this->communicationTimeout);
-        return false;
-    }
+
+    initializeCoreState();
+
 
     std::stringstream startTimeStamp;
-    startTimeStamp << zeroTimeDt.time;
-
-    FmuContainer_LOG(fmi2OK, "logAll",
-                     "Received initial data message with time '%s' which will be simulation time zero '0'",
-                     startTimeStamp.str().c_str());
-    this->currentData.merge(zeroTimeDt);
-    this->startOffsetTime = zeroTimeDt.time;
-
+    startTimeStamp << this->core->getStartOffsetTime();
 
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Initialization completed with: Hostname='%s', Port='%d', Username='%s', routingkey='%s', starttimestamp='%s', communication timeout %d s",
@@ -178,22 +177,15 @@ RabbitmqHandler *FmuContainer::createCommunicationHandler(const string &hostname
 }
 
 
-bool FmuContainer::terminate() { return true; }
+bool FmuContainer::initializeCoreState() {
 
-#define secondsToMs(value) ((value)*1000.0)
 
-std::chrono::milliseconds FmuContainer::messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime) {
-    return (messageTime - this->startOffsetTime);
-}
-
-fmi2ComponentEnvironment FmuContainer::getComponentEnvironment() { return (fmi2ComponentEnvironment) this; }
-
-bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccurred) {
     auto start = std::chrono::system_clock::now();
     try {
 
         string json;
-        while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() < timeout) {
+        while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
+               this->communicationTimeout) {
 
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
@@ -205,9 +197,23 @@ bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutO
 
                 FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str());
 
-                *dataPoint = result;
-                *timeoutOccurred = false;
-                return true;
+                for (auto &pair: result.integerValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+                for (auto &pair: result.stringValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+                for (auto &pair: result.doubleValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+                for (auto &pair: result.booleanValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+
+                if (this->core->initialize())
+                {
+                    return true;
+                }
             }
 
         }
@@ -217,10 +223,73 @@ bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutO
         throw e;
     }
 
-    *timeoutOccurred = true;
     return false;
 
+
+//    DataPoint zeroTimeDt;
+//    bool timeoutOccurred;
+//    if (!readMessage(&zeroTimeDt, this->communicationTimeout, &timeoutOccurred)) {
+//        FmuContainer_LOG(fmi2Fatal, "logAll",
+//                         "Did not receive initial message withing %d seconds", this->communicationTimeout);
+//        return false;
+//    }
+//
+//    std::stringstream startTimeStamp;
+//    startTimeStamp << zeroTimeDt.time;
+//
+//    FmuContainer_LOG(fmi2OK, "logAll",
+//                     "Received initial data message with time '%s' which will be simulation time zero '0'",
+//                     startTimeStamp.str().c_str());
+//    this->currentData.merge(zeroTimeDt);
+//    this->startOffsetTime = zeroTimeDt.time;
+
+
 }
+
+
+bool FmuContainer::terminate() { return true; }
+
+#define secondsToMs(value) ((value)*1000.0)
+
+std::chrono::milliseconds FmuContainer::messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime) {
+    return (messageTime - this->startOffsetTime);
+}
+
+fmi2ComponentEnvironment FmuContainer::getComponentEnvironment() { return (fmi2ComponentEnvironment) this; }
+
+//bool FmuContainer::readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccurred) {
+//    auto start = std::chrono::system_clock::now();
+//    try {
+//
+//        string json;
+//        while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() < timeout) {
+//
+//            if (this->rabbitMqHandler->consume(json)) {
+//                //data received
+//
+//                auto result = MessageParser::parse(&this->nameToValueReference, json.c_str());
+//
+//                std::stringstream startTimeStamp;
+//                startTimeStamp << result.time;
+//
+//                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str());
+//
+//                *dataPoint = result;
+//                *timeoutOccurred = false;
+//                return true;
+//            }
+//
+//        }
+//
+//    } catch (exception &e) {
+//        FmuContainer_LOG(fmi2Fatal, "logFatal", "Read message exception '%s'", e.what());
+//        throw e;
+//    }
+//
+//    *timeoutOccurred = true;
+//    return false;
+//
+//}
 
 bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicationStepSize) {
     auto simulationTime = secondsToMs(currentCommunicationPoint + communicationStepSize);
@@ -235,50 +304,117 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         return false;
     }
 
-    if (messageTimeToSim(this->currentData.time).count() == simulationTime) {
-        return true;
-    }
+    auto start = std::chrono::system_clock::now();
+    try {
 
+        string json;
+        while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
+               this->communicationTimeout) {
 
-    while (!this->data.empty() && messageTimeToSim(this->data.front().time).count() <= simulationTime) {
+            if (this->rabbitMqHandler->consume(json)) {
+                //data received
 
-        this->currentData.merge(this->data.front());
-        this->data.pop_front();
+                auto result = MessageParser::parse(&this->nameToValueReference, json.c_str());
 
-    }
+                std::stringstream startTimeStamp;
+                startTimeStamp << result.time;
 
+                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str());
 
-    DataPoint newMessage;
-    bool timeoutOccurred = false;
+                for (auto &pair: result.integerValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+                for (auto &pair: result.stringValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+                for (auto &pair: result.doubleValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
+                for (auto &pair: result.booleanValues) {
+                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                }
 
-    while (readMessage(&newMessage, this->communicationTimeout, &timeoutOccurred)) {
-        auto msgSimTime = messageTimeToSim(newMessage.time).count();
+                if (this->core->process(simulationTime)) {
+                    FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
+                    return true;
+                }
+            }
 
-               if (msgSimTime > simulationTime) {
-
-            //ok this message is for the future.
-            //queue current read message for newt step
-            DataPoint tmp;
-
-            tmp = newMessage;
-            this->data.push_back(tmp);
-            //Stop reading messages and leave them queue on the queue outside this program
-            break;
-        } else {
-            //ok the message defined the values for this step so merge it
-            this->currentData.merge(newMessage);
         }
+
+    } catch (exception &e) {
+        FmuContainer_LOG(fmi2Fatal, "logFatal", "Read message exception '%s'", e.what());
+        return false;
     }
 
 
-    FmuContainer_LOG(fmi2OK, "logAll", "Step time %.0f [ms] data time %lld [ms]", simulationTime,
-                     messageTimeToSim(this->currentData.time).count());
 
-    /*the current state is only valid if we have a next message with a timestamp that is after simulationTime.
-     * Then we know that the current values are valid until after the simulation time and we can safely use these*/
-    return !timeoutOccurred && (messageTimeToSim(this->currentData.time).count() == simulationTime ||
-                                (messageTimeToSim(currentData.time).count() < simulationTime && !this->data.empty() &&
-                                 messageTimeToSim(this->data.front().time).count() > simulationTime));
+
+
+
+
+
+return false;
+
+
+
+
+
+
+
+
+//
+//
+//
+//    if (!this->rabbitMqHandler) {
+//        FmuContainer_LOG(fmi2Fatal, "logAll", "Rabbitmq handle not initialized%s", "");
+//        return false;
+//    }
+//
+//    if (messageTimeToSim(this->currentData.time).count() == simulationTime) {
+//        return true;
+//    }
+//
+//
+//    while (!this->data.empty() && messageTimeToSim(this->data.front().time).count() <= simulationTime) {
+//
+//        this->currentData.merge(this->data.front());
+//        this->data.pop_front();
+//
+//    }
+//
+//
+//    DataPoint newMessage;
+//    bool timeoutOccurred = false;
+//
+//    while (readMessage(&newMessage, this->communicationTimeout, &timeoutOccurred)) {
+//        auto msgSimTime = messageTimeToSim(newMessage.time).count();
+//
+//        if (msgSimTime > simulationTime) {
+//
+//            //ok this message is for the future.
+//            //queue current read message for newt step
+//            DataPoint tmp;
+//
+//            tmp = newMessage;
+//            this->data.push_back(tmp);
+//            //Stop reading messages and leave them queue on the queue outside this program
+//            break;
+//        } else {
+//            //ok the message defined the values for this step so merge it
+//            this->currentData.merge(newMessage);
+//        }
+//    }
+
+
+//    FmuContainer_LOG(fmi2OK, "logAll", "Step time %.0f [ms] data time %lld [ms]", simulationTime,
+//                     messageTimeToSim(this->currentData.time).count());
+//
+//    /*the current state is only valid if we have a next message with a timestamp that is after simulationTime.
+//     * Then we know that the current values are valid until after the simulation time and we can safely use these*/
+//    return !timeoutOccurred && (messageTimeToSim(this->currentData.time).count() == simulationTime ||
+//                                (messageTimeToSim(currentData.time).count() < simulationTime && !this->data.empty() &&
+//                                 messageTimeToSim(this->data.front().time).count() > simulationTime));
 }
 
 /*####################################################
@@ -303,7 +439,7 @@ bool FmuContainer::fmi2GetMaxStepsize(fmi2Real *size) {
 bool FmuContainer::getBoolean(const fmi2ValueReference *vr, size_t nvr, fmi2Boolean *value) {
     try {
         for (int i = 0; i < nvr; i++) {
-            value[i] = this->currentData.booleanValues.at(vr[i]);
+            value[i] = this->core->getData().at(vr[i]).second.b.b;
         }
 
         return true;
@@ -316,7 +452,7 @@ bool FmuContainer::getBoolean(const fmi2ValueReference *vr, size_t nvr, fmi2Bool
 bool FmuContainer::getInteger(const fmi2ValueReference *vr, size_t nvr, fmi2Integer *value) {
     try {
         for (int i = 0; i < nvr; i++) {
-            value[i] = this->currentData.integerValues.at(vr[i]);
+            value[i] = this->core->getData().at(vr[i]).second.i.i;
         }
 
         return true;
@@ -329,7 +465,7 @@ bool FmuContainer::getInteger(const fmi2ValueReference *vr, size_t nvr, fmi2Inte
 bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *value) {
     try {
         for (int i = 0; i < nvr; i++) {
-            value[i] = this->currentData.doubleValues.at(vr[i]);
+            value[i] = this->core->getData().at(vr[i]).second.d.d;
         }
 
         return true;
@@ -342,7 +478,7 @@ bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *v
 bool FmuContainer::getString(const fmi2ValueReference *vr, size_t nvr, fmi2String *value) {
     try {
         for (int i = 0; i < nvr; i++) {
-            value[i] = this->currentData.stringValues.at(vr[i]).c_str();
+            value[i] = this->core->getData().at(vr[i]).second.s.s.c_str();
         }
 
         return true;
