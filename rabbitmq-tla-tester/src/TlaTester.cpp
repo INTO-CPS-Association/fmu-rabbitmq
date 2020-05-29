@@ -5,27 +5,14 @@
 #include <vector>
 #include <fstream>
 
-
-#include <filesystem>
-
-
 #include <algorithm>
-
 #include "rapidjson/document.h"
-#include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-
-#include <iostream>
-
 #include "FmuContainerCore.h"
-
-
-#include <iostream>
-
 #include "date/date.h"
+#include <dirent.h>
 
 
-namespace fs = std::filesystem;
 
 using namespace std;
 using namespace rapidjson;
@@ -476,7 +463,23 @@ int main(int argc, char **argv) {
         if (verbose) {
             cout << "Searching for tests in path: " << searchPath << endl;
         }
-        for (const auto &entry : fs::directory_iterator(searchPath)) {
+
+        DIR *dir;
+        struct dirent *ent;
+        if ((dir = opendir (searchPath.c_str())) != NULL) {
+            /* print all the files and directories within directory */
+            while ((ent = readdir (dir)) != NULL) {
+//                printf ("%s\n", ent->d_name);
+                testFiles.push_back(ent->d_name);
+            }
+            closedir (dir);
+        } else {
+            /* could not open directory */
+            perror ("");
+            return EXIT_FAILURE;
+        }
+
+      /*  for (const auto &entry : fs::directory_iterator(searchPath)) {
             auto fn = entry.path().generic_string();
             if (fn.substr(fn.find_last_of(".") + 1) == "json") {
                 if (verbose) {
@@ -485,7 +488,7 @@ int main(int argc, char **argv) {
                 testFiles.push_back(fn);
 
             }
-        }
+        }*/
     }
     if (verbose) {
         cout << "Testing..." << endl;
