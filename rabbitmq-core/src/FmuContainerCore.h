@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include <ctime>
+#include <iostream>
 
 using namespace std;
 
@@ -49,7 +50,7 @@ union ScalarVariableBaseValue {
 
     ScalarVariableBaseValue(std::string s) : s{TU_STRING, std::move(s)} {}
 
-    ScalarVariableBaseValue(ScalarVariableBaseValue const &other) {
+    ScalarVariableBaseValue(const ScalarVariableBaseValue &other) {
         // This is safe.
         switch (other.i.type) {
             case TU_INT:
@@ -67,22 +68,28 @@ union ScalarVariableBaseValue {
         }
     }
 
-    inline bool operator!=( const ScalarVariableBaseValue& rhs) const { return !(this == &rhs); }
 
-    bool operator==(const ScalarVariableBaseValue& other) const
-    {
+    inline bool operator!=(const ScalarVariableBaseValue &rhs) const { return !(this == &rhs); }
+
+    bool operator==(const ScalarVariableBaseValue &other) const {
         // This is safe.
         switch (other.i.type) {
             case TU_INT:
-                return this->i.i==other.i.i;
+                return this->i.i == other.i.i;
             case TU_BOOL:
-                return this->b.b==other.b.b;
+                return this->b.b == other.b.b;
             case TU_DOUBLE:
-                return this->d.d==other.d.d;
+                return this->d.d == other.d.d;
             case TU_STRING:
-                return this->s.s==other.s.s;
+                return this->s.s == other.s.s;
         }
         return false;
+    }
+
+    ScalarVariableBaseValue &operator=(const ScalarVariableBaseValue &other) // copy assignment
+    {
+        printf("Assign\n");
+        return *this;
     }
 
     ~ScalarVariableBaseValue() {
@@ -90,6 +97,21 @@ union ScalarVariableBaseValue {
         if (TU_STRING == s.type) {
             s.~s_type();
         }
+    }
+
+
+    friend ostream &operator<<(ostream &os, const ScalarVariableBaseValue &c) {
+        switch (c.i.type) {
+            case TU_INT:
+                os << c.i.i;
+            case TU_BOOL:
+                os << c.b.b;
+            case TU_DOUBLE:
+                os << c.d.d;
+            case TU_STRING:
+                os << c.s.s;
+        }
+        return os;
     }
 };
 
@@ -100,7 +122,7 @@ public:
     typedef pair<date::sys_time<std::chrono::milliseconds>, ScalarVariableBaseValue> TimedScalarBasicValue;
     typedef unsigned int ScalarVariableId;
 
-    FmuContainerCore( std::chrono::milliseconds maxAge,
+    FmuContainerCore(std::chrono::milliseconds maxAge,
                      std::map<ScalarVariableId, int> lookAhead);
 
     void add(ScalarVariableId id, TimedScalarBasicValue value);
@@ -110,7 +132,12 @@ public:
     bool initialize();
 
     std::map<ScalarVariableId, TimedScalarBasicValue> getData();
+
     date::sys_time<std::chrono::milliseconds> getStartOffsetTime();
+
+    void setVerbose(bool verbose);
+
+    friend ostream &operator<<(ostream &os, const FmuContainerCore &c);
 
 protected:
 
@@ -126,6 +153,8 @@ protected:
     std::map<ScalarVariableId, int> lookahead;
     std::chrono::milliseconds maxAge;
 private:
+
+    bool verbose;
 
     std::chrono::milliseconds messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime);
 

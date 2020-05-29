@@ -33,6 +33,9 @@ using namespace date;
 
 namespace tla {
 
+    static bool verbose = false;
+    static bool verbose2 = false;
+
 //    static bool operator==(const pair<date::sys_time<std::chrono::milliseconds>, ScalarVariableBaseValue>& a1, const pair<date::sys_time<std::chrono::milliseconds>, ScalarVariableBaseValue>& a2) {
 //        return false;
 //    }
@@ -98,7 +101,7 @@ namespace tla {
             this->startOffsetTime = startOffsetTime;
         }
 
-        void showValue(const char *prefix, FmuContainerCore::TimedScalarBasicValue val) {
+        static void showValue(const char *prefix, FmuContainerCore::TimedScalarBasicValue val) {
             cout << prefix << "Time: " << val.first.time_since_epoch().count() << " Value: ";
 
             switch (val.second.b.type) {
@@ -151,12 +154,25 @@ namespace tla {
             return maxAge;
         }
 
+        static void showData(std::map<ScalarVariableId, TimedScalarBasicValue> currentData, const char *tag = "") {
+            cout << "Data: " << tag << "                " << endl;
+            for (auto &pair: currentData) {
+                cout << "\tId: " << pair.first;
+
+                showValue(" ", pair.second);
+
+
+            }
+            cout << endl;
+        }
 
         void show(const char *tag) {
+            date::sys_time<std::chrono::milliseconds> valueTimeZero;
             cout << "------------------------------ INFO " << tag << "------------------------------" << endl;
             cout << "Max age:              " << this->maxAge << endl;
-            cout << "StartTime:            " << this->startOffsetTime << endl;
-            cout << "Lookahead ids:        [";
+            cout << "StartTime:            " << this->startOffsetTime << " ( "
+                 << (this->startOffsetTime - valueTimeZero).count() << " )" << endl;
+            cout << "Lookahead ids:        [ ";
             for (auto &id:lookahead) {
                 cout << id.first << "->" << id.second << " ";
             }
@@ -179,15 +195,7 @@ namespace tla {
                 }
             }
 
-            cout << "Data:                 " << endl;
-            for (auto &pair: currentData) {
-                cout << "\tId: " << pair.first;
-
-                showValue(" ", pair.second);
-
-
-            }
-            cout << endl;
+            showData(currentData);
 //            cout << "------------------------------------------------------------------" << endl;
         }
     };
@@ -196,6 +204,10 @@ namespace tla {
     parseQueueValues(Value &doc, const char *queueName) {
         std::map<FmuContainerCore::ScalarVariableId, list<FmuContainerCore::TimedScalarBasicValue>> lookahead;
         date::sys_time<std::chrono::milliseconds> valueTimeZero;
+
+        if (verbose) {
+            cout << queueName << endl;
+        }
 
 //        cout << "Parsing " << queueName << endl;
         if (doc.HasMember(queueName)) {
@@ -210,13 +222,25 @@ namespace tla {
 
                 unsigned int key = 0;
                 keyStream >> key;
-
-                cout << key << endl;
+                if (verbose) {
+                    cout << "Key " << key << endl;
+                }
 
 //                list<FmuContainerCore::TimedScalarBasicValue> list;
+
                 for (auto &val: itr->value.GetArray()) {
-                    lookahead[key].push_front(
-                            std::make_pair(valueTimeZero + std::chrono::milliseconds(val.GetInt()), val.GetInt()));
+
+                    if (val.IsArray() && val.GetInt() == 2) {
+
+                        if (verbose) {
+                            cout << "\t(" << val.GetArray()[0].GetInt() << " , " << val.GetArray()[1].GetInt() << " )"
+                                 << endl;
+                        }
+
+                        lookahead[key].push_back(
+                                std::make_pair(valueTimeZero + std::chrono::milliseconds(val.GetArray()[0].GetInt()),
+                                               val.GetArray()[1].GetInt()));
+                    }
                 }
 
                 //  lookahead[key] = list;
@@ -224,6 +248,57 @@ namespace tla {
 
         }
         return lookahead;
+    }
+
+    std::map<FmuContainerCore::ScalarVariableId, FmuContainerCore::TimedScalarBasicValue>
+    parseCurrentValues(Value &doc, const char *queueName) {
+        std::map<FmuContainerCore::ScalarVariableId, FmuContainerCore::TimedScalarBasicValue> currenntData;
+        date::sys_time<std::chrono::milliseconds> valueTimeZero;
+
+        if (verbose) {
+            cout << queueName << endl;
+        }
+
+//        cout << "Parsing " << queueName << endl;
+        if (doc.HasMember(queueName)) {
+            auto &lookaheadVal = doc[queueName];
+
+            for (Value::ConstMemberIterator itr = lookaheadVal.MemberBegin();
+                 itr != lookaheadVal.MemberEnd(); ++itr) {
+
+                auto keyStr = itr->name.GetString();
+
+                stringstream keyStream(keyStr);
+
+                unsigned int key = 0;
+                keyStream >> key;
+                if (verbose) {
+                    cout << "Key " << key << endl;
+                }
+//                list<FmuContainerCore::TimedScalarBasicValue> list;
+                auto &val = itr->value;
+
+
+                if (val.IsArray() && val.GetInt() == 2) {
+
+                    if (verbose) {
+                        cout << "\t(" << val.GetArray()[0].GetInt() << " , " << val.GetArray()[1].GetInt() << " )"
+                             << endl;
+                    }
+
+                    auto f = std::make_pair(valueTimeZero + std::chrono::milliseconds(val.GetArray()[0].GetInt()),
+                                            ScalarVariableBaseValue((int) val.GetArray()[1].GetInt()));
+//                    currenntData.
+//                    currenntData.at(key).first = f.first;
+                    currenntData.insert(std::make_pair(key, f));
+                }
+
+
+                //  lookahead[key] = list;
+            }
+
+        }
+        return currenntData;
     }
 
     FmuContainerCoreTestProxy::State createState(Value &doc) {
@@ -257,25 +332,35 @@ namespace tla {
                 .maxAge=std::chrono::milliseconds(doc["maxAge"].GetInt()),
                 .lookahead=lookahead,
                 .incomingUnprocessed=parseQueueValues(doc, "incomingUnprocessed"),
-                .incomingLookahead=parseQueueValues(doc, "incomingLookahead")
-
+                .incomingLookahead=parseQueueValues(doc, "incomingLookahead"),
+                .currentData=parseCurrentValues(doc,
+                                                "currentData"),
+                .startOffsetTime =valueTimeZero + std::chrono::milliseconds(doc["startOffsetTime"].GetInt())
         };
 
         return pre;
     }
 
-    bool check(FmuContainerCoreTestProxy &fcc, FmuContainerCoreTestProxy::State &post) {
-        if (post.currentData != fcc.getData()) {
-            cout << "Current state does not match" << endl;
+    bool check(FmuContainerCoreTestProxy &fcc, FmuContainerCoreTestProxy::State &post, bool blocked) {
+        if (!blocked && post.currentData != fcc.getData()) {
+
+            if (verbose) {
+                cerr << "Current state does not match" << endl;
+
+                FmuContainerCoreTestProxy::showData(fcc.getData(), "Actual");
+                FmuContainerCoreTestProxy::showData(post.currentData, "Expected");
+            }
             return false;
-        } else if (post.lookahead != fcc.getLookahead()) {
-            cout << "lookahead does not match" << endl;
+        }/* else if (post.lookahead != fcc.getLookahead()) {
+            cerr << "lookahead does not match" << endl;
             return false;
-        } else if (post.incomingLookahead != fcc.getIncomingLookahead()) {
-            cout << "incomingLookahead does not match" << endl;
+        }*//* else if (!blocked && post.incomingLookahead != fcc.getIncomingLookahead()) {
+            cerr << "incomingLookahead does not match" << endl;
             return false;
-        } else if (post.incomingUnprocessed != fcc.getIncomingUnprocessed()) {
-            cout << "incomingUnprocessed does not match" << endl;
+        }*/ else if (post.incomingUnprocessed != fcc.getIncomingUnprocessed()) {
+            if (verbose) {
+                cerr << "incomingUnprocessed does not match" << endl;
+            }
             return false;
         }
         return true;
@@ -296,15 +381,20 @@ namespace tla {
         Value &pre = doc["pre"];
         Value &post = doc["post"];
 
-        cout << "\t##  Meta:" << meta.GetString() << endl;
-        cout << "\t##  Action: " << action.GetString() << endl;
+        if (verbose) {
+            cout << "\t##  Meta:" << meta.GetString() << endl;
+            cout << "\t##  Action: " << action.GetString() << endl;
+        }
 
         auto preState = createState(pre);
         auto postState = createState(post);
 
         FmuContainerCoreTestProxy fcc(preState);
+        fcc.setVerbose(verbose2);
 //        cout << "######################## PRE  ########################" << endl;
-        fcc.show("PRE ");
+        if (verbose) {
+            fcc.show("PRE ");
+        }
 
         cout << ">> " << action.GetString() << endl;
 
@@ -312,19 +402,38 @@ namespace tla {
 
         if (string("dostep") == action.GetString()) {
 
-            //FIXME what time?
-            res = fcc.process(0);
+            //auto h =  pre["H"].GetInt()+pre["node"].GetObject()["fmu_state_time"].GetInt()-pre["startOffsetTime"].GetInt();//(post["H"].GetInt()-
+
+            auto h = (post["node"].GetObject()["fmu_state_time"].GetInt() -
+                      pre["node"].GetObject()["fmu_state_time"].GetInt()) +
+                     (pre["node"].GetObject()["fmu_state_time"].GetInt() - pre["startOffsetTime"].GetInt());
+
+            if (verbose) {
+                cout << "STEP H " << h << endl;
+            }
+//            date::sys_time<std::chrono::milliseconds> valueTimeZero;
+//
+//            auto stepTime = valueTimeZero + std::chrono::milliseconds(h);
+
+            res = fcc.process(h);
+            if (verbose) {
+                cout << "DoStep Result = " << res << endl;
+
+            }
+            res = !post["blocked"].GetBool() == res;
         } else if (string("initialize").compare(action.GetString()) == 0) {
             res = fcc.initialize();
+            if (verbose) {
+                cout << "Initiialized: " << res << endl;
+            }
+            //!blocked &&initialized
+
+            res = (!post["blocked"].GetBool() && post["initialized"].GetBool()) == res;
         }
-
-
-        fcc.show("POST ");
-
-        return post["fmuInitialized"].GetBool() == res;
-
-        return check(fcc, postState);
-
+        if (verbose) {
+            fcc.show("POST ");
+        }
+        return check(fcc, postState, post["blocked"].GetBool()) && res;
 
     }
 
@@ -332,6 +441,7 @@ namespace tla {
 }
 
 using namespace tla;
+
 
 int main(int argc, char **argv) {
     cout << "tla" << endl;
@@ -344,34 +454,51 @@ int main(int argc, char **argv) {
         cout << " -h     help" << endl;
         cout << " -s     path to a folder containing *json test files" << endl;
         cout << " -t     path to a single test *.json file" << endl;
+        cout << " -v     verbose" << endl;
+        cout << " -vv    more verbose" << endl;
         return 0;
     }
+
+    verbose = input.cmdOptionExists("-v");
+    verbose2 = input.cmdOptionExists("-vv");
+    verbose = verbose || verbose2;
+
     const std::string &filename = input.getCmdOption("-t");
     if (!filename.empty()) {
-        cout << "Adding test: " << filename << endl;
+        if (verbose) {
+            cout << "Adding test: " << filename << endl;
+        }
         testFiles.push_back(filename);
     }
 
     const std::string &searchPath = input.getCmdOption("-s");
     if (!searchPath.empty()) {
-        cout << "Searching for tests in path: " << searchPath << endl;
+        if (verbose) {
+            cout << "Searching for tests in path: " << searchPath << endl;
+        }
         for (const auto &entry : fs::directory_iterator(searchPath)) {
             auto fn = entry.path().generic_string();
             if (fn.substr(fn.find_last_of(".") + 1) == "json") {
-                cout << "Adding test: " << fn << endl;
+                if (verbose) {
+                    cout << "Adding test: " << fn << endl;
+                }
                 testFiles.push_back(fn);
 
             }
         }
     }
+    if (verbose) {
+        cout << "Testing..." << endl;
+    }
+    int failures = 0;
 
-    cout << "Testing..." << endl;
 
     for (auto &path:testFiles) {
 
-        cout << "############################## " << path << " ##############################" << endl;
-        cout << "\t## Test" << path << endl;
-
+        //cout << "############################## " << path << " ##############################" << endl;
+        if (verbose) {
+            cout << "\t## Test: " << path << endl;
+        }
         ifstream f(path.c_str());
         if (!f.good()) {
             cout << "\t##  " << " File does not exist" << endl;
@@ -385,12 +512,26 @@ int main(int argc, char **argv) {
 
         Document d;
         d.Parse(str.c_str());
-        if (processTest(d)) {
-            cout << "\t##  " << " PASSED" << endl;
+        auto verdict = processTest(d);
+
+
+        if (!verbose) {
+            cout << path << " ->";
         } else {
-            cout << "\t##  " << " FAIL" << endl;
+            cout << "\t##  ";
         }
+
+        if (verdict) {
+            cout << " PASSED" << endl;
+        } else {
+            cout << " FAIL" << endl;
+
+            failures++;
+        }
+
     }
+
+    cout << "Summery Tests: " << testFiles.size() << " Failures: " << failures << endl;
 
     return 0;
 }

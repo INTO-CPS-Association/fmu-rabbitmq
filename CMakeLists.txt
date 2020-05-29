@@ -75,6 +75,8 @@ add_subdirectory(thirdparty/googletest)
 #set(BUILD_TOOLS_DOCS OFF CACHE BOOL "" FORCE)
 add_subdirectory(thirdparty/rabbitmq-c)
 add_subdirectory(thirdparty/date)
+add_subdirectory(rabbitmq-core)
+add_subdirectory(rabbitmq-tla-tester)
 add_subdirectory(rabbitmq-fmu)
 
 
