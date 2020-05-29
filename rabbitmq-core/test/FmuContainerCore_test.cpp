@@ -193,7 +193,8 @@ namespace {
     }
 
     void
-    checkStep(FmuContainerCoreTestProxy::State pre, FmuContainerCoreTestProxy::State post,double time, bool expectStepOk) {
+    checkStep(FmuContainerCoreTestProxy::State pre, FmuContainerCoreTestProxy::State post, double time,
+              bool expectStepOk) {
 
         FmuContainerCoreTestProxy c(pre);
         c.setVerbose(true);
@@ -224,7 +225,6 @@ namespace {
     }
 
 
-
     TEST(FmuContainerCore, Initialize1
     ) {
         int sv1 = 1;
@@ -242,10 +242,13 @@ namespace {
         FmuContainerCoreTestProxy::State post = {
                 .maxAge=std::chrono::milliseconds(0),
                 .lookahead={{sv1, 1}},
+                .incomingUnprocessed={},
+                .incomingLookahead={},
                 .currentData = {{sv1, std::make_pair(valueTimeZero + std::chrono::milliseconds(0), 1)}}
 
 
         };
+
 
         checkInitialize(pre, post, true);
     }
@@ -355,6 +358,7 @@ namespace {
                 .lookahead={{sv0, 1},
                             {sv1, 2}},
                 .incomingUnprocessed={{sv0, {V(2, 2)}}},
+                .incomingLookahead={},
 //                .incomingLookahead={
 //                    { sv0, {V(1, 1)}},
 //                    { sv1, {V(2, 2)}}
@@ -374,6 +378,8 @@ namespace {
                 .maxAge=std::chrono::milliseconds(1),
                 .lookahead={{sv0, 1},
                             {sv1, 2}},
+                .incomingUnprocessed={},
+                .incomingLookahead={},
 //                .incomingUnprocessed={{sv0, {V(2, 2)}}},
 //                .incomingLookahead={
 //                    { sv0, {V(1, 1)}},
@@ -388,6 +394,7 @@ namespace {
 
         };
 
-        checkStep(post, postDoStep,1,true);
+
+        checkStep(post, postDoStep, 1, true);
     }
 }
