@@ -76,7 +76,9 @@ add_subdirectory(thirdparty/googletest)
 add_subdirectory(thirdparty/rabbitmq-c)
 add_subdirectory(thirdparty/date)
 add_subdirectory(rabbitmq-core)
+if (APPLE)
 add_subdirectory(rabbitmq-tla-tester)
+endif()
 add_subdirectory(rabbitmq-fmu)
 
 
