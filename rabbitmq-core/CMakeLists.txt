@@ -35,7 +35,7 @@ file(GLOB C_FILES src/*.c)
 #target_link_libraries(${PROJECT_NAME}-tla XercesC::XercesC rabbitmq-static tz)
 
 
-add_library(rabbitmq-core SHARED ${C_FILES} ${CPP_FILES})
+add_library(rabbitmq-core STATIC ${C_FILES} ${CPP_FILES})
 target_link_libraries(rabbitmq-core tz)
 set_target_properties(rabbitmq-core
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
