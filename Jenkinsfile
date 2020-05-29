@@ -43,11 +43,16 @@ pipeline {
                     }
                 }
 
-                stage('Xcompile win64') {
+                stage('Xcompile win32') {
                     steps {
-                        sh "./scripts/win64_build.sh"
+                        sh "./scripts/win32_build.sh"
                     }
                 }
+                 stage('Xcompile win64') {
+                    steps {
+                        sh "./scripts/win64_build.sh"
+                     }
+                 }
             }
         }
 
