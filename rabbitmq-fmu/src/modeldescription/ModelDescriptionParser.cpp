@@ -147,6 +147,7 @@ map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::par
                     }
 
                     sv.type = type;
+                    sv.output = isOutput;
 
                     if (isOutput) {
                         //set default values
@@ -228,19 +229,15 @@ DataPoint ModelDescriptionParser::extractDataPoint(map <string, ScalarVariable> 
 
         switch (sv.type) {
             case SvType::Integer:
-//                cout << sv.valueReference << "->" << sv.i_value << endl;
                 dp.integerValues[sv.valueReference] = sv.i_value;
                 break;
             case SvType::Real:
-//                cout << sv.valueReference << "->" << sv.d_value << endl;
                 dp.doubleValues[sv.valueReference] = sv.d_value;
                 break;
             case SvType::Boolean:
-//                cout << sv.valueReference << "->" << sv.b_value << endl;
                 dp.booleanValues[sv.valueReference] = sv.b_value;
                 break;
             case SvType::String:
-//                cout << sv.valueReference << "->" << sv.s_value << endl;
                 dp.stringValues[sv.valueReference] = sv.s_value;
                 break;
         }

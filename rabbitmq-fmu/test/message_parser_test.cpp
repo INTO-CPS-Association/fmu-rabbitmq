@@ -15,16 +15,16 @@ namespace {
 
 
         for (auto &it : dp.doubleValues) {
-            cout <<"Double " <<it.first << " = " << it.second << endl;
+            cout << "Double " << it.first << " = " << it.second << endl;
         }
         for (auto &it : dp.integerValues) {
-            cout <<"Int     "<< it.first << " = " << it.second << endl;
+            cout << "Int     " << it.first << " = " << it.second << endl;
         }
         for (auto &it : dp.booleanValues) {
-            cout<<"Bool   " << it.first << " = " << it.second << endl;
+            cout << "Bool   " << it.first << " = " << it.second << endl;
         }
         for (auto &it : dp.stringValues) {
-            cout <<"String "<< it.first << " = " << it.second << endl;
+            cout << "String " << it.first << " = " << it.second << endl;
         }
 
         cout << "###################################" << endl;
@@ -46,8 +46,8 @@ namespace {
 
         auto json = buffer.str().c_str();
 
-
-        auto dp = messageParser.parse(&svs, json);
+        DataPoint dp;
+        auto success = messageParser.parse(&svs, json, &dp);
 
         printDataPoint(dp);
 

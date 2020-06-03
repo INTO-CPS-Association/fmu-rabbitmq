@@ -15,19 +15,27 @@ using namespace rapidjson;
 using SvType = ModelDescriptionParser::ScalarVariable::SvType;
 
 
-DataPoint
-MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameToValueReference, const char *json) {
+bool
+MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameToValueReference, const char *json,
+                     DataPoint *output) {
 
     DataPoint result;
 
 
     Document d;
     d.Parse(json);
+    bool hasData = false;
+
     for (Value::ConstMemberIterator itr = d.MemberBegin();
          itr != d.MemberEnd(); ++itr) {
         auto memberName = itr->name.GetString();
 
-        if (std::string("time").compare(memberName) == 0 && d["time"].IsString()) {
+        if(string(memberName).rfind("internal_",0)==0)
+        {
+            continue;
+        }
+
+        if (std::string("time") == memberName && d["time"].IsString()) {
             const char *timeString = d["time"].GetString();
 
             result.time = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
@@ -38,6 +46,7 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
                 // not found
                 cout << "Input data contains unknown member " << memberName << endl;
             } else {
+                hasData = true;
                 auto sv = (*nameToValueReference)[memberName];
 
                 switch (sv.type) {
@@ -60,6 +69,10 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 
         }
     }
-    return result;
+     *output = result;
+
+   return hasData && d.HasMember("time");
+
+
 
 }

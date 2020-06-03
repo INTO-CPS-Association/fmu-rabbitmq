@@ -35,17 +35,17 @@ build_xercersc()
  $1 make -C$2 install
 }
 
-if [ ! -d thirdparty/external/$install_name ]
+if [ ! -d build/external/$install_name ]
 then
 
-build_xercersc $script $working_dir/xerces-c thirdparty/external/$install_name
+build_xercersc $script $working_dir/xerces-c build/external/$install_name
 else
 echo "Dependency already generated"
 fi
 
 
 echo Running CMake
-
+rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
 ./$script cmake -B$working_dir -H.
 
 echo Compiling

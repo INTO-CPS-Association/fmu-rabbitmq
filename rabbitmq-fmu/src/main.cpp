@@ -16,6 +16,21 @@
 
 #include "modeldescription/ModelDescriptionParser.h"
 
+#include "fmi2Functions.h"
+
+
+#include <stdio.h>  /* defines FILENAME_MAX */
+
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+
+#include <unistd.h>
+
+#define GetCurrentDir getcwd
+#endif
+
 using namespace std;
 using SvType = ModelDescriptionParser::ScalarVariable::SvType;
 using namespace rapidjson;
@@ -44,8 +59,7 @@ std::time_t ParseISO8601(const std::string &input) {
     return timegm(&time) * 1000 + millis;
 }
 
-void testMd()
-{
+void testMd() {
     ModelDescriptionParser parser;
     auto map = parser.parse(string("modelDescription.xml"));
 
@@ -71,11 +85,118 @@ void testMd()
     }
 }
 
+void showStatus(const char *what, fmi2Status status) {
+    const char **statuses = new const char *[6]{"ok", "warning", "discard", "error", "fatal", "pending"};
+    cout << "Executed '" << what << "' with status '" << statuses[status] << "'" << endl;
+
+    if (status != fmi2OK) {
+        throw status;
+    }
+}
+
 int main() {
     {
+        cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
-     testMd();
-     return 0;
+
+        char cCurrentPath[FILENAME_MAX];
+
+        if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+            return 1;
+        }
+
+        cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
+
+
+        cout << "Working directory is " << cCurrentPath << endl;
+
+        fmi2String instanceName = "rabbitmq";
+        fmi2Type fmuType = fmi2CoSimulation;
+        fmi2String fmuGUID = "63ba49fe-07d3-402c-b9db-2df495167424";
+        string currentUri = (string("file://") + string(cCurrentPath));
+        fmi2String fmuResourceLocation = currentUri.c_str();
+        const fmi2CallbackFunctions *functions = nullptr;
+        fmi2Boolean visible = false;
+        fmi2Boolean loggingOn = false;
+
+
+        auto c = fmi2Instantiate(
+                instanceName,
+                fmuType, fmuGUID,
+                fmuResourceLocation,
+                functions,
+                visible,
+                loggingOn);
+
+        try {
+            fmi2Boolean toleranceDefined = false;
+            fmi2Real tolerance = 0;
+            fmi2Real startTime = 0;
+            fmi2Boolean stopTimeDefined = true;
+            fmi2Real stopTime = true;
+
+            showStatus("fmi2SetupExperiment", fmi2SetupExperiment(
+                    c, toleranceDefined, tolerance,
+                    startTime, stopTimeDefined, stopTime));
+
+#define RABBITMQ_FMU_HOSTNAME_ID 0
+#define RABBITMQ_FMU_PORT 1
+#define RABBITMQ_FMU_USER 2
+#define RABBITMQ_FMU_PWD 3
+#define RABBITMQ_FMU_ROUTING_KEY 4
+#define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
+#define RABBITMQ_FMU_PRECISION 6
+
+            fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
+                                          RABBITMQ_FMU_PORT};
+            int intVals[] = {60, 10, 5672};
+            fmi2SetInteger(c, vrefs, 3, intVals);
+
+
+            fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
+                                                RABBITMQ_FMU_ROUTING_KEY};
+            const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"};
+            fmi2SetString(c, vrefsString, 4, stringVals);
+
+            showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
+            showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
+
+            cout << "Initialization one"<<endl;
+
+#define RABBITMQ_FMU_LEVEL 20
+
+            size_t nvr = 1;
+            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL};
+            fmi2Real *value = new fmi2Real[nvr];
+
+            showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
+            for (int i = 0; i < nvr; i++) {
+                cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+            }
+
+
+            fmi2Real currentCommunicationPoint = 0;
+            fmi2Real communicationStepSize = 10;
+            fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
+
+
+            showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
+                                                noSetFMUStatePriorToCurrentPoint));
+
+            showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
+            for (int i = 0; i < nvr; i++) {
+                cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+            }
+
+
+//        fmi2Terminate(fmi2Component c)
+        } catch (const char *status) {
+            cout << "Error " << status << endl;
+        }
+        fmi2FreeInstance(c);
+//
+//     testMd();
+//     return 0;
 
         // 1. Parse a JSON string into DOM.
         const char *json = "{\"project\":\"rapidjson\",\"stars\":10}";

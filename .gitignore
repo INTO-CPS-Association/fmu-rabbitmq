@@ -1,3 +1,25 @@
+
+# Apple stuff
+*DS_Store
+
+## Maven ##
+target/
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+
+src/main/resources/*.json
+
+*.log
+*.log.*
+*.dot
+
 bin
 build
 thirdparty/external

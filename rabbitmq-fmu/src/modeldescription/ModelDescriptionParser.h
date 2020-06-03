@@ -23,6 +23,7 @@ public:
         string name;
         unsigned int valueReference;
         enum SvType{Real,Integer,Boolean,String};
+        bool output;
         SvType type;
         union {
             double d_value;
