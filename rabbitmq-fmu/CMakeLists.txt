@@ -6,48 +6,20 @@ include(CheckCXXCompilerFlag)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
 
-if (COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
-else ()
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif ()
-
-
-#CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-#CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 #if (COMPILER_SUPPORTS_CXX11)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#elseif (COMPILER_SUPPORTS_CXX0X)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+#
 #else ()
 #    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 #endif ()
 
-
-#add_definitions(-DSOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
-
-#set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-pthread")
-
-
-#get_cmake_property(_variableNames VARIABLES)
-#list (SORT _variableNames)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
-
-#add_dependencies(rapidjson)
-#include_directories(${libshmfmu_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/fmi/include)
 include_directories(${RapidJSON_SOURCE_DIR}/include)
 include_directories(${gtest_SOURCE_DIR}/include)
-#include_directories(${LIBRABBITMQ_INCLUDE_DIRS})
-#target_link_libraries(${PROJECT_NAME} libshmfmu_static)
-#target_link_libraries(${PROJECT_NAME} ${libshmfmu_LIBS})
 
 
 #if (UNIX)
@@ -80,14 +52,16 @@ endif ()
 
 
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
+list(FILTER CPP_FILES EXCLUDE REGEX "main.cpp")
 file(GLOB C_FILES src/*.c)
 
-add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES})
-target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz)
+# Main
+add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
+target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
 
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
-target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz)
+target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 set_target_properties(rabbitmq
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(rabbitmq PROPERTIES PREFIX "")
@@ -141,12 +115,12 @@ file(GLOB CPP_TEST_FILES test/*.cpp)
 list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
 
 add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz)
+target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
 if (WIN32)
-    add_test(unit-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
+    add_test(NAME unit-test-${PROJECT_NAME} COMMAND wine unit-test-${PROJECT_NAME}   --gtest_output=xml:gtestresults.xml)
 else ()
-    add_test(unit-test-${PROJECT_NAME} ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
+    add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}  --gtest_output=xml:gtestresults.xml)
 endif ()
 
 # ---------------------------- Integration TESTS ------------------------------
@@ -155,7 +129,7 @@ file(GLOB CPP_TEST_FILES test/*.cpp)
 list(FILTER CPP_TEST_FILES INCLUDE REGEX ".*_it.cpp")
 
 add_executable(it-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz)
+target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
 #if (WIN32)
 #    add_test(it-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)

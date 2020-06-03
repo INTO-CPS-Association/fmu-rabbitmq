@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <cmath>
 #include "fmi2Functions.h"
 #include "DataPoint.h"
 #include "modeldescription/ModelDescriptionParser.h"
@@ -16,6 +17,7 @@
 #include <iterator>
 #include "rabbitmq/RabbitmqHandler.h"
 #include "Iso8601TimeParser.h"
+#include "FmuContainerCore.h"
 
 #define RABBITMQ_FMU_HOSTNAME_ID 0
 #define RABBITMQ_FMU_PORT 1
@@ -24,6 +26,8 @@
 #define RABBITMQ_FMU_ROUTING_KEY 4
 #define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
 #define RABBITMQ_FMU_PRECISION 6
+#define RABBITMQ_FMU_MAX_AGE 7
+#define RABBITMQ_FMU_LOOKAHEAD 8
 
 using namespace std;
 
@@ -71,6 +75,9 @@ public:
     bool isLoggingOn();
 
 private:
+
+    FmuContainerCore *core;
+
     date::sys_time<std::chrono::milliseconds> startOffsetTime;
     int communicationTimeout;
 
@@ -81,7 +88,7 @@ private:
 
     RabbitmqHandler *rabbitMqHandler;
 
-    bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
+   // bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
 
     std::chrono::milliseconds messageTimeToSim( date::sys_time<std::chrono::milliseconds> messageTime);
 
@@ -90,6 +97,9 @@ private:
     const bool loggingOn;
 
     unsigned long precision;
+
+
+    bool initializeCoreState();
 
 };
 

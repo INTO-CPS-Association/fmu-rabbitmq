@@ -14,7 +14,7 @@
 
 class MessageParser {
 public :
-   static DataPoint parse(map<string, ModelDescriptionParser::ScalarVariable> *nameToValueReference,const char *json);
+   static bool parse(map<string, ModelDescriptionParser::ScalarVariable> *nameToValueReference,const char *json,  DataPoint* output);
 };
 
 
