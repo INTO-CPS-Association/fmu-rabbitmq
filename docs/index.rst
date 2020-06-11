@@ -14,6 +14,7 @@ Furthermore, it makes it possible to write plugins that can either expand to MaB
    :caption: Table of Contents:
 
    overview
+   data-handling
    plugins
    developer-overview
 
