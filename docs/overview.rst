@@ -11,6 +11,7 @@ It has certain quality attributes related to timeliness of messages and precisio
 The overall approach is depicted in the diagram below.
 
 .. uml::
+
     title Time Handling for a Single Message
     hide footbox
 
