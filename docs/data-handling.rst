@@ -10,6 +10,7 @@ All values from messages with :code:`timestampInSimulationTime` within the time 
 are considered in a step from :code:`currentSimlationTime` to :code:`currentSimulationTime+simulationStepSize`. If a value from a message has a newer timestamp than the value stored in the RabbitMQ FMU Output state, then the output state is updated, thus using *zero-order hold*.
 
 .. uml::
+
     title Time Handling for a Single Message
     hide footbox
 
@@ -64,32 +65,42 @@ SimulatinoTime
 
 
 
+DoStep
+-------
+This section describes the dostep operation of RabbitMQ FMU and provides valuable insights into the operation of RabbitMQ FMU and the meaning of the Quality Attributes. First a few functions are explained before presenting the flow of a DoStep operation.
+
 Functions
----------
-check
-    Returns false if any of the following cases occur for a message\: msg in currentData:
+^^^^^^^^^^
+RabbitMQFMUCore.check
+    Returns false if any of the following cases occur for a message\: msg in currentData\:
+
     - Missing in currentData
     - CurrentData holds a future value\: msg.time > simulationTime
     - CurrentData holds an expired value\: (msg.time + maxAge) < simulationTime
 
-ProcessIncoming
+RabbitMQFMUCore.ProcessIncoming
     - Move lookahead amount of messages per message type from IncomingUnprocessed to IncomingLookahead
     - Sort lookahead according to time
-    - Delete messages in IncomingUnprocessed
 
-ProcessLookahead
+RabbitMQFMUCore.ProcessLookahead
     - Move value from incomingLookahead to currentData if <= simulationTime. Otherwise keep in IncomingLookahead
 
+Flow of DoStep Operation
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. uml::
+
     title DoStep operation
     hide footbox
 
     boundary "Co-simulation Master" as Master
     participant RabbitMQFMUInterface as FMUI
     participant RabbitMQFMUCore as FMUC
+    database "RabbitMQ Server" as server
+
 
     Master -> FMUI: doStep(currentCommunicationTime, communicationStepSize)
-    FMUI -> FMUI: simulationTime = applyPrecision(currentCommunicationTime+communicationStepSize)
+    FMUI -> FMUI: simulationTime = applyPrecision(\ncurrentCommunicationTime+communicationStepSize)
     FMUI -> FMUC: process(simulationTime)
     FMUC -> FMUC: check()
     FMUC -> FMUC: ProcessIncoming()
@@ -98,14 +109,16 @@ ProcessLookahead
     FMUC --> FMUI: processResult
     FMUI -> FMUI: StartTime = Time Now
         loop TimeNow - StartTime < communicationTimeOut
-            FMUI -> Server: ConsumeSingleMessage(&msg)
+            FMUI -> server: ConsumeSingleMessage(&msg)
             alt There is a message
-                Server -> Server: msg = message
-                Server --> FMUI: True
+                server --> FMUI: msg = message; return True
                 FMUI -> FMUC: AddToIncomingUnprocessed(msg)
             else There are no messages
-                Server --> FMUI: False
+                server --> FMUI: False
+            end
             FMUI -> FMUC: processResult = Process() // Described above
             alt processResult == True
             FMUI -> Master: True
+            end
+        end
     FMUI -> Master: False
