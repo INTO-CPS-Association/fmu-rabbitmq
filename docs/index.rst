@@ -3,11 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to INTO-CPS Maestro's documentation!
+Welcome to INTO-CPS RabbitMQ FMU documentation!
 ============================================
-Maestro2 is for specifying and executing co-simulations based on the Functional Mock-up Interface. 
-It features a domain specific language called Mastro Base Language (MaBL) along with a parser and an interpreter. 
-Furthermore, it makes it possible to write plugins that can either expand to MaBL code or execute in the interpreter.
+RabbitMQ FMU is an FMU that can subscribe to a RabbitMQ topic exchange and consume messages, which are then made available  via regular FMI outputs.
 
 .. toctree::
    :maxdepth: 3
@@ -15,17 +13,6 @@ Furthermore, it makes it possible to write plugins that can either expand to MaB
 
    overview
    data-handling
-   plugins
-   developer-overview
-
-
-Plugins
--------
-The following plugins are to be described:
-
-* **Initialize**
-* **Fixed Step**
-* **CSV**
 
 Indices and tables
 ==================

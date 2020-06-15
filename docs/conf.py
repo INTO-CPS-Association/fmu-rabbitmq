@@ -17,12 +17,12 @@ import os
 
 # -- Project information -----------------------------------------------------
 
-project = 'INTO-CPS Maestro'
+project = 'INTO-CPS RabbitMQ FMU'
 copyright = '2020, INTO-CPS Association'
 author = 'INTO-CPS Association'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0.0 Alpha'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
