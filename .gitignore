@@ -72,3 +72,4 @@ _deps
 *.exe
 *.out
 *.app
+/docs/buildDir/
