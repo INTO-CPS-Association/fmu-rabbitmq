@@ -32,7 +32,7 @@ void FmuContainerCore::processIncoming() {
 
         auto id = pair.first;
         if (verbose) {
-            std::cout << "\t --  Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size()
+            cout << "\t --  Incoming unprocessed: id=" << id << " - size=" << pair.second.size()
                       << ": ";
             showL(this->incomingUnprocessed[id]);
             cout << std::endl;
@@ -43,7 +43,7 @@ void FmuContainerCore::processIncoming() {
         }
 
         // read until lookahead or end
-        auto it = this->incomingUnprocessed[id].begin();
+        auto it = pair.second.begin();
         auto c = 0;
         for (int i = 0; i < this->lookahead[id]; i++) {
             it++;
@@ -53,8 +53,8 @@ void FmuContainerCore::processIncoming() {
             std::cout << "\t --  Incoming lookahead  slice  id=: " << id << " - count=" << c << endl;
         }
         //move
-        this->incomingLookahead[id].splice(this->incomingLookahead[id].end(), this->incomingUnprocessed[id],
-                                           this->incomingUnprocessed[id].begin(), it);
+        this->incomingLookahead[id].splice(this->incomingLookahead[id].end(), pair.second,
+                                           pair.second.begin(), it);
 
         //sort
         this->incomingLookahead[id].sort(
@@ -157,7 +157,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                 auto existingValue = this->currentData.find(id);
                 // if the current state does not contain the value or if the new value is newer than the current state value then use the new value
                 if (existingValue == this->currentData.end() ||
-                        existingValue->second.first < timeValue->first) {
+                    existingValue->second.first < timeValue->first) {
                     this->currentData.erase(id);
                     this->currentData.insert(this->currentData.begin(),
                                              std::make_pair(id, std::make_pair(timeValue->first, timeValue->second)));
