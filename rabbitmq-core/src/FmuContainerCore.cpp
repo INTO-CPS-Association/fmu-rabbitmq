@@ -45,7 +45,7 @@ void FmuContainerCore::processIncoming() {
         // read until lookahead or end
         auto it = this->incomingUnprocessed[id].begin();
         auto c = 0;
-        for (int i = 0; i < this->lookahead[id]; i++) {
+        for (int i = 0; i < this->lookahead[id] && it != this->incomingUnprocessed[id].end(); i++) {
             it++;
             c++;
         }
