@@ -103,13 +103,17 @@ union ScalarVariableBaseValue {
     friend ostream &operator<<(ostream &os, const ScalarVariableBaseValue &c) {
         switch (c.i.type) {
             case TU_INT:
-                os << c.i.i;
+                os<<"I" << (int)(c.i.i);
+                break;
             case TU_BOOL:
-                os << c.b.b;
+                os <<"B"<< (bool)(c.b.b);
+                break;
             case TU_DOUBLE:
-                os << c.d.d;
+                os<<"D" << (double)(c.d.d);
+                break;
             case TU_STRING:
-                os << c.s.s;
+                os<<"S" << c.s.s;
+                break;
         }
         return os;
     }
