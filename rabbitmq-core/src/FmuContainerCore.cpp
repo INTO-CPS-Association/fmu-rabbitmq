@@ -154,9 +154,10 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
 
             if (predicate(*timeValue)) {
 
+                auto existingValue = this->currentData.find(id);
                 // if the current state does not contain the value or if the new value is newer than the current state value then use the new value
-                if (this->currentData.find(id) == this->currentData.end() ||
-                    this->currentData[id].first < timeValue->first) {
+                if (existingValue == this->currentData.end() ||
+                        existingValue->second.first < timeValue->first) {
                     this->currentData.erase(id);
                     this->currentData.insert(this->currentData.begin(),
                                              std::make_pair(id, std::make_pair(timeValue->first, timeValue->second)));
