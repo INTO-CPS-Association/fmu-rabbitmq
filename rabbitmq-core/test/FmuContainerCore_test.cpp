@@ -115,25 +115,7 @@ public:
 
 private:
     void showValue(const char *prefix, FmuContainerCore::TimedScalarBasicValue val) {
-        cout << prefix << "Time: " << val.first.time_since_epoch().count() << " Value: ";
-
-        switch (val.second.b.type) {
-            case TU_STRING:
-                cout << val.second.s.s;
-                break;
-            case TU_INT:
-                cout << val.second.i.i;
-                break;
-            case TU_BOOL:
-                cout << val.second.b.b;
-                break;
-            case TU_DOUBLE:
-                cout << val.second.d.d;
-                break;
-
-        }
-
-        cout << endl;
+        cout << prefix << "Time: " << val.first.time_since_epoch().count() << " Value: " << val.second << endl;
     }
 
 };
