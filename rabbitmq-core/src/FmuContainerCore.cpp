@@ -5,8 +5,9 @@
 #include "FmuContainerCore.h"
 
 #include <iostream>
+
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead)
-        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)),verbose(false) {
+        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false) {
 
 
 }
@@ -31,10 +32,12 @@ void FmuContainerCore::processIncoming() {
 
         auto id = pair.first;
         if (verbose) {
-            std::cout << "\t --  Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size() << ": ";
+            std::cout << "\t --  Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size()
+                      << ": ";
             showL(this->incomingUnprocessed[id]);
             cout << std::endl;
-            std::cout << "\t --  Incoming lookahead  : id=" << id << " - size=" << this->incomingLookahead[id].size() << ": ";
+            std::cout << "\t --  Incoming lookahead  : id=" << id << " - size=" << this->incomingLookahead[id].size()
+                      << ": ";
             showL(this->incomingLookahead[id]);
             cout << std::endl;
         }
@@ -58,10 +61,12 @@ void FmuContainerCore::processIncoming() {
                 [](const TimedScalarBasicValue &a, const TimedScalarBasicValue &b) { return a.first < b.first; });
 
         if (verbose) {
-            std::cout << "\t --> Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size() << ": ";
+            std::cout << "\t --> Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size()
+                      << ": ";
             showL(this->incomingUnprocessed[id]);
             cout << std::endl;
-            std::cout << "\t --> Incoming lookahead  : id=" << id << " - size=" << this->incomingLookahead[id].size() << ": ";
+            std::cout << "\t --> Incoming lookahead  : id=" << id << " - size=" << this->incomingLookahead[id].size()
+                      << ": ";
             showL(this->incomingLookahead[id]);
             cout << std::endl << endl;
         }
@@ -76,7 +81,8 @@ void FmuContainerCore::processIncoming() {
         for (auto itr = this->incomingUnprocessed.begin(); itr != this->incomingUnprocessed.end();) {
             auto id = itr->first;
             if (verbose) {
-                std::cout << "\t --  Incoming unprocessed  : id=" << id << " - size=" << this->incomingUnprocessed[id].size()
+                std::cout << "\t --  Incoming unprocessed  : id=" << id << " - size="
+                          << this->incomingUnprocessed[id].size()
                           << ": ";
                 showL(this->incomingUnprocessed[id]);
                 cout << std::endl;
@@ -132,12 +138,10 @@ pair<bool, date::sys_time<std::chrono::milliseconds>> FmuContainerCore::calculat
 template<typename Predicate>
 void FmuContainerCore::processLookahead(Predicate predicate) {
 
-    if(verbose)
-    {
-        cout << "Lookaheads:"<<endl;
-        for(auto &p : this->lookahead)
-        {
-            cout << "\t"<<p.first<<" = "<<p.second<<endl;
+    if (verbose) {
+        cout << "Lookaheads:" << endl;
+        for (auto &p : this->lookahead) {
+            cout << "\t" << p.first << " = " << p.second << endl;
         }
     }
 
@@ -150,12 +154,15 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
 
             if (predicate(*timeValue)) {
 
-                this->currentData.erase(id);
-                this->currentData.insert(this->currentData.begin(),
-                                         std::make_pair(id, std::make_pair(timeValue->first, timeValue->second)));
-                if(verbose)
-                {
-                    cout << "Updated state with id="<<id  << " value="<<timeValue->second.d.d<<endl;
+                // if the current state does not contain the value or if the new value is newer than the current state value then use the new value
+                if (this->currentData.find(id) == this->currentData.end() ||
+                    this->currentData[id].first < timeValue->first) {
+                    this->currentData.erase(id);
+                    this->currentData.insert(this->currentData.begin(),
+                                             std::make_pair(id, std::make_pair(timeValue->first, timeValue->second)));
+                    if (verbose) {
+                        cout << "Updated state with id=" << id << " value=" << timeValue->second.d.d << endl;
+                    }
                 }
 
                 itr = pair.second.erase(itr);
@@ -174,7 +181,8 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
         for (auto itr = this->incomingLookahead.begin(); itr != this->incomingLookahead.end();) {
             auto id = itr->first;
             if (verbose) {
-                std::cout << "\t --  Incoming lookahead  : Id=" << id << " - Size=" << this->incomingLookahead[id].size()
+                std::cout << "\t --  Incoming lookahead  : Id=" << id << " - Size="
+                          << this->incomingLookahead[id].size()
                           << ": ";
                 showL(this->incomingLookahead[id]);
                 cout << std::endl;
@@ -196,9 +204,8 @@ bool FmuContainerCore::initialize() {
 
     bool initial = this->currentData.empty();
 
-    if(verbose && initial)
-    {
-        cout <<"Initial initialize!"<<endl;
+    if (verbose && initial) {
+        cout << "Initial initialize!" << endl;
     }
 
     //process all lookahead messages
@@ -305,14 +312,14 @@ void FmuContainerCore::setVerbose(bool verbose) {
 }
 
 
-void showValue(ostream &os,const char *prefix,date::sys_time<std::chrono::milliseconds> offset, FmuContainerCore::TimedScalarBasicValue val) {
-    os << prefix << "Time: " << val.first.time_since_epoch().count()<<" ("<< (val.first-offset).count() << ")" << " Value: " << val.second<< "\n";
+void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::milliseconds> offset,
+               FmuContainerCore::TimedScalarBasicValue val) {
+    os << prefix << "Time: " << val.first.time_since_epoch().count() << " (" << (val.first - offset).count() << ")"
+       << " Value: " << val.second << "\n";
 }
 
 
-
-ostream &operator<<(ostream &os, const FmuContainerCore &c)
-{
+ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "------------------------------ INFO ------------------------------" << "\n";
     os << "Max age: " << c.maxAge.count() << "\n";
     os << "StartTime: " << c.startOffsetTime.time_since_epoch().count() << "\n";
@@ -325,7 +332,7 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c)
     for (auto &pair: c.incomingUnprocessed) {
         cout << "\tId: " << pair.first << "\n";
         for (auto &val: pair.second) {
-            showValue(os,"\t\t",c.startOffsetTime, val);
+            showValue(os, "\t\t", c.startOffsetTime, val);
 
         }
     }
@@ -334,7 +341,7 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c)
     for (auto &pair: c.incomingLookahead) {
         os << "\tId: " << pair.first << "\n";
         for (auto &val: pair.second) {
-            showValue(os,"\t\t",c.startOffsetTime, val);
+            showValue(os, "\t\t", c.startOffsetTime, val);
 
         }
     }
@@ -343,7 +350,7 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c)
     for (auto &pair: c.currentData) {
         os << "\tId: " << pair.first;
 
-        showValue(os," ",c.startOffsetTime, pair.second);
+        showValue(os, " ", c.startOffsetTime, pair.second);
 
 
     }
