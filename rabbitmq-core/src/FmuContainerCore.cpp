@@ -33,7 +33,7 @@ void FmuContainerCore::processIncoming() {
         auto id = pair.first;
         if (verbose) {
             cout << "\t --  Incoming unprocessed: id=" << id << " - size=" << pair.second.size()
-                      << ": ";
+                 << ": ";
             showL(this->incomingUnprocessed[id]);
             cout << std::endl;
             std::cout << "\t --  Incoming lookahead  : id=" << id << " - size=" << this->incomingLookahead[id].size()
@@ -203,31 +203,21 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
 bool FmuContainerCore::initialize() {
     processIncoming();
 
-    bool initial = this->currentData.empty();
-
-    if (verbose && initial) {
+    if (verbose) {
         cout << "Initial initialize!" << endl;
     }
 
     //process all lookahead messages
-    auto predicate = [this, initial](FmuContainerCore::TimedScalarBasicValue &value) {
-        if (initial) {
-            return true;
-        } else {
-            return value.first <= this->startOffsetTime;
-        }
-
+    auto predicate = [](FmuContainerCore::TimedScalarBasicValue &value) {
+        return true;
     };
     processLookahead(predicate);
 
-    if (initial) {
-        auto initialTimePair = calculateStartTime();
+    auto initialTimePair = calculateStartTime();
 
-        if (initialTimePair.first) {
-            this->startOffsetTime = initialTimePair.second;
-            //no longer initial mode since time is found
-            initial = false;
-        }
+    if (initialTimePair.first) {
+        this->startOffsetTime = initialTimePair.second;
+        //no longer initial mode since time is found
     }
 
     //run the age check for time 0
