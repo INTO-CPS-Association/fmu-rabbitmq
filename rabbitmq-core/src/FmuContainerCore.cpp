@@ -26,8 +26,6 @@ void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
 }
 
 void FmuContainerCore::processIncoming() {
-    //sort
-
     for (auto &pair: this->incomingUnprocessed) {
 
         auto id = pair.first;
