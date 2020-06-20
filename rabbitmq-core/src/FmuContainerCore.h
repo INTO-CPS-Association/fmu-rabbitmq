@@ -147,6 +147,11 @@ protected:
 
 //TODO: these should be qualified by type because the svid is not globally unique
     std::map<ScalarVariableId, list<TimedScalarBasicValue>> incomingUnprocessed;
+
+    /*
+    This map holds the messages that have been read from the rabbit queue into the FMU.
+    For each scalar var id, the list is kept sorted by timestamp.
+    */
     std::map<ScalarVariableId, list<TimedScalarBasicValue>> incomingLookahead;
 
     std::map<ScalarVariableId, TimedScalarBasicValue> currentData;

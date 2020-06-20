@@ -70,7 +70,7 @@ void FmuContainerCore::processIncoming() {
         }
     }
 
-
+    // Remove empty lists. TODO: Why?
     if (!this->incomingUnprocessed.empty()) {
         if (verbose) {
             cout << "Cleaning incomingUnprocessed" << endl;
@@ -199,6 +199,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
 }
 
 bool FmuContainerCore::initialize() {
+    // take a maximum of lookahead messages from the rabbitmq queue and place them sorted into the fmu incomingLookahead map.
     processIncoming();
 
     bool initial = this->currentData.empty();
@@ -216,7 +217,13 @@ bool FmuContainerCore::initialize() {
         }
 
     };
+    /*
+    while the predicate holds, this sweeps all incoming lookahead (deleting them in the process)
+    and collecting the latest (in the sense of the timestamp) data into currentData.
+    */
     processLookahead(predicate);
+
+    // TODO: Assertion: all incoming looahead should be empty after this.
 
     if (initial) {
         auto initialTimePair = calculateStartTime();
