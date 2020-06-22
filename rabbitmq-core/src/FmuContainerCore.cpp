@@ -70,7 +70,7 @@ void FmuContainerCore::processIncoming() {
         }
     }
 
-    // Remove empty lists. TODO: Why?
+    // Remove empty lists so that we avoid spurious visits to an empty list later.
     if (!this->incomingUnprocessed.empty()) {
         if (verbose) {
             cout << "Cleaning incomingUnprocessed" << endl;
@@ -215,7 +215,6 @@ bool FmuContainerCore::initialize() {
         } else {
             return value.first <= this->startOffsetTime;
         }
-
     };
     /*
     while the predicate holds, this sweeps all incoming lookahead (deleting them in the process)
