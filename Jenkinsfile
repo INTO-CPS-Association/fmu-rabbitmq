@@ -35,6 +35,11 @@ pipeline {
                 stage('Xcompile linux64') {
                     steps {
                         sh "./scripts/linux64_build.sh"
+                        dir("build/linux-x64/rabbitmq-core") {
+                           script {
+                               sh label: '', script: './unit-test-rabbitmq-core'
+                           }
+                        }
                         dir("build/linux-x64/rabbitmq-fmu") {
                             script {
                                 sh label: '', script: './unit-test-rabbitmq'
