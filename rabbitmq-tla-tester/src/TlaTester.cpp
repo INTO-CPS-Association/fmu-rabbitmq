@@ -87,27 +87,27 @@ namespace tla {
             this->startOffsetTime = startOffsetTime;
         }
 
-        static void showValue(const char *prefix, FmuContainerCore::TimedScalarBasicValue val) {
-            cout << prefix << "Time: " << val.first.time_since_epoch().count() << " Value: ";
-
-            switch (val.second.b.type) {
-                case TU_STRING:
-                    cout << val.second.s.s;
-                    break;
-                case TU_INT:
-                    cout << val.second.i.i;
-                    break;
-                case TU_BOOL:
-                    cout << val.second.b.b;
-                    break;
-                case TU_DOUBLE:
-                    cout << val.second.d.d;
-                    break;
-
-            }
-
-            cout << endl;
-        }
+//        static void showValue(const char *prefix, FmuContainerCore::TimedScalarBasicValue val) {
+//            cout << prefix << "Time: " << val.first.time_since_epoch().count() << " Value: ";
+//
+//            switch (val.second.b.type) {
+//                case TU_STRING:
+//                    cout << val.second.s.s;
+//                    break;
+//                case TU_INT:
+//                    cout << val.second.i.i;
+//                    break;
+//                case TU_BOOL:
+//                    cout << val.second.b.b;
+//                    break;
+//                case TU_DOUBLE:
+//                    cout << val.second.d.d;
+//                    break;
+//
+//            }
+//
+//            cout << endl;
+//        }
 
 
         FmuContainerCoreTestProxy(const State &s)
@@ -168,12 +168,15 @@ namespace tla {
             return maxAge;
         }
 
-        static void showData(std::map<ScalarVariableId, TimedScalarBasicValue> currentData, const char *tag = "") {
+        static void showData(std::map<ScalarVariableId, TimedScalarBasicValue> currentData,
+                             date::sys_time<std::chrono::milliseconds> startOffsetTime, const char *tag = "") {
             cout << "Data: " << tag << "                " << endl;
             for (auto &pair: currentData) {
                 cout << "\tId: " << pair.first;
 
-                showValue(" ", pair.second);
+                cout << " " << "Time: " << pair.second.first.time_since_epoch().count() << " ("
+                     << (pair.second.first - startOffsetTime).count() << ") " << " Value: " << pair.second.second
+                     << endl;
 
 
             }
@@ -195,7 +198,8 @@ namespace tla {
             for (auto &pair: incomingUnprocessed) {
                 cout << "\tId: " << pair.first << endl;
                 for (auto &val: pair.second) {
-                    showValue("\t\t", val);
+                    cout << "\t\t" << "Time: " << val.first.time_since_epoch().count() << " ("
+                         << (val.first - startOffsetTime).count() << ") " << " Value: " << val.second << endl;
 
                 }
             }
@@ -204,12 +208,14 @@ namespace tla {
             for (auto &pair: incomingLookahead) {
                 cout << "\tId: " << pair.first << endl;
                 for (auto &val: pair.second) {
-                    showValue("\t\t", val);
+                    cout << "\t\t" << "Time: " << val.first.time_since_epoch().count() << " ("
+                         << (val.first - startOffsetTime).count() << ") " << " Value: " << val.second << endl;
+
 
                 }
             }
 
-            showData(currentData);
+            showData(currentData, startOffsetTime);
 //            cout << "------------------------------------------------------------------" << endl;
         }
     };
@@ -320,6 +326,41 @@ namespace tla {
         return lookahead;
     }
 
+    std::list<FmuContainerCore::ScalarVariableId>
+    parseQueueValuesIncommingForKnownValueIds(Value &doc, const char *queueName) {
+        std::list<FmuContainerCore::ScalarVariableId> ids;
+
+        if (verbose) {
+            cout << queueName << endl;
+        }
+
+//        cout << "Parsing " << queueName << endl;
+        if (doc.HasMember(queueName)) {
+            auto &lookaheadVal = doc[queueName];
+
+            for (Value::ConstMemberIterator itr = lookaheadVal.MemberBegin();
+                 itr != lookaheadVal.MemberEnd(); ++itr) {
+
+
+                auto keyStr = itr->name.GetString();
+
+                stringstream keyStream(keyStr);
+
+                unsigned int key = 0;
+                keyStream >> key;
+                if (verbose) {
+                    cout << "Key " << key << endl;
+                }
+
+                ids.push_back(key);
+
+                //  lookahead[key] = list;
+            }
+
+        }
+        return ids;
+    }
+
     std::map<FmuContainerCore::ScalarVariableId, FmuContainerCore::TimedScalarBasicValue>
     parseCurrentValues(Value &doc, const char *queueName) {
         std::map<FmuContainerCore::ScalarVariableId, FmuContainerCore::TimedScalarBasicValue> currenntData;
@@ -396,8 +437,8 @@ namespace tla {
         std::map<FmuContainerCore::ScalarVariableId, int> lookahead;
 
 
-        for (auto &pair: incomingUnprocessed) {
-            lookahead[pair.first] = globalLookahead;
+        for (auto &id: parseQueueValuesIncommingForKnownValueIds(doc, "incomingUnprocessed")) {
+            lookahead[id] = globalLookahead;
         }
 
         FmuContainerCoreTestProxy::State pre = {
@@ -418,8 +459,9 @@ namespace tla {
             if (verbose) {
                 cerr << "Current state does not match" << endl;
 
-                FmuContainerCoreTestProxy::showData(fcc.getData(), "Actual");
-                FmuContainerCoreTestProxy::showData(expectedState.currentData, "Expected");
+                FmuContainerCoreTestProxy::showData(fcc.getData(), fcc.getStartOffsetTime(), "Actual");
+                FmuContainerCoreTestProxy::showData(expectedState.currentData, expectedState.startOffsetTime,
+                                                    "Expected");
             }
             return false;
         }/* else if (post.lookahead != fcc.getLookahead()) {
@@ -435,22 +477,27 @@ namespace tla {
                 cerr << "incomingLookahead does not match" << endl;
             }
             return false;
-        } else if (expectedState.incomingUnprocessed != fcc.getIncomingUnprocessed()) {
+        }
+        /*else if (expectedState.incomingUnprocessed != fcc.getIncomingUnprocessed()) {
             if (verbose) {
                 cerr << "incomingUnprocessed does not match" << endl;
             }
             return false;
-        }
+        }*/
         return true;
     }
 
+    enum Verdict {
+        PASSED, FAILED, SKIPPED
+    };
 
-    bool processTest(Document &doc) {
+
+    Verdict processTest(Document &doc) {
 
         if (!doc.IsObject() || !doc.HasMember("meta") || !doc.HasMember("action") || !doc.HasMember("preState") ||
             !doc.HasMember("postState")) {
             cout << "\t##  " << "Parse failed" << endl;
-            return false;
+            return FAILED;
         }
 
 
@@ -467,6 +514,10 @@ namespace tla {
         auto preState = createState(pre);
         auto postState = createState(post);
 
+        if (pre["blocked"].GetBool() ) {
+               return SKIPPED;
+        }
+
         FmuContainerCoreTestProxy fcc(preState);
         fcc.setVerbose(verbose2);
 //        cout << "######################## PRE  ########################" << endl;
@@ -480,7 +531,7 @@ namespace tla {
 
         if (string("dostep") == action.GetString()) {
 
-            auto targetTime =pre["cstime"].GetInt()+ pre["H"].GetInt();
+            auto targetTime = pre["cstime"].GetInt() + pre["H"].GetInt();
 
             if (verbose) {
                 cout << "STEP to time " << targetTime << endl;
@@ -491,7 +542,26 @@ namespace tla {
                 cout << "DoStep Result = " << res << endl;
 
             }
+
+            if (verbose) {
+                fcc.show("POST ");
+            }
+
+            if (post["blocked"].GetBool() && !pre["blocked"].GetBool()) {
+                if (!res)//we must block
+                    return PASSED;
+                else
+                    return FAILED;
+            }
+
             res = !post["blocked"].GetBool() == res;
+
+
+            if (check(fcc, postState, post["blocked"].GetBool()) && res)
+                return PASSED;
+            else
+                return FAILED;
+
         } else if (string("initialize").compare(action.GetString()) == 0) {
             res = fcc.initialize();
             if (verbose) {
@@ -500,12 +570,18 @@ namespace tla {
             //!blocked &&initialized
 
             res = (!post["blocked"].GetBool() && post["initialized"].GetBool()) == res;
+
+
+            if (verbose) {
+                fcc.show("POST ");
+            }
+            if (check(fcc, postState, post["blocked"].GetBool()) && res)
+                return PASSED;
+            else
+                return FAILED;
         }
 
-        if (verbose) {
-            fcc.show("POST ");
-        }
-        return check(fcc, postState, post["blocked"].GetBool()) && res;
+        return FAILED;
 
     }
 
@@ -609,13 +685,14 @@ int main(int argc, char **argv) {
             cout << "\t##  ";
         }
 
-        if (verdict) {
+        if (verdict == PASSED) {
             cout << " PASSED" << endl;
-        } else {
+        } else if (verdict == FAILED) {
             cout << " FAIL" << endl;
 
             failures++;
-        }
+        } else if (verdict == SKIPPED)
+            cout << " SKIPPED" << endl;
 
     }
 
