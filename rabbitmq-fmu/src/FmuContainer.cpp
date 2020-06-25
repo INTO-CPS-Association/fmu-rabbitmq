@@ -352,16 +352,15 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
                     }
 
+                    if (this->core->process(simulationTime)) {
+                        FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
+                        return true;
+                    }
 
                 } else {
                     FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
                 }
             }
-            if (this->core->process(simulationTime)) {
-                FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
-                return true;
-            }
-
         }
 
     } catch (exception &e) {
