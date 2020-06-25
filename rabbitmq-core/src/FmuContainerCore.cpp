@@ -45,7 +45,7 @@ void FmuContainerCore::processIncoming() {
         // read until lookahead or end
         auto it = pair.second.begin();
         auto c = 0;
-        for (int i = 0; i < this->lookahead[id]; i++) {
+        for (int i = 0; i < this->lookahead[id] && it != pair.second.end(); i++) {
             it++;
             c++;
         }
