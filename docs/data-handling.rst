@@ -60,10 +60,70 @@ Precision
 
 Communication Timeout
 
-SimulatinoTime
+SimulationTime
     End time of a step (currentCommunicationPoint + communicationStepSize). Internal time in RabbitMQ FMU is milliseconds.
 
+Ready Message
 
+Initialization
+______________
+The initialization process of RabbitMQ FMU is peculiar in the sense that it needs to have an output for all types of messages. For this reason, it has to happen when :code:`fmi2EnterInitializationMode` is invoked on RabbitMQ FMU.
+
+Functions
+^^^^^^^^^
+RabbitMQFMU.checkParameters()
+
+RabbitMQFMUCore.ProcessIncoming
+    - Move lookahead amount of messages per message type from IncomingUnprocessed to IncomingLookahead
+    - Sort lookahead according to time
+
+RabbitMQFMUCore.ProcessLookahead
+    - Move message from incomingLookahead to currentData if initial == true || message.timestamp <= startOffsetTime. Otherwise keep in IncomingLookahead
+
+
+
+Flow of EnterInitializationMode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. uml::
+
+    title EnterInitializationMode
+    hide footbox
+
+    boundary "Co-simulation Master" as Master
+    participant RabbitMQFMUInterface as FMUI
+    participant RabbitMQFMUCore as FMUC
+    database "RabbitMQ Server" as server
+
+
+    Master -> FMUI: EnterInitializationMode
+    FMUI -> FMUI: CheckParmeters()
+    FMUI -> server: Publish Ready message
+    FMUI -> FMUI: initializeCoreState()
+    FMUI -> FMUI: StartTime = Time Now
+        loop TimeNow - StartTime < communicationTimeOut
+            FMUI -> server: ConsumeSingleMessage(&msg)
+            alt There is a message
+                server --> FMUI: msg = message; return True
+                FMUI -> FMUC: AddToIncomingUnprocessed(msg)
+                FMUI -> FMUI: initial = true
+                FMUI -> FMUC: initializeResult = Initialize()
+                group initialize function
+                    FMUC -> FMUC: processIncoming()
+                    FMUC -> FMUC: processLookahead()
+                    alt initial = true
+                        FMUC -> FMUC: startOffsetTime = calculateStartTime()
+                        FMUC -> FMUC: initial = false
+                    end
+                    FMUC -> FMUC: initializeResult = check(0)
+                    FMUC --> FMUI: initializeResult
+                end
+                alt initializeResult is True
+                    FMUI --> Master: True
+                end
+            else There are no messages
+                server --> FMUI: False
+            end
+        end
 
 DoStep
 -------
@@ -102,23 +162,25 @@ Flow of DoStep Operation
     Master -> FMUI: doStep(currentCommunicationTime, communicationStepSize)
     FMUI -> FMUI: simulationTime = applyPrecision(\ncurrentCommunicationTime+communicationStepSize)
     FMUI -> FMUC: process(simulationTime)
-    FMUC -> FMUC: check()
-    FMUC -> FMUC: ProcessIncoming()
-    FMUC -> FMUC: ProcessLookahead()
-    FMUC -> FMUC: processResult = check()
-    FMUC --> FMUI: processResult
+    group process function
+        FMUC -> FMUC: check()
+        FMUC -> FMUC: ProcessIncoming()
+        FMUC -> FMUC: ProcessLookahead()
+        FMUC -> FMUC: processResult = check()
+        FMUC --> FMUI: processResult
+    end
     FMUI -> FMUI: StartTime = Time Now
         loop TimeNow - StartTime < communicationTimeOut
             FMUI -> server: ConsumeSingleMessage(&msg)
             alt There is a message
                 server --> FMUI: msg = message; return True
                 FMUI -> FMUC: AddToIncomingUnprocessed(msg)
+                FMUI -> FMUC: processResult = Process() // Described above
+                alt processResult == True
+                    FMUI -> Master: True
+                end
             else There are no messages
                 server --> FMUI: False
-            end
-            FMUI -> FMUC: processResult = Process() // Described above
-            alt processResult == True
-            FMUI -> Master: True
             end
         end
     FMUI -> Master: False
