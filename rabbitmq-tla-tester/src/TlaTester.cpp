@@ -132,14 +132,22 @@ namespace tla {
 
             for (auto &pair: this->currentData) {
                 auto id = pair.first;
-                this->incommingLookaheadAndStateMap[id].push_back(pair.second);
-            }
+                cout << id;
 
+
+
+                if (incomingLookahead.find(id) == incomingLookahead.end() || incomingLookahead[id].empty() ||
+                    (!incomingLookahead[id].empty() && incomingLookahead[id].front() != pair.second)) {
+                    this->incommingLookaheadAndStateMap[id].push_back(pair.second);
+                }
+            }
 
             for (auto &pair: this->incomingLookahead) {
                 auto id = pair.first;
 
-                this->incommingLookaheadAndStateMap.insert_or_assign(pair.first, pair.second);
+                for (auto &value: pair.second)
+                    this->incommingLookaheadAndStateMap[id].push_back(
+                            value);
 
                 this->incommingLookaheadAndStateMap[id].sort(
                         [](const TimedScalarBasicValue &a, const TimedScalarBasicValue &b) {
@@ -206,6 +214,17 @@ namespace tla {
 
             cout << "IncomingLookahead:    " << endl;
             for (auto &pair: incomingLookahead) {
+                cout << "\tId: " << pair.first << endl;
+                for (auto &val: pair.second) {
+                    cout << "\t\t" << "Time: " << val.first.time_since_epoch().count() << " ("
+                         << (val.first - startOffsetTime).count() << ") " << " Value: " << val.second << endl;
+
+
+                }
+            }
+
+            cout << "IncomingLookahead(+output):    " << endl;
+            for (auto &pair: getIncomingLookaheadAndState()) {
                 cout << "\tId: " << pair.first << endl;
                 for (auto &val: pair.second) {
                     cout << "\t\t" << "Time: " << val.first.time_since_epoch().count() << " ("
@@ -514,8 +533,8 @@ namespace tla {
         auto preState = createState(pre);
         auto postState = createState(post);
 
-        if (pre["blocked"].GetBool() ) {
-               return SKIPPED;
+        if (pre["blocked"].GetBool()) {
+            return SKIPPED;
         }
 
         FmuContainerCoreTestProxy fcc(preState);
@@ -579,6 +598,8 @@ namespace tla {
                 return PASSED;
             else
                 return FAILED;
+        } else if (string("noop").compare(action.GetString()) == 0) {
+            return SKIPPED;
         }
 
         return FAILED;
@@ -590,8 +611,34 @@ namespace tla {
 
 using namespace tla;
 
+void ttt() {
+    int sv1 = 1;
+    int sv0 = 0;
+    date::sys_time<std::chrono::milliseconds> valueTimeZero;
+    FmuContainerCoreTestProxy::State post = {
+            .maxAge=std::chrono::milliseconds(0),
+            .lookahead={{sv0, 1},
+                        {sv1, 1}},
+            .incomingUnprocessed={
+                    {sv1, {std::make_pair(
+                            valueTimeZero + std::chrono::milliseconds(1), 1)}}},
+            .incomingLookahead={{sv0, {std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}}},
+            .currentData = {{sv0, std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}},
+            .startOffsetTime=valueTimeZero + std::chrono::milliseconds(2)
+
+
+    };
+
+    FmuContainerCoreTestProxy fcc(post);
+    fcc.setVerbose(verbose2);
+    fcc.show("");
+
+
+}
 
 int main(int argc, char **argv) {
+     
+
     cout << "tla" << endl;
     std::vector<std::string> testFiles;
 
