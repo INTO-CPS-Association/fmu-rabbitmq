@@ -12,6 +12,7 @@ RabbitMQ FMU is an FMU that can subscribe to a RabbitMQ topic exchange and consu
    :caption: Table of Contents:
 
    overview
+   user-manual
    data-handling
 
 Indices and tables
