@@ -4,13 +4,17 @@ Data Handling
 This page gives a more detailed description of initialisation and doStep of RMQFMU. The description is mainly carried out via diagrams, where some functions are referred to by name. Such functions are described in the section *Functions*.
 
 Initialization
-______________
+--------------
 The initialization process of RabbitMQ FMU is peculiar in the sense that it needs to have an output for all messages. For this reason, the initialization has to occur when :code:`fmi2EnterInitializationMode` is invoked on RabbitMQ FMU.
+
+.. _initialisation-functions:
 
 Functions
 ^^^^^^^^^
+Some functions are are described in this seciton that  are used in the diagram in the subsequent section.
+
 RabbitMQFMU.configure()
-- Configure the RMQFMU based on the configuration within the model description file.
+    - Configure the RMQFMU based on the configuration within the model description file.
 
 RabbitMQFMUCore.ProcessIncoming
     - Move lookahead amount of messages per message type from IncomingUnprocessed to IncomingLookahead
@@ -25,8 +29,6 @@ RabbitMQFMUCore.check
     - Missing in currentData
     - CurrentData holds a future value\: msg.time > simulationTime
     - CurrentData holds an expired value\: (msg.time + maxAge) < simulationTime
-
-
 
 
 Flow of EnterInitializationMode
@@ -70,10 +72,16 @@ Flow of EnterInitializationMode
 
 DoStep
 -------
-This section describes the dostep operation of RabbitMQ FMU and provides valuable insights into the operation of RabbitMQ FMU and the meaning of the Quality Attributes. First a few functions are explained before presenting the flow of a DoStep operation.
+This section describes the doStep operation of RabbitMQ FMU.
+
+.. _dostep-functions:
 
 Functions
 ^^^^^^^^^^
+
+Some functions are are described in this seciton that  are used in the diagram in the subsequent section.
+
+
 RabbitMQFMUCore.check
     Described in functions section of the initialization section.
 
