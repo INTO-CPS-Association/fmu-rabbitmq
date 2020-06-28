@@ -3,6 +3,8 @@ User Manual
 This page covers how to use RabbitMQ FMU (RMQFMU), whereas the internal workins are described in Developer Manual.
 The two parts described are: The structure of a message and how to configure properties of RMQFMU via the modelDescription file.
 
+**NOTE: As the Model Description file itself is parsed by RMQFMU, a copy has to be placed inside the resources folder.**
+
 Message Format
 ---------------
 Messages are to be in JSON format with timestamps in ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
@@ -19,7 +21,7 @@ A message shall contain a timestamp and one or more values. The example below co
 
 Model Description File
 ----------------------
-:code:`ScalarVariables` within the Model Description File are used to both configure properties of RMQFMU and mapping message data to FMU outputs. As the Model Description file itself is parsed by RMQFMU, a copy has to be placed inside the resources folder.
+:code:`ScalarVariables` within the Model Description File are used to both configure properties of RMQFMU and mapping message data to FMU outputs.
 The first 0-8 `valueReference` of the model description file are used for configuring RMQFMU. It is adviced **not** to use `valueReference` 0-19, as these might be used for future updates.
 Below is a description of the configuration of RMQFMU via scalar variables of the model description file:
 
