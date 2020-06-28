@@ -5,7 +5,7 @@
 
 Welcome to INTO-CPS RabbitMQ FMU documentation!
 ============================================
-RabbitMQ FMU is an FMU that can subscribe to a RabbitMQ topic exchange and consume messages, which are then made available  via regular FMI outputs.
+RabbitMQ FMU (RMQFMU) is an FMU that subscribes to a RabbitMQ topic exchange and consume messages, which are then made available via regular FMI outputs.
 
 .. toctree::
    :maxdepth: 3
