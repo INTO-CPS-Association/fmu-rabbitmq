@@ -1,7 +1,7 @@
 Overview
 =========
 This page presents a rough overview of the RabbitMQ FMU (RMQFMU). Note, that terminology related to the Functional Mock-up Interface 2.0 (FMI) and RabbitMQ is not described in detail.
-The internal workings are described in detail in :doc:`data-handling` and a user manual is available in :doc:`user-manual`.
+The internal workings are described in detail in :doc:`data-handling` and a user manual is available in :doc:`user-manual`. It is adviced to read the user manual first.
 
 The purpose of RMQFMU is to provide a tool (and approach) for briging external data from a RabbitMQ Server into an FMI-based co-simulation.
 It has certain properties related to timeliness of messages, timeout and precision of data.
