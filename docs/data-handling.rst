@@ -138,7 +138,8 @@ Flow of DoStep Operation
 
 
 
-  KJWAFAKJW
+LEGACY EXAMPLE - TO BE UPDATED
+------------------------------
 
 This section concerns data handling occurring within :code:`fmi2DoStep` of RabbitMQ FMU.
 
