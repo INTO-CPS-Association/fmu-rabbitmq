@@ -91,7 +91,7 @@ git submodule update --init
 To compile the dependencies first prepare the docker 
 
 ```bash
-mkdiir -p build
+mkdir -p build
 
 # run cmake
 ./<platform>-dockcross cmake -Bbuild/<platform> -H.
