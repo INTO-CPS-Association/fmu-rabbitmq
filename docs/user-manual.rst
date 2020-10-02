@@ -1,6 +1,6 @@
 User Manual
 ===========
-This page covers how to use RabbitMQ FMU (RMQFMU), whereas the internal workins are described in Developer Manual.
+This page covers how to use RabbitMQ FMU (RMQFMU), whereas the internal workings are described in Developer Manual.
 The two parts described are: The structure of a message and how to configure properties of RMQFMU via the modelDescription file.
 
 **NOTE: As the Model Description file itself is parsed by RMQFMU, a copy has to be placed inside the resources folder.**
@@ -46,7 +46,7 @@ ValueReference 5 - Communication Timeout
 ValueReference 6 - Precision
     Precision is the number of decimals to consider after converting the addition of :code:`currentCommunicationpoint` and :code:`communicationStepSize` passed in :code:`doStep` to milliseconds.
     This has proven important in relation to imprecision of real numbers.
-    The calculation is: :code:`std::round(((currentCommunicationPoint + communicationStepSize) * 1000 ) * precision) / precision`
+    The calculation is: :code:`precision = std::pow(10, precisionDecimalPlaces); simulationTime = std::round(simulationTime * precision) / precision;`
 
 ValueReference 7 - Max Age
     The maximum age of variable values expressed in milliseconds.
@@ -58,3 +58,12 @@ ValueReference 8 - Look Ahead
 
 A mapping of message data to FMU output is carried out via the name property of a :code:`ScalarVariable`. For example: :code:`<ScalarVariable name="level" valueReference="20" variability="continuous" causality="output"><Real /></ScalarVariable>` maps the value of the key :code:`level` within a message to the output with :code:`valueReference 20`.
 
+Remember, when adding an additional output this also has to be added to outputs in modelstructure. Note, that it uses index and not valuereference! Index is related to the order of the respective scalarvariable. I.e. the topmost scalar variable within ``ModelVariables`` has index 1. Example of adding an index to ``ModelStructure/Outputs``:
+
+.. code-block:: xml
+
+    <ModelStructure>
+        <Outputs>
+            <Unknown index="1"/>
+        </Outputs>
+    </ModelStructure>
