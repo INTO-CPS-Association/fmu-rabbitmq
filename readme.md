@@ -102,7 +102,7 @@ mkdir -p build
 
 # Local development
 
-1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory
+1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory. Example: `./scripts/darwin64_build.sh`
 2. Second run the following command matching the platform to the one just build:
 
 ```bash
