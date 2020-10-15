@@ -102,9 +102,9 @@ mkdir -p build
 
 # Local development
 
-1. First run the compliation script for your platform to get the external libraries compiled.
+1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory
 2. Second run the following command matching the platform to the one just build:
 
 ```bash
-cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build_old/external/darwin-x86_64`
+cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build/external/darwin-x86_64`
 ```
