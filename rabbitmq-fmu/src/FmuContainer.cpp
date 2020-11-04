@@ -22,7 +22,17 @@
     fprintf(stderr, "\n");                                             \
   }
 
+std::map<FmuContainerCore::ScalarVariableId, int> FmuContainer::calculateLookahead(int lookaheadBound){
+    std::map<FmuContainerCore::ScalarVariableId, int> lookahead;
 
+    for (auto &pair: nameToValueReference) {
+        if (pair.second.output) {
+            lookahead[pair.second.valueReference] = lookaheadBound;
+        }
+    }
+    return lookahead;
+
+}
 FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginOn, const char *mName,
                            map<string, ModelDescriptionParser::ScalarVariable> nameToValueReference,
                            DataPoint initialDataPoint)
@@ -63,17 +73,11 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
             }
         }
     }
-    std::map<FmuContainerCore::ScalarVariableId, int> lookahead;
 
-    for (auto &pair: nameToValueReference) {
-        if (pair.second.output) {
-            lookahead[pair.second.valueReference] = lookaheadBound;
-        }
-    }
 
     std::chrono::milliseconds maxAge = std::chrono::milliseconds(maxAgeMs);
 
-    this->core = new FmuContainerCore(maxAge, lookahead);
+    this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 }
 
 FmuContainer::~FmuContainer() {
@@ -82,6 +86,7 @@ FmuContainer::~FmuContainer() {
         delete this->rabbitMqHandler;
     }
 }
+
 
 
 bool FmuContainer::isLoggingOn() {
@@ -122,7 +127,9 @@ bool FmuContainer::initialize() {
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_PORT, "port"),
                        std::make_pair(RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, "communicationtimeout"),
-                       std::make_pair(RABBITMQ_FMU_PRECISION, "precision")};
+                       std::make_pair(RABBITMQ_FMU_PRECISION, "precision"),
+                       std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead"),
+                       std::make_pair(RABBITMQ_FMU_MAX_AGE, "maxage")};
 
     for (auto const &value: intConfigs) {
         auto vRef = value.first;
@@ -135,11 +142,17 @@ bool FmuContainer::initialize() {
         }
     }
 
-
     if (!allParametersPresent) {
         return false;
     }
 
+    // Max age might have been set by master. Ensure that it is propagated to core.
+    this->core->setMaxAge(std::chrono::milliseconds(this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second));
+    cout << "maxage: " << this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second << endl;
+    // Lookahead might have been set by master. Ensure that it is propagated to core
+    int lookaheadBound = this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second;
+    cout << "lookaheadBound: " << this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second << endl;
+    core->setLookahead(calculateLookahead(lookaheadBound));
 
     auto hostname = stringMap[RABBITMQ_FMU_HOSTNAME_ID];
     auto username = stringMap[RABBITMQ_FMU_USER];

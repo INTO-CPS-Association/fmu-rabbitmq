@@ -12,6 +12,10 @@ FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<Sc
 
 }
 
+void FmuContainerCore::setMaxAge(std::chrono::milliseconds maxAge){
+    this->maxAge = maxAge;
+}
+
 void FmuContainerCore::add(ScalarVariableId id, TimedScalarBasicValue value) {
     this->incomingUnprocessed[id].push_back(value);
 }
@@ -204,7 +208,11 @@ bool FmuContainerCore::initialize() {
     processIncoming();
 
     if (verbose) {
-        cout << "Initial initialize!" << endl;
+        cout << "Initial initialize! Max age: " << this->maxAge.count() << " - Lookahead: ";
+        for (auto pair: this->lookahead) {
+            cout << "(id: " << pair.first << " value: " << pair.second << ")";
+        }
+        cout << endl;
     }
 
     //process all lookahead messages
@@ -224,7 +232,7 @@ bool FmuContainerCore::initialize() {
     return this->check(0);
 }
 
-bool FmuContainerCore::process(double time) {
+bool FmuContainerCore:: process(double time ) {
 
 //check messages for acceptable aged values
 
@@ -258,6 +266,50 @@ date::sys_time<std::chrono::milliseconds> FmuContainerCore::getStartOffsetTime()
     return this->startOffsetTime;
 }
 
+
+//bool FmuContainerCore::check(double time) {
+//
+//    for (auto &lookaheadPair: this->lookahead) {
+//
+//        auto id = lookaheadPair.first;
+//        if (this->currentData.count(id) == 0) {
+//            //missing known id
+//            if (verbose) {
+//                printf("Failing check on %d\n", id);
+//            }
+//            return false;
+//        }
+//
+//
+//        auto valueTime = this->currentData.at(id).first;
+//        auto valueTimeInSimtime = messageTimeToSim(valueTime);
+//
+//        if (time < valueTimeInSimtime.count()) {
+//            if (verbose) {
+//                printf("Future value discovered. Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %f\n", id,
+//                       this->maxAge.count(), valueTimeInSimtime.count(),
+//                       (messageTimeToSim(valueTime) + this->maxAge).count(), time);
+//            }
+//            return false;
+//
+//        } else {
+//            if ((valueTimeInSimtime + this->maxAge).count() < time) {
+//                if (verbose)
+//                    printf("Value is too old for %d. maxage %lld, t1 %lld, t1+age %lld, t %9.f\n", id, this->maxAge.count(),
+//                           valueTimeInSimtime.count(), (valueTimeInSimtime + this->maxAge).count(),
+//                           time);
+//                return false;
+//            }
+//            else {
+//                // There are no error cases, so we pass!
+//                return true;
+//            }
+//        }
+//    }
+//
+//    // We have been through the entire list and no item passed the tests.
+//    return false;
+//}
 
 bool FmuContainerCore::check(double time) {
 
@@ -295,7 +347,6 @@ bool FmuContainerCore::check(double time) {
 
     return true;
 }
-
 
 void FmuContainerCore::setVerbose(bool verbose) {
     this->verbose = verbose;
@@ -348,5 +399,9 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "\n";
     os << "------------------------------------------------------------------" << "\n";
     return os;
+}
+
+void FmuContainerCore::setLookahead(map<ScalarVariableId, int> i) {
+    this->lookahead = i;
 }
 
