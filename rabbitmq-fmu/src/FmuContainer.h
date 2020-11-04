@@ -101,6 +101,7 @@ private:
 
     bool initializeCoreState();
 
+    map<FmuContainerCore::ScalarVariableId, int> calculateLookahead(int lookaheadBound);
 };
 
 
