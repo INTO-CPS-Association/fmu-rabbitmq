@@ -87,6 +87,10 @@ private:
     DataPoint currentData;
 
     RabbitmqHandler *rabbitMqHandler;
+    //this connection is for consuming from rabbitmq
+    RabbitmqHandler *rabbitMqHandlerPublish;
+    //this connection is for exchanging data regarding system health
+    RabbitmqHandler *rabbitMqHandlerSystemHealth;
 
    // bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
 

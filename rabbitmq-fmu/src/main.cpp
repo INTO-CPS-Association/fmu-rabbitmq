@@ -147,6 +147,9 @@ int main() {
 #define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
 #define RABBITMQ_FMU_PRECISION 6
 
+#define RABBITMQ_FMU_SEND_FLAG_CSTOP 21
+#define RABBITMQ_FMU_COMMAND_STOP 23
+
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
                                           RABBITMQ_FMU_PORT};
             int intVals[] = {60, 10, 5672};
@@ -157,6 +160,22 @@ int main() {
                                                 RABBITMQ_FMU_ROUTING_KEY};
             const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"};
             fmi2SetString(c, vrefsString, 4, stringVals);
+
+            unsigned int flag = 0;
+            cout << "Enter 1 to set send_flag, 0 otherwise: ";
+            cin >> flag;
+            fmi2ValueReference vrefsBoolean[] = {RABBITMQ_FMU_SEND_FLAG_CSTOP, RABBITMQ_FMU_COMMAND_STOP, 25};
+            fmi2Boolean boolVals[] = {fmi2False, fmi2False, fmi2True};
+            cout << "the value of flag is " << flag << endl;
+            if(flag==1) {
+                boolVals[0] = fmi2True;
+                boolVals[1] = fmi2True;
+            }
+            else {
+                boolVals[0] = fmi2False;
+                boolVals[1] = fmi2False;
+            }
+            fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
 
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
@@ -176,7 +195,7 @@ int main() {
 
 
             fmi2Real currentCommunicationPoint = 0;
-            fmi2Real communicationStepSize = 10;
+            fmi2Real communicationStepSize = 1;
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
 
@@ -187,7 +206,6 @@ int main() {
             for (int i = 0; i < nvr; i++) {
                 cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
             }
-
 
 //        fmi2Terminate(fmi2Component c)
         } catch (const char *status) {

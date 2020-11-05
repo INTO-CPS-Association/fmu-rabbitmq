@@ -143,6 +143,18 @@ public:
 
     friend ostream &operator<<(ostream &os, const FmuContainerCore &c);
 
+    void add_flag(int flagVRef, pair<string, bool> nameVal);
+
+    void update_flag(int flagVRef, pair<string, bool> nameVal);
+
+    void add_input_val(int inputVRef, pair<string, string> nameVal);
+
+    void update_input_val(int inputVRef, pair<string, string> nameVal);
+
+    void sendCheckCompose(string &message);
+    
+    void printFlagsInputs();
+
 protected:
 
 //TODO: these should be qualified by type because the svid is not globally unique
@@ -156,6 +168,11 @@ protected:
 
     std::map<ScalarVariableId, int> lookahead;
     std::chrono::milliseconds maxAge;
+
+
+    std::map<int, std::pair<string, bool>> inputFlags; //<vref, <name, value>>
+    std::map<int, std::pair<string, string>> inputVals; //<vref, <name, value>>
+    
 private:
 
     bool verbose;
