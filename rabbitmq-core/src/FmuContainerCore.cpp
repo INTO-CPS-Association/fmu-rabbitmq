@@ -12,10 +12,6 @@ FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<Sc
 
 }
 
-void FmuContainerCore::setMaxAge(std::chrono::milliseconds maxAge){
-    this->maxAge = maxAge;
-}
-
 void FmuContainerCore::add(ScalarVariableId id, TimedScalarBasicValue value) {
     this->incomingUnprocessed[id].push_back(value);
 }
@@ -401,7 +397,4 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     return os;
 }
 
-void FmuContainerCore::setLookahead(map<ScalarVariableId, int> i) {
-    this->lookahead = i;
-}
 

@@ -126,7 +126,7 @@ namespace {
         fmi2String instanceName = "rabbitmq";
         fmi2Type fmuType = fmi2CoSimulation;
         fmi2String fmuGUID = "63ba49fe-07d3-402c-b9db-2df495167424";
-        string currentUri = (string("file://") + string(cCurrentPath) + string("/gita"));
+        string currentUri = (string("file://") + string(cCurrentPath) + string("/rabbitmq-fmu/xmls-for-tests"));
         fmi2String fmuResourceLocation = currentUri.c_str();
         const fmi2CallbackFunctions *functions = nullptr;
         fmi2Boolean visible = true;
@@ -150,7 +150,6 @@ namespace {
 
 
             size_t nvr = 1;
-
             // Test for setting max age
             const fmi2ValueReference *vrMaxAge = new fmi2ValueReference[nvr]{7};
             const fmi2Integer *valueMaxAge = new fmi2Integer[nvr]{100};

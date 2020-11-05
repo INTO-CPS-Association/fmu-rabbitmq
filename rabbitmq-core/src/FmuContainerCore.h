@@ -131,8 +131,6 @@ public:
 
     void add(ScalarVariableId id, TimedScalarBasicValue value);
 
-    void setMaxAge(std::chrono::milliseconds maxAge);
-
     bool process(double time);
 
     bool initialize();
@@ -144,8 +142,6 @@ public:
     void setVerbose(bool verbose);
 
     friend ostream &operator<<(ostream &os, const FmuContainerCore &c);
-
-    void setLookahead(map<ScalarVariableId, int> i);
 
 protected:
 
