@@ -156,14 +156,6 @@ bool FmuContainer::initialize() {
         return false;
     }
 
-    // Max age might have been set by master. Ensure that it is propagated to core.
-    //this->core->setMaxAge(std::chrono::milliseconds(this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second));
-    //cout << "maxage: " << this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second << endl;
-    // Lookahead might have been set by master. Ensure that it is propagated to core
-    //int lookaheadBound = this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second;
-    //cout << "lookaheadBound: " << this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second << endl;
-    //core->setLookahead(calculateLookahead(lookaheadBound));
-
     auto hostname = stringMap[RABBITMQ_FMU_HOSTNAME_ID];
     auto username = stringMap[RABBITMQ_FMU_USER];
     auto password = stringMap[RABBITMQ_FMU_PWD];
@@ -215,6 +207,56 @@ bool FmuContainer::initialize() {
                      "Sending RabbitMQ ready message%s", "");
     this->rabbitMqHandler->publish(routingKey,
                                    R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})");
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    //create a separate connection that deals with publishing to the rabbitmq server/////
+    this->rabbitMqHandlerPublish = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       "from_cosim");
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
+    try {
+        if (!this->rabbitMqHandlerPublish->open()) {
+            FmuContainer_LOG(fmi2Fatal, "logAll",
+                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
+                             hostname.c_str(), port);
+            return false;
+        }
+
+        this->rabbitMqHandlerPublish->bind();
+
+    } catch (RabbitMqHandlerException &ex) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
+                         ex.what());
+        return false;
+    }
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    //create a separate connection that deals with publishing to the rabbitmq server/////
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       "system_health");
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
+    try {
+        if (!this->rabbitMqHandlerSystemHealth->open()) {
+            FmuContainer_LOG(fmi2Fatal, "logAll",
+                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
+                             hostname.c_str(), port);
+            return false;
+        }
+
+        this->rabbitMqHandlerSystemHealth->bind();
+
+    } catch (RabbitMqHandlerException &ex) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
+                         ex.what());
+        return false;
+    }
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
 
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
@@ -277,6 +319,26 @@ bool FmuContainer::initializeCoreState() {
                     }
                     for (auto &pair: result.booleanValues) {
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                    }
+
+                    //store input flags in core (if any) in the format map<valueRef:int, pair<flagName:string, value:bool>>
+                    //store input content in core (if any) in the format map<valueRef:int, pair<flagName:string, value:string>>
+                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+                        if(it->first.find("flag") != string::npos){
+                            this->core->add_flag(it->second.valueReference, pair<string,bool>(it->first, this->currentData.booleanValues[it->second.valueReference]));
+                            if(this->currentData.booleanValues.count(it->second.valueReference+1) > 0){
+                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.booleanValues[it->second.valueReference+1])));
+                            }
+                            else if(this->currentData.integerValues.count(it->second.valueReference+1) > 0){
+                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.integerValues[it->second.valueReference+1])));
+                            }
+                            else if(this->currentData.stringValues.count(it->second.valueReference+1) > 0){
+                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, this->currentData.stringValues[it->second.valueReference+1]));
+                            }
+                            else if(this->currentData.doubleValues.count(it->second.valueReference+1) > 0){
+                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.doubleValues[it->second.valueReference+1])));
+                            }
+                        }
                     }
 
                     if (this->core->initialize()) {
@@ -354,6 +416,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
 
+                //publish that rbmq entered the next round of do-step
+                string cosim_time = to_string(simulationTime);
+                this->rabbitMqHandlerSystemHealth->publish("system_health", cosim_time);
+
                 DataPoint result;
 
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
@@ -375,6 +441,102 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     }
                     for (auto &pair: result.booleanValues) {
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                    }
+
+                     //update values of input flags and input content
+                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+                        if(it->first.find("flag") != string::npos){
+                            this->core->update_flag(it->second.valueReference, pair<string,bool>(it->first, this->currentData.booleanValues[it->second.valueReference]));
+                            //update input based on type: real, int, bool, string
+                            if(this->currentData.booleanValues.count(it->second.valueReference+1) > 0){
+                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.booleanValues[it->second.valueReference+1])));
+                            }
+                            else if(this->currentData.integerValues.count(it->second.valueReference+1) > 0){
+                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.integerValues[it->second.valueReference+1])));
+                            }
+                            else if(this->currentData.stringValues.count(it->second.valueReference+1) > 0){
+                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, this->currentData.stringValues[it->second.valueReference+1]));
+                            }
+                            else if(this->currentData.doubleValues.count(it->second.valueReference+1) > 0){
+                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.doubleValues[it->second.valueReference+1])));
+                            }
+                            
+                            //if (this->currentData.booleanValues[it->second.valueReference+1])this->currentData.booleanValues[it->second.valueReference+1] = false;
+                            //else this->currentData.booleanValues[it->second.valueReference+1] = true;
+                            //cout << "Updating stuff: " << this->currentData.booleanValues[it->second.valueReference+1] << endl;
+                        }
+                    }
+                    //check update of flags and inputs -- AUX function
+                    this->core->printFlagsInputs();
+                    //check the input flags and compose the message if there is anything to send to rabbitmq
+                    string message;
+                    this->core->sendCheckCompose(message);                   
+
+
+                    /*
+#define RABBITMQ_FMU_SEND_FLAG_CSTOP 21
+#define RABBITMQ_FMU_COMMAND_STOP 22
+                    bool flag = false;
+                    for(auto it = this->currentData.booleanValues.cbegin(); it != this->currentData.booleanValues.cend(); ++it){
+                        if(it->first == RABBITMQ_FMU_SEND_FLAG_CSTOP){
+                            flag = it->second;
+                            //publish to rabbitmq only if SEND_FLAG is set
+                            //after the check invert the value of the flag
+                            cout << "flag is set to " << flag << "; " << it->first << " " << it->second << "\n";
+
+                            if (flag){
+                                message = R"("command_stop":)" + to_string(this->currentData.booleanValues[RABBITMQ_FMU_COMMAND_STOP]);
+                                cout << "This is the message being composed: " << message << endl;
+                                this->currentData.booleanValues[RABBITMQ_FMU_SEND_FLAG_CSTOP] = false;
+                                //cout << "it should have published at " << startTimeStamp.str() << endl;
+                                
+                            }
+                            //else this->currentData.booleanValues[RABBITMQ_FMU_SEND_FLAG_CSTOP] = true;
+                            //cout << "flag is updated to " << it->second << "; " << it->first << "\n";
+                            break;
+                        }
+                    }
+                    */
+                    /*
+                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+                        if(it->first.find("flag") != string::npos){
+                            cout << "Found a flag input: " << it->first << endl;
+                            //check if the found flag is set
+                            if (this->currentData.booleanValues[it->second.valueReference]){
+                                //if the flag is set, then get the input value with value reference incremented by 1
+                                string cmd = it->first;
+                                message += R"(")" + cmd + R"(":)" + to_string(this->currentData.booleanValues[it->second.valueReference+1]) + R"(,)";
+                            }
+                        }
+                    }*/
+
+                    //if anything to send, publish to rabbitmq
+                    if(!message.empty()){
+                        message = R"({)" + message + R"("timestep:")" + startTimeStamp.str() + R"("})";
+                        cout << "This is the message sent to rabbitmq: " << message << endl;
+                        this->rabbitMqHandlerPublish->publish("from_cosim", message);
+                    }
+                    /*for(auto it = this->currentData.booleanValues.cbegin(); it != this->currentData.booleanValues.cend(); ++it){
+                        if(it->first == 21 || it->first == 23){
+                            int flag = it->second;
+                            //publish to rabbitmq only if SEND_FLAG is set
+                            //after the check invert the value of the flag
+                            cout << "flag is set to " << flag << "; " << it->first << " " << it->second << "\n";
+
+                            if (flag){
+                                this->currentData.booleanValues[it->first] = false;
+                                //cout << "it should have published at " << startTimeStamp.str() << endl;
+                                
+                            }
+                            else this->currentData.booleanValues[it->first] = true;
+                            //cout << "flag is updated to " << it->second << "; " << it->first << "\n";
+                        }
+                    }*/
+
+                    //Check if there is info on the system real time
+                    string systemRealTime;
+                    if (this->rabbitMqHandlerSystemHealth->consume(systemRealTime)){
+                        cout << "New info on real-time of the system: " << systemRealTime << ", current simulation time: " << simulationTime << endl;
                     }
 
                     if (this->core->process(simulationTime)) {

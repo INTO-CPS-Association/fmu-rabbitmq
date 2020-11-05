@@ -7,7 +7,7 @@
 #include <iostream>
 
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead)
-        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false) {
+        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false), inputFlags(), inputVals() {
 
 
 }
@@ -354,6 +354,53 @@ void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::mill
                FmuContainerCore::TimedScalarBasicValue val) {
     os << prefix << "Time: " << val.first.time_since_epoch().count() << " (" << (val.first - offset).count() << ")"
        << " Value: " << val.second << "\n";
+}
+
+void FmuContainerCore::add_flag(int flagVRef, pair<string, bool> nameVal){
+    this->inputFlags.insert(pair<int, pair<string, bool>>(flagVRef, nameVal));
+    /*for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
+            cout << "ADD_FLAG:" << it->first << it->second.first << it->second.second << endl;
+        }*/
+}
+
+void FmuContainerCore::update_flag(int flagVRef, pair<string, bool> nameVal){
+    //this->inputFlags.insert(pair<string, pair<int, bool>>(flagName, vrVal));
+    this->inputFlags[flagVRef].second = nameVal.second;
+    //cout << "UPDATE_FLAG:" << flagVRef << this->inputFlags[flagVRef].first << this->inputFlags[flagVRef].second << endl;
+}
+
+void FmuContainerCore::add_input_val(int inputVRef, pair<string, string> nameVal){
+    this->inputVals.insert(pair<int, pair<string, string>>(inputVRef, nameVal));
+    /*for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
+            cout << "ADD_FLAG:" << it->first << it->second.first << it->second.second << endl;
+        }*/
+}
+
+void FmuContainerCore::update_input_val(int inputVRef, pair<string, string> nameVal){
+    //this->inputVals.insert(pair<string, pair<int, string>>(inputName, vrVal));
+    this->inputVals[inputVRef].second = nameVal.second;
+    //cout << "UPDATE_FLAG:" << inputVRef << this->inputVals[inputVRef].first << this->inputVals[inputVRef].second << endl;
+}
+
+//Left it here - look at todo
+void FmuContainerCore::sendCheckCompose(string &message){
+    for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
+        if (it->second.second){
+            //if the flag is set, then get the input value with value reference incremented by 1
+            string cmd = this->inputVals[it->first+1].first;
+            //TODO change the message to send the content of the input and not the flag
+            message += R"(")" + cmd + R"(":)" + this->inputVals[it->first+1].second + R"(,)";
+        }
+    }
+}
+
+void FmuContainerCore::printFlagsInputs(){
+    for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
+            cout << "FLAG: " << it->first << " " << it->second.first << " " << it->second.second << endl;
+        }
+    for(auto it = this->inputVals.cbegin(); it != this->inputVals.cend(); it++){
+        cout << "INPUT: " << it->first << " " << it->second.first << " " << it->second.second << endl;
+    }
 }
 
 
