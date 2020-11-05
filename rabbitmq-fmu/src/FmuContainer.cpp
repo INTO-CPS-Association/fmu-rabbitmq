@@ -74,10 +74,6 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
         }
     }
 
-
-    std::chrono::milliseconds maxAge = std::chrono::milliseconds(maxAgeMs);
-
-    this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 }
 
 FmuContainer::~FmuContainer() {
@@ -131,6 +127,9 @@ bool FmuContainer::initialize() {
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead"),
                        std::make_pair(RABBITMQ_FMU_MAX_AGE, "maxage")};
 
+    std::chrono::milliseconds maxAge = std::chrono::milliseconds(this->currentData.integerValues[RABBITMQ_FMU_MAX_AGE]);
+    int lookaheadBound = 1;
+
     for (auto const &value: intConfigs) {
         auto vRef = value.first;
         auto description = value.second;
@@ -140,6 +139,17 @@ bool FmuContainer::initialize() {
                              description);
             allParametersPresent = false;
         }
+        else if (vRef == RABBITMQ_FMU_LOOKAHEAD){
+            auto v = this->currentData.integerValues[vRef];
+                if (v < 1) {
+                    FmuContainer_LOG(fmi2Warning, "logWarn",
+                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
+                                     vRef,
+                                     description, v, lookaheadBound);
+                    v = lookaheadBound;
+                }
+                lookaheadBound = v;
+        }
     }
 
     if (!allParametersPresent) {
@@ -147,12 +157,12 @@ bool FmuContainer::initialize() {
     }
 
     // Max age might have been set by master. Ensure that it is propagated to core.
-    this->core->setMaxAge(std::chrono::milliseconds(this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second));
-    cout << "maxage: " << this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second << endl;
+    //this->core->setMaxAge(std::chrono::milliseconds(this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second));
+    //cout << "maxage: " << this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second << endl;
     // Lookahead might have been set by master. Ensure that it is propagated to core
-    int lookaheadBound = this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second;
-    cout << "lookaheadBound: " << this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second << endl;
-    core->setLookahead(calculateLookahead(lookaheadBound));
+    //int lookaheadBound = this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second;
+    //cout << "lookaheadBound: " << this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second << endl;
+    //core->setLookahead(calculateLookahead(lookaheadBound));
 
     auto hostname = stringMap[RABBITMQ_FMU_HOSTNAME_ID];
     auto username = stringMap[RABBITMQ_FMU_USER];
@@ -206,6 +216,8 @@ bool FmuContainer::initialize() {
     this->rabbitMqHandler->publish(routingKey,
                                    R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})");
 
+    //Create container core
+    this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
     if (!initializeCoreState()) {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");

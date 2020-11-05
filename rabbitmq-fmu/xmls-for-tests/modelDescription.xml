@@ -48,7 +48,7 @@
             <Integer start="10"/>
         </ScalarVariable>
         <ScalarVariable name="config.maxage" valueReference="7" variability="fixed" causality="parameter" description="The max age of a value specified in ms," initial="exact">
-            <Integer start="1"/>
+            <Integer start="0"/>
         </ScalarVariable>
         <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
             <Integer start="1"/>
