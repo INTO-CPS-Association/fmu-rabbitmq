@@ -22,7 +22,7 @@ def publish():
     msg['xpos']=0.0
     msg['ypos']=0.0
 
-    with open('gazebo_playback_data-noround.csv', newline='') as csvfile:
+    with open('gazebo_playback_data.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             t = row['time']
@@ -38,7 +38,8 @@ def publish():
             channel.basic_publish(exchange='fmi_digital_twin',
 						routing_key='linefollower',
 						body=json.dumps(msg))
-            #input("Press Enter to Continue")
+            input("Press Enter to Continue")
+            #time.sleep(1)
    
 def callback(ch, method, properties, body):
     print(" [x] %r" % body)

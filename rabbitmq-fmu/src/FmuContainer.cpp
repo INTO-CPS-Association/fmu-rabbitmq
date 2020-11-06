@@ -57,21 +57,8 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
             FmuContainer_LOG(fmi2Warning, "logWarn",
                              "Missing parameter. Value reference '%d', Description '%s'.", vRef,
                              description);
-        } else {
-            if (vRef == RABBITMQ_FMU_MAX_AGE) {
-                maxAgeMs = this->currentData.integerValues[vRef];
-            } else if (vRef == RABBITMQ_FMU_LOOKAHEAD) {
-                auto v = this->currentData.integerValues[vRef];
-                if (v < 1) {
-                    FmuContainer_LOG(fmi2Warning, "logWarn",
-                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
-                                     vRef,
-                                     description, v, lookaheadBound);
-                    v = lookaheadBound;
-                }
-                lookaheadBound = v;
-            }
         }
+
     }
 
 }
@@ -127,19 +114,14 @@ bool FmuContainer::initialize() {
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead"),
                        std::make_pair(RABBITMQ_FMU_MAX_AGE, "maxage")};
 
-    std::chrono::milliseconds maxAge = std::chrono::milliseconds(this->currentData.integerValues[RABBITMQ_FMU_MAX_AGE]);
     int lookaheadBound = 1;
+    int maxAgeBound = 0;
 
     for (auto const &value: intConfigs) {
         auto vRef = value.first;
         auto description = value.second;
 
-        if (this->currentData.integerValues.find(vRef) == this->currentData.integerValues.end()) {
-            FmuContainer_LOG(fmi2Fatal, "logError", "Missing parameter. Value reference '%d', Description '%s' ", vRef,
-                             description);
-            allParametersPresent = false;
-        }
-        else if (vRef == RABBITMQ_FMU_LOOKAHEAD){
+       if (vRef == RABBITMQ_FMU_LOOKAHEAD){
             auto v = this->currentData.integerValues[vRef];
                 if (v < 1) {
                     FmuContainer_LOG(fmi2Warning, "logWarn",
@@ -150,7 +132,21 @@ bool FmuContainer::initialize() {
                 }
                 lookaheadBound = v;
         }
+        else if (vRef == RABBITMQ_FMU_MAX_AGE) {
+            auto v = this->currentData.integerValues[vRef];
+            cout << "MAXAGE: " << v << endl;
+                if (v < 0) {
+                    FmuContainer_LOG(fmi2Warning, "logWarn",
+                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
+                                     vRef,
+                                     description, v, maxAgeBound);
+                    v = maxAgeBound;
+                }
+                maxAgeBound = v;
+        }
     }
+
+    std::chrono::milliseconds maxAge = std::chrono::milliseconds(maxAgeBound);
 
     if (!allParametersPresent) {
         return false;
@@ -232,22 +228,22 @@ bool FmuContainer::initialize() {
     }
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
-
+/*
     /////////////////////////////////////////////////////////////////////////////////////
-    //create a separate connection that deals with publishing to the rabbitmq server/////
-    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
-                                                       "system_health");
+    //create a separate connection that deals with publishing the co-sim time to the rabbitmq server/////
+    this->rabbitMqHandlerSystemHealthPublish = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       "system_health_cosimtime");
     FmuContainer_LOG(fmi2OK, "logAll",
                      "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
-        if (!this->rabbitMqHandlerSystemHealth->open()) {
+        if (!this->rabbitMqHandlerSystemHealthPublish->open()) {
             FmuContainer_LOG(fmi2Fatal, "logAll",
                              "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
                              hostname.c_str(), port);
             return false;
         }
 
-        this->rabbitMqHandlerSystemHealth->bind();
+        this->rabbitMqHandlerSystemHealthPublish->bind();
 
     } catch (RabbitMqHandlerException &ex) {
         FmuContainer_LOG(fmi2Fatal, "logAll",
@@ -258,6 +254,31 @@ bool FmuContainer::initialize() {
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
 
+    /////////////////////////////////////////////////////////////////////////////////////
+    //create a separate connection that deals with publishing the co-sim time to the rabbitmq server/////
+    this->rabbitMqHandlerSystemHealthConsume = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       "system_health_rtime");
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
+    try {
+        if (!this->rabbitMqHandlerSystemHealthConsume->open()) {
+            FmuContainer_LOG(fmi2Fatal, "logAll",
+                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
+                             hostname.c_str(), port);
+            return false;
+        }
+
+        this->rabbitMqHandlerSystemHealthConsume->bind();
+
+    } catch (RabbitMqHandlerException &ex) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
+                         ex.what());
+        return false;
+    }
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+*/
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
@@ -418,7 +439,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                 //publish that rbmq entered the next round of do-step
                 string cosim_time = to_string(simulationTime);
-                this->rabbitMqHandlerSystemHealth->publish("system_health", cosim_time);
+                this->rabbitMqHandlerSystemHealthPublish->publish("system_health_cosimtime", cosim_time);
 
                 DataPoint result;
 
@@ -466,49 +487,13 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                             //cout << "Updating stuff: " << this->currentData.booleanValues[it->second.valueReference+1] << endl;
                         }
                     }
+                    
                     //check update of flags and inputs -- AUX function
                     this->core->printFlagsInputs();
+
                     //check the input flags and compose the message if there is anything to send to rabbitmq
                     string message;
                     this->core->sendCheckCompose(message);                   
-
-
-                    /*
-#define RABBITMQ_FMU_SEND_FLAG_CSTOP 21
-#define RABBITMQ_FMU_COMMAND_STOP 22
-                    bool flag = false;
-                    for(auto it = this->currentData.booleanValues.cbegin(); it != this->currentData.booleanValues.cend(); ++it){
-                        if(it->first == RABBITMQ_FMU_SEND_FLAG_CSTOP){
-                            flag = it->second;
-                            //publish to rabbitmq only if SEND_FLAG is set
-                            //after the check invert the value of the flag
-                            cout << "flag is set to " << flag << "; " << it->first << " " << it->second << "\n";
-
-                            if (flag){
-                                message = R"("command_stop":)" + to_string(this->currentData.booleanValues[RABBITMQ_FMU_COMMAND_STOP]);
-                                cout << "This is the message being composed: " << message << endl;
-                                this->currentData.booleanValues[RABBITMQ_FMU_SEND_FLAG_CSTOP] = false;
-                                //cout << "it should have published at " << startTimeStamp.str() << endl;
-                                
-                            }
-                            //else this->currentData.booleanValues[RABBITMQ_FMU_SEND_FLAG_CSTOP] = true;
-                            //cout << "flag is updated to " << it->second << "; " << it->first << "\n";
-                            break;
-                        }
-                    }
-                    */
-                    /*
-                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
-                        if(it->first.find("flag") != string::npos){
-                            cout << "Found a flag input: " << it->first << endl;
-                            //check if the found flag is set
-                            if (this->currentData.booleanValues[it->second.valueReference]){
-                                //if the flag is set, then get the input value with value reference incremented by 1
-                                string cmd = it->first;
-                                message += R"(")" + cmd + R"(":)" + to_string(this->currentData.booleanValues[it->second.valueReference+1]) + R"(,)";
-                            }
-                        }
-                    }*/
 
                     //if anything to send, publish to rabbitmq
                     if(!message.empty()){
@@ -516,29 +501,15 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandlerPublish->publish("from_cosim", message);
                     }
-                    /*for(auto it = this->currentData.booleanValues.cbegin(); it != this->currentData.booleanValues.cend(); ++it){
-                        if(it->first == 21 || it->first == 23){
-                            int flag = it->second;
-                            //publish to rabbitmq only if SEND_FLAG is set
-                            //after the check invert the value of the flag
-                            cout << "flag is set to " << flag << "; " << it->first << " " << it->second << "\n";
-
-                            if (flag){
-                                this->currentData.booleanValues[it->first] = false;
-                                //cout << "it should have published at " << startTimeStamp.str() << endl;
-                                
-                            }
-                            else this->currentData.booleanValues[it->first] = true;
-                            //cout << "flag is updated to " << it->second << "; " << it->first << "\n";
-                        }
-                    }*/
 
                     //Check if there is info on the system real time
                     string systemRealTime;
-                    if (this->rabbitMqHandlerSystemHealth->consume(systemRealTime)){
+                    if (this->rabbitMqHandlerSystemHealthConsume->consume(systemRealTime)){
                         cout << "New info on real-time of the system: " << systemRealTime << ", current simulation time: " << simulationTime << endl;
                     }
-
+                    //TODO Extract rtime value from message
+                    //TODO compare rtime to sim time. I need the messagetosim function or similar that transforms the message time to the sim time.
+                    cout << "THIS VERSION" << endl;
                     if (this->core->process(simulationTime)) {
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
                         return true;
