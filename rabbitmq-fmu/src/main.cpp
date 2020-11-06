@@ -195,16 +195,19 @@ int main() {
 
 
             fmi2Real currentCommunicationPoint = 0;
-            fmi2Real communicationStepSize = 1;
+            fmi2Real communicationStepSize = 0.1;
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
+            fmi2Real simDuration = 10;
+            for(int i = 0; i <= simDuration; i++){
+                showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
+                                                    noSetFMUStatePriorToCurrentPoint));
 
-            showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
-                                                noSetFMUStatePriorToCurrentPoint));
-
-            showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
-            for (int i = 0; i < nvr; i++) {
-                cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+                showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
+                for (int i = 0; i < nvr; i++) {
+                    cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+                }
+                currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
             }
 
 //        fmi2Terminate(fmi2Component c)

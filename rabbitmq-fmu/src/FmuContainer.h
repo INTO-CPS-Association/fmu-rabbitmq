@@ -90,7 +90,10 @@ private:
     //this connection is for consuming from rabbitmq
     RabbitmqHandler *rabbitMqHandlerPublish;
     //this connection is for exchanging data regarding system health
-    RabbitmqHandler *rabbitMqHandlerSystemHealth;
+    //this connection is for consuming from rabbitmq
+    RabbitmqHandler *rabbitMqHandlerSystemHealthPublish;
+    //this connection is for exchanging data regarding system health
+    RabbitmqHandler *rabbitMqHandlerSystemHealthConsume;
 
    // bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
 
