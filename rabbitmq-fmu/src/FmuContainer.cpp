@@ -57,20 +57,6 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
             FmuContainer_LOG(fmi2Warning, "logWarn",
                              "Missing parameter. Value reference '%d', Description '%s'.", vRef,
                              description);
-        } else {
-            if (vRef == RABBITMQ_FMU_MAX_AGE) {
-                maxAgeMs = this->currentData.integerValues[vRef];
-            } else if (vRef == RABBITMQ_FMU_LOOKAHEAD) {
-                auto v = this->currentData.integerValues[vRef];
-                if (v < 1) {
-                    FmuContainer_LOG(fmi2Warning, "logWarn",
-                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
-                                     vRef,
-                                     description, v, lookaheadBound);
-                    v = lookaheadBound;
-                }
-                lookaheadBound = v;
-            }
         }
     }
 
@@ -127,19 +113,14 @@ bool FmuContainer::initialize() {
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead"),
                        std::make_pair(RABBITMQ_FMU_MAX_AGE, "maxage")};
 
-    std::chrono::milliseconds maxAge = std::chrono::milliseconds(this->currentData.integerValues[RABBITMQ_FMU_MAX_AGE]);
     int lookaheadBound = 1;
+    int maxAgeBound = 0;
 
     for (auto const &value: intConfigs) {
         auto vRef = value.first;
         auto description = value.second;
 
-        if (this->currentData.integerValues.find(vRef) == this->currentData.integerValues.end()) {
-            FmuContainer_LOG(fmi2Fatal, "logError", "Missing parameter. Value reference '%d', Description '%s' ", vRef,
-                             description);
-            allParametersPresent = false;
-        }
-        else if (vRef == RABBITMQ_FMU_LOOKAHEAD){
+       if (vRef == RABBITMQ_FMU_LOOKAHEAD){
             auto v = this->currentData.integerValues[vRef];
                 if (v < 1) {
                     FmuContainer_LOG(fmi2Warning, "logWarn",
@@ -150,19 +131,24 @@ bool FmuContainer::initialize() {
                 }
                 lookaheadBound = v;
         }
+        else if (vRef == RABBITMQ_FMU_MAX_AGE) {
+            auto v = this->currentData.integerValues[vRef];
+                if (v < 0) {
+                    FmuContainer_LOG(fmi2Warning, "logWarn",
+                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
+                                     vRef,
+                                     description, v, maxAgeBound);
+                    v = maxAgeBound;
+                }
+                maxAgeBound = v;
+        }
     }
+
+    std::chrono::milliseconds maxAge = std::chrono::milliseconds(maxAgeBound);
 
     if (!allParametersPresent) {
         return false;
     }
-
-    // Max age might have been set by master. Ensure that it is propagated to core.
-    //this->core->setMaxAge(std::chrono::milliseconds(this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second));
-    //cout << "maxage: " << this->currentData.integerValues.find(RABBITMQ_FMU_MAX_AGE)->second << endl;
-    // Lookahead might have been set by master. Ensure that it is propagated to core
-    //int lookaheadBound = this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second;
-    //cout << "lookaheadBound: " << this->currentData.integerValues.find(RABBITMQ_FMU_LOOKAHEAD)->second << endl;
-    //core->setLookahead(calculateLookahead(lookaheadBound));
 
     auto hostname = stringMap[RABBITMQ_FMU_HOSTNAME_ID];
     auto username = stringMap[RABBITMQ_FMU_USER];
