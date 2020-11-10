@@ -39,6 +39,8 @@ def callbackConsume(ch, method, properties, body):
     #cosimTime = datetime.datetime.strptime(body, "%Y-%m-%dT%H:%M:%S.%f%z")
     with lock:
         newData = True
+        cosimTime = float(body.decode())
+        #print(cosimTime)
 
 def publishRtime():
     global newData

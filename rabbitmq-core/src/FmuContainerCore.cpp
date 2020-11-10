@@ -403,6 +403,13 @@ void FmuContainerCore::printFlagsInputs(){
     }
 }
 
+std::chrono::milliseconds FmuContainerCore::printMessage2SimTime(date::sys_time<std::chrono::milliseconds> rTime){
+    std::stringstream rtimeString, temp;
+    cout << "RTIME: "  << endl;
+    rtimeString << this->messageTimeToSim(rTime).count() << endl;
+    cout << "RTIME: " << rtimeString.str().c_str();
+    return this->messageTimeToSim(rTime);
+}
 
 ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "------------------------------ INFO ------------------------------" << "\n";

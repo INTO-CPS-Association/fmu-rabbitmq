@@ -175,7 +175,7 @@ int main() {
                 boolVals[0] = fmi2False;
                 boolVals[1] = fmi2False;
             }
-            fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
+            //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
 
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
