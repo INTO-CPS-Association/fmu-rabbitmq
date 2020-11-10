@@ -155,6 +155,8 @@ public:
     
     void printFlagsInputs();
 
+    std::chrono::milliseconds printMessage2SimTime(date::sys_time<std::chrono::milliseconds> rTime);
+
 protected:
 
 //TODO: these should be qualified by type because the svid is not globally unique

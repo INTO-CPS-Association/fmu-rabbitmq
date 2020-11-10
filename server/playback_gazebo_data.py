@@ -22,14 +22,17 @@ def publish():
     msg['xpos']=0.0
     msg['ypos']=0.0
 
-    with open('gazebo_playback_data.csv', newline='') as csvfile:
+    with open('gazebo_playback_data-noround.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             t = row['time']
             xpos = float(row['xpos'])
             ypos = float(row['ypos'])
             msg['xpos']=xpos
-            msg['ypos']=ypos
+            msg['ypos']=ypos            
+            msg['obs_xpos']=1000
+            msg['obs_ypos']=1000
+            msg['obstacles']=""
 			#dt = dt+ datetime.timedelta(seconds=float(row['step-size']))
 			#msg['time']= dt.isoformat()
             timet = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -38,8 +41,8 @@ def publish():
             channel.basic_publish(exchange='fmi_digital_twin',
 						routing_key='linefollower',
 						body=json.dumps(msg))
-            input("Press Enter to Continue")
-            #time.sleep(1)
+            #input("Press Enter to Continue")
+            time.sleep(.1)
    
 def callback(ch, method, properties, body):
     print(" [x] %r" % body)

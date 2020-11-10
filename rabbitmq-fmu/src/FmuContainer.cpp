@@ -70,8 +70,6 @@ FmuContainer::~FmuContainer() {
     }
 }
 
-
-
 bool FmuContainer::isLoggingOn() {
     return this->loggingOn;
 }
@@ -228,7 +226,7 @@ bool FmuContainer::initialize() {
     }
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
-/*
+
     /////////////////////////////////////////////////////////////////////////////////////
     //create a separate connection that deals with publishing the co-sim time to the rabbitmq server/////
     this->rabbitMqHandlerSystemHealthPublish = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
@@ -278,7 +276,7 @@ bool FmuContainer::initialize() {
     }
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
-*/
+
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
@@ -464,7 +462,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
                     }
 
-                     //update values of input flags and input content
+                    //update values of input flags and input content
                     for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
                         if(it->first.find("flag") != string::npos){
                             this->core->update_flag(it->second.valueReference, pair<string,bool>(it->first, this->currentData.booleanValues[it->second.valueReference]));
@@ -501,15 +499,26 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandlerPublish->publish("from_cosim", message);
                     }
-
+                    /*
                     //Check if there is info on the system real time
-                    string systemRealTime;
-                    if (this->rabbitMqHandlerSystemHealthConsume->consume(systemRealTime)){
-                        cout << "New info on real-time of the system: " << systemRealTime << ", current simulation time: " << simulationTime << endl;
-                    }
-                    //TODO Extract rtime value from message
-                    //TODO compare rtime to sim time. I need the messagetosim function or similar that transforms the message time to the sim time.
-                    cout << "THIS VERSION" << endl;
+                    string systemHealthData;
+                    if (this->rabbitMqHandlerSystemHealthConsume->consume(systemHealthData)){
+                        cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
+                        FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
+
+                        //TODO Extract rtime value from message
+                        date::sys_time<std::chrono::milliseconds> rTime;
+                        double simTime;
+                        MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str());
+                        cout << "New info on real-time of the system: " << this->messageTimeToSim(rTime).count() << ", current simulation time: " << simTime << endl;
+                        std::stringstream rtimeString, temp;
+                        rtimeString << this->messageTimeToSim(rTime).count();
+                        temp << this->core->printMessage2SimTime(rTime).count();
+                        FmuContainer_LOG(fmi2OK, "logAll", "at sim-time: %f [ms], rtime 2 simtime: %s, %s", simTime, rtimeString.str().c_str(), temp.str().c_str());
+                        //TODO compare rtime to sim time. I need the messagetosim function or similar that transforms the message time to the sim time.
+
+                    }*/
+
                     if (this->core->process(simulationTime)) {
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
                         return true;

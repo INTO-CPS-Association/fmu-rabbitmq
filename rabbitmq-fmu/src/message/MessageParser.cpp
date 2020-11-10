@@ -76,3 +76,27 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 
 
 }
+
+bool
+MessageParser::parseSystemHealthMessage(double &simTime, date::sys_time<std::chrono::milliseconds> &rTime, const char *json){
+    Document d;
+    d.Parse(json);
+    bool hasData = false;
+
+    for (Value::ConstMemberIterator itr = d.MemberBegin();
+         itr != d.MemberEnd(); ++itr) {
+        auto memberName = itr->name.GetString();
+            
+        if (std::string("rtime") == memberName && d["rtime"].IsString()) {
+            hasData = true;
+            const char *timeString = d["rtime"].GetString();
+            rTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
+
+        } else if (std::string("cosimtime") == memberName) {
+            hasData = true;
+            simTime = d["cosimtime"].GetDouble();
+
+        }
+    }
+    return hasData;
+}
