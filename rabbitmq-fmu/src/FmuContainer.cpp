@@ -404,6 +404,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
     simulationTime = std::round(simulationTime * precision) / precision;
 
+    //publish that rbmq entered the next round of do-step
+    string cosim_time = to_string(simulationTime);
+    this->rabbitMqHandlerSystemHealthPublish->publish("system_health_cosimtime", cosim_time);
+
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
 
@@ -435,9 +439,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
 
-                //publish that rbmq entered the next round of do-step
-                string cosim_time = to_string(simulationTime);
-                this->rabbitMqHandlerSystemHealthPublish->publish("system_health_cosimtime", cosim_time);
+                
 
                 DataPoint result;
 
@@ -499,25 +501,29 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandlerPublish->publish("from_cosim", message);
                     }
-                    /*
+                    
                     //Check if there is info on the system real time
                     string systemHealthData;
                     if (this->rabbitMqHandlerSystemHealthConsume->consume(systemHealthData)){
                         cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
-                        FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
+                        //FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
 
                         //TODO Extract rtime value from message
                         date::sys_time<std::chrono::milliseconds> rTime;
-                        double simTime;
+                        double simTime, rTime_d;
                         MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str());
-                        cout << "New info on real-time of the system: " << this->messageTimeToSim(rTime).count() << ", current simulation time: " << simTime << endl;
-                        std::stringstream rtimeString, temp;
-                        rtimeString << this->messageTimeToSim(rTime).count();
-                        temp << this->core->printMessage2SimTime(rTime).count();
-                        FmuContainer_LOG(fmi2OK, "logAll", "at sim-time: %f [ms], rtime 2 simtime: %s, %s", simTime, rtimeString.str().c_str(), temp.str().c_str());
-                        //TODO compare rtime to sim time. I need the messagetosim function or similar that transforms the message time to the sim time.
 
-                    }*/
+                        rTime_d = this->core->printMessage2SimTime(rTime).count();
+                        FmuContainer_LOG(fmi2OK, "logAll", "at sim-time: %f [ms], rtime 2 simtime: %f", simTime, rTime_d);
+
+                        if(rTime_d < simulationTime){
+                            FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f", simTime-rTime_d);
+                        }
+                        else  if (rTime_d > simulationTime){
+                            FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime);
+                        }
+
+                    }
 
                     if (this->core->process(simulationTime)) {
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);

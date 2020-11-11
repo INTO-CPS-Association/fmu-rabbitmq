@@ -322,7 +322,11 @@ bool FmuContainerCore::check(double time) {
 
 
         auto valueTime = this->currentData.at(id).first;
-
+        /*std::stringstream temp;
+        temp << valueTime.time_since_epoch().count();
+        cout << "The time value of datapoint " << temp.str().c_str() << endl;
+        cout << "The time value of datapoint " << messageTimeToSim(valueTime).count() << endl;
+        */
         if (time < messageTimeToSim(valueTime).count()) {
             if (verbose) {
                 printf("Future value discovered. Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %f\n", id,
