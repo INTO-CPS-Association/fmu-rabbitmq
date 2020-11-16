@@ -85,7 +85,7 @@ def rabbitmq_callback(ch, method, properties, body):
             print(rostimeISO.isoformat())
             msg['time']= rostimeISO.isoformat(timespec='milliseconds')
             
-            dt = dt + datetime.timedelta(seconds=sim_time_step)
+            #dt = dt + datetime.timedelta(seconds=sim_time_step)
             #msg['time']= dt.isoformat()
             msg['xpos'] = robot_location[0]
             msg['ypos'] = robot_location[1]
