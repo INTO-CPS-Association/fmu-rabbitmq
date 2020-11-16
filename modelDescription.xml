@@ -21,6 +21,19 @@
         <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
+        <ScalarVariable name="command_stop" valueReference="22" variability="discrete" causality="input">
+            <Boolean start="false" />
+        </ScalarVariable>
+        <ScalarVariable name="command2" valueReference="23" variability="discrete" causality="input">
+            <Real start="3.2" />
+        </ScalarVariable>
+        <ScalarVariable name="command3" valueReference="24" variability="discrete" causality="input">
+            <Integer start="2" />
+        </ScalarVariable>
+        <ScalarVariable name="command4" valueReference="25" variability="discrete" causality="input">
+            <String start="hello rabbitmq" />
+        </ScalarVariable>
+
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>

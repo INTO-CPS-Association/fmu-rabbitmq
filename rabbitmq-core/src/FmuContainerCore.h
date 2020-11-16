@@ -151,7 +151,7 @@ public:
 
     void update_input_val(int inputVRef, pair<string, string> nameVal);
 
-    void sendCheckCompose(string &message);
+    void sendCheckCompose(pair<string,string> input, string &message);
     
     void printFlagsInputs();
 
@@ -174,6 +174,7 @@ protected:
 
     std::map<int, std::pair<string, bool>> inputFlags; //<vref, <name, value>>
     std::map<int, std::pair<string, string>> inputVals; //<vref, <name, value>>
+    std::string currentOutput; // current message without timestamp
     
 private:
 

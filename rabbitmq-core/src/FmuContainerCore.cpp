@@ -387,14 +387,14 @@ void FmuContainerCore::update_input_val(int inputVRef, pair<string, string> name
 }
 
 //Left it here - look at todo
-void FmuContainerCore::sendCheckCompose(string &message){
-    for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
-        if (it->second.second){
-            //if the flag is set, then get the input value with value reference incremented by 1
-            string cmd = this->inputVals[it->first+1].first;
-            //TODO change the message to send the content of the input and not the flag
-            message += R"(")" + cmd + R"(":)" + this->inputVals[it->first+1].second + R"(,)";
-        }
+void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &message){
+    if(!message.empty()){
+        //TODO change the message to send the content of the input and not the flag
+        message += R"(")" + input.first + R"(":)" + input.second + R"(,)";
+    }
+    else{
+        //TODO change the message to send the content of the input and not the flag
+        message = R"(")" + input.first + R"(":)" + input.second + R"(,)";
     }
 }
 

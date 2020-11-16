@@ -149,6 +149,7 @@ int main() {
 
 #define RABBITMQ_FMU_SEND_FLAG_CSTOP 21
 #define RABBITMQ_FMU_COMMAND_STOP 23
+#define RABBITMQ_FMU_COMMAND_INT 24
 
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
                                           RABBITMQ_FMU_PORT};
@@ -161,20 +162,6 @@ int main() {
             const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"};
             fmi2SetString(c, vrefsString, 4, stringVals);
 
-            unsigned int flag = 0;
-            cout << "Enter 1 to set send_flag, 0 otherwise: ";
-            cin >> flag;
-            fmi2ValueReference vrefsBoolean[] = {RABBITMQ_FMU_SEND_FLAG_CSTOP, RABBITMQ_FMU_COMMAND_STOP, 25};
-            fmi2Boolean boolVals[] = {fmi2False, fmi2False, fmi2True};
-            cout << "the value of flag is " << flag << endl;
-            if(flag==1) {
-                boolVals[0] = fmi2True;
-                boolVals[1] = fmi2True;
-            }
-            else {
-                boolVals[0] = fmi2False;
-                boolVals[1] = fmi2False;
-            }
             //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
 
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
@@ -199,6 +186,11 @@ int main() {
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
             fmi2Real simDuration = 10;
+            bool changeInput = false;
+            fmi2ValueReference vrefsReals[] = {RABBITMQ_FMU_COMMAND_STOP};
+            fmi2ValueReference vrefsInt[] = {RABBITMQ_FMU_COMMAND_INT};
+            double reals[] = {3.5};
+            int ints[] = {5};
             for(int i = 0; i <= simDuration; i++){
                 showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
                                                     noSetFMUStatePriorToCurrentPoint));
@@ -208,6 +200,17 @@ int main() {
                     cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
                 }
                 currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
+
+                if(changeInput){
+                    showStatus("fmi2SetReal", fmi2SetReal(c, vrefsReals, 1, reals));
+                    cout << "SHOULD have updated" << endl;
+                }
+                else{
+
+                    showStatus("fmi2SetInteger", fmi2SetInteger(c, vrefsInt, 1, ints));
+                }
+
+                changeInput=!changeInput;
             }
 
 //        fmi2Terminate(fmi2Component c)
