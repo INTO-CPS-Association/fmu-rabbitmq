@@ -51,17 +51,25 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 
                 switch (sv.type) {
                     case SvType::Integer:
-                        result.integerValues[sv.valueReference] = d[memberName].GetInt();
+                        if (d[memberName].IsInt()){
+                            result.integerValues[sv.valueReference] = d[memberName].GetInt();
+                        }
                         break;
                     case SvType::Real:
-                        result.doubleValues[sv.valueReference] = d[memberName].GetDouble();
+                        if (d[memberName].IsDouble()){
+                            result.doubleValues[sv.valueReference] = d[memberName].GetDouble();
+                        }
 //                        cout << "Got message with double name='"<<memberName<<"' ref="<<sv.valueReference<<"' value = "<<result.doubleValues[sv.valueReference]<<endl;
                         break;
                     case SvType::Boolean:
-                        result.booleanValues[sv.valueReference] = d[memberName].GetBool();
+                        if (d[memberName].IsBool()){
+                            result.booleanValues[sv.valueReference] = d[memberName].GetBool();
+                        }
                         break;
                     case SvType::String:
-                        result.stringValues[sv.valueReference] = string(d[memberName].GetString());
+                        if (d[memberName].IsString()){
+                            result.stringValues[sv.valueReference] = string(d[memberName].GetString());
+                        }
                         break;
                 }
 
@@ -92,7 +100,7 @@ MessageParser::parseSystemHealthMessage(double &simTime, date::sys_time<std::chr
             const char *timeString = d["rtime"].GetString();
             rTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
-        } else if (std::string("cosimtime") == memberName) {
+        } else if (std::string("cosimtime") == memberName && d["cosimtime"].IsDouble()) {
             hasData = true;
             simTime = d["cosimtime"].GetDouble();
 
