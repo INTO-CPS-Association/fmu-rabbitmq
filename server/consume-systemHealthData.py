@@ -9,6 +9,7 @@ import datetime
 cosimTime = 0.0
 newData = False
 lock = threading.Lock()
+thread_stop = False
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 connectionPublish = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -44,7 +45,7 @@ def callbackConsume(ch, method, properties, body):
 
 def publishRtime():
     global newData
-    while True:
+    while not thread_stop:
         if newData:
             with lock:
                 newData = False
@@ -66,4 +67,6 @@ try:
     channelConsume.start_consuming()
 except KeyboardInterrupt:
     print("Exiting...")
+    channelConsume.stop_consuming()
+    thread_stop = True
     connection.close()

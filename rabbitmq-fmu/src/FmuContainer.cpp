@@ -33,13 +33,14 @@ std::map<FmuContainerCore::ScalarVariableId, int> FmuContainer::calculateLookahe
     return lookahead;
 
 }
+
 FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginOn, const char *mName,
                            map<string, ModelDescriptionParser::ScalarVariable> nameToValueReference,
                            DataPoint initialDataPoint)
         : m_functions(mFunctions), m_name(mName), nameToValueReference((nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30), loggingOn(logginOn), precision(10) {
+          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(){
 
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
@@ -132,15 +133,14 @@ bool FmuContainer::initialize() {
         }
         else if (vRef == RABBITMQ_FMU_MAX_AGE) {
             auto v = this->currentData.integerValues[vRef];
-            cout << "MAXAGE: " << v << endl;
-                if (v < 0) {
-                    FmuContainer_LOG(fmi2Warning, "logWarn",
-                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
-                                     vRef,
-                                     description, v, maxAgeBound);
-                    v = maxAgeBound;
-                }
-                maxAgeBound = v;
+            if (v < 0) {
+                FmuContainer_LOG(fmi2Warning, "logWarn",
+                                    "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
+                                    vRef,
+                                    description, v, maxAgeBound);
+                v = maxAgeBound;
+            }
+            maxAgeBound = v;
         }
     }
 
@@ -276,6 +276,26 @@ bool FmuContainer::initialize() {
     }
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
+
+    //Initialise previousInputs
+    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+        if(it->second.input){
+            //Init value 
+            cout << "Input type: " << it->second.type << endl;
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
+                this->previousInputs.doubleValues.insert(pair<unsigned int, double>(it->second.valueReference, it->second.d_value));
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
+                this->previousInputs.booleanValues.insert(pair<unsigned int, bool>(it->second.valueReference, it->second.b_value));
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
+                this->previousInputs.integerValues.insert(pair<unsigned int, int>(it->second.valueReference, it->second.i_value));
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
+                this->previousInputs.stringValues.insert(pair<unsigned int, string>(it->second.valueReference, it->second.s_value));
+            }
+        }
+    }
 
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
@@ -464,36 +484,49 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
                     }
 
-                    //update values of input flags and input content
-                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
-                        if(it->first.find("flag") != string::npos){
-                            this->core->update_flag(it->second.valueReference, pair<string,bool>(it->first, this->currentData.booleanValues[it->second.valueReference]));
-                            //update input based on type: real, int, bool, string
-                            if(this->currentData.booleanValues.count(it->second.valueReference+1) > 0){
-                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.booleanValues[it->second.valueReference+1])));
-                            }
-                            else if(this->currentData.integerValues.count(it->second.valueReference+1) > 0){
-                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.integerValues[it->second.valueReference+1])));
-                            }
-                            else if(this->currentData.stringValues.count(it->second.valueReference+1) > 0){
-                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, this->currentData.stringValues[it->second.valueReference+1]));
-                            }
-                            else if(this->currentData.doubleValues.count(it->second.valueReference+1) > 0){
-                                this->core->update_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.doubleValues[it->second.valueReference+1])));
-                            }
-                            
-                            //if (this->currentData.booleanValues[it->second.valueReference+1])this->currentData.booleanValues[it->second.valueReference+1] = false;
-                            //else this->currentData.booleanValues[it->second.valueReference+1] = true;
-                            //cout << "Updating stuff: " << this->currentData.booleanValues[it->second.valueReference+1] << endl;
-                        }
-                    }
-                    
-                    //check update of flags and inputs -- AUX function
-                    this->core->printFlagsInputs();
-
-                    //check the input flags and compose the message if there is anything to send to rabbitmq
+                    //Check which of the inputs of the fmu has changed since the last step
                     string message;
-                    this->core->sendCheckCompose(message);                   
+                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+                        ostringstream val;
+                        if(it->second.input){
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
+                                cout << "CURRENT DATA: " << this->currentData.doubleValues[it->second.valueReference] << ", previous DATA: " <<this->previousInputs.doubleValues[it->second.valueReference] << endl;
+                                if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    val << this->currentData.doubleValues[it->second.valueReference];
+                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    //Update previous to current value
+                                    this->previousInputs.doubleValues[it->second.valueReference] = this->currentData.doubleValues[it->second.valueReference];
+                                }
+                            }
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
+                                if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    val << this->currentData.booleanValues[it->second.valueReference];
+                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    //Update previous to current value
+                                    this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
+                                }
+                            }
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
+                                if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    val << this->currentData.integerValues[it->second.valueReference];
+                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    //Update previous to current value
+                                    this->previousInputs.integerValues[it->second.valueReference] = this->currentData.integerValues[it->second.valueReference];
+                                }
+                            }
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
+                                if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, this->currentData.stringValues[it->second.valueReference]), message);
+                                    //Update previous to current value
+                                    this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
+                                }
+                            }
+                        }
+                    }                
 
                     //if anything to send, publish to rabbitmq
                     if(!message.empty()){

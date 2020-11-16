@@ -85,6 +85,9 @@ private:
 
     list<DataPoint> data;
     DataPoint currentData;
+    DataPoint previousInputs;
+    enum SvType{Real,Integer,Boolean,String};
+    
 
     RabbitmqHandler *rabbitMqHandler;
     //this connection is for consuming from rabbitmq

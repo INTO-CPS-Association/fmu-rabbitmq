@@ -121,6 +121,7 @@ map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::par
 
             auto causality = getAttributeValue(n, "causality");
             bool isOutput = string(causality) == "output";
+            bool isInput = string(causality) == "input";
             XMLString::release(&causality);
 
             if (n->hasChildNodes()) {
@@ -148,6 +149,7 @@ map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::par
 
                     sv.type = type;
                     sv.output = isOutput;
+                    sv.input = isInput;
 
                     if (isOutput) {
                         //set default values
