@@ -40,7 +40,7 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
         : m_functions(mFunctions), m_name(mName), nameToValueReference((nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(){
+          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), routingKey(), routingKeySystemHealth(){
 
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
@@ -92,7 +92,8 @@ bool FmuContainer::initialize() {
     auto stringConfigs = {std::make_pair(RABBITMQ_FMU_HOSTNAME_ID, "hostname"),
                           std::make_pair(RABBITMQ_FMU_USER, "username"),
                           std::make_pair(RABBITMQ_FMU_PWD, "password"),
-                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key")};
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key"),
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH, "routing key system health")};
 
 
     auto allParametersPresent = true;
@@ -174,6 +175,7 @@ bool FmuContainer::initialize() {
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
                      this->communicationTimeout, this->precision, precisionDecimalPlaces);
 
+    /*
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
                                                        routingKey);
 
@@ -201,22 +203,29 @@ bool FmuContainer::initialize() {
                      "Sending RabbitMQ ready message%s", "");
     this->rabbitMqHandler->publish(routingKey,
                                    R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})");
-
+    */
     /////////////////////////////////////////////////////////////////////////////////////
     //create a separate connection that deals with publishing to the rabbitmq server/////
-    this->rabbitMqHandlerPublish = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
-                                                       "from_cosim");
+    this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       routingKey);//this routing key does not affect what is defined below.
     FmuContainer_LOG(fmi2OK, "logAll",
                      "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
-        if (!this->rabbitMqHandlerPublish->open()) {
+        if (!this->rabbitMqHandler->createConnection()) {
             FmuContainer_LOG(fmi2Fatal, "logAll",
                              "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
                              hostname.c_str(), port);
             return false;
         }
 
-        this->rabbitMqHandlerPublish->bind();
+        this->rabbitMqHandler->createChannel(1); //Channel where to publish data
+        this->rabbitMqHandler->createChannel(2); //Channel where to consume data
+        this->routingKey.first = routingKey;
+        this->routingKey.first.append("_from_cosim");
+        this->routingKey.second = routingKey;
+        this->routingKey.second.append("_to_cosim");
+        this->rabbitMqHandler->bind(1, this->routingKey.first);
+        this->rabbitMqHandler->bind(2, this->routingKey.second);
 
     } catch (RabbitMqHandlerException &ex) {
         FmuContainer_LOG(fmi2Fatal, "logAll",
@@ -224,49 +233,37 @@ bool FmuContainer::initialize() {
                          ex.what());
         return false;
     }
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "Sending RabbitMQ ready message%s", "");
+    this->rabbitMqHandler->publish(routingKey,
+                                   R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",2);
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////////////////
-    //create a separate connection that deals with publishing the co-sim time to the rabbitmq server/////
-    this->rabbitMqHandlerSystemHealthPublish = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
-                                                       "system_health_cosimtime");
+    //create a separate connection that deals with publishing and consuming system health data, using a channel for eavh/////
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       "system_health");//this binding key is not really used in this context
     FmuContainer_LOG(fmi2OK, "logAll",
-                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
+                     "Another rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
-        if (!this->rabbitMqHandlerSystemHealthPublish->open()) {
+        if (!this->rabbitMqHandlerSystemHealth->createConnection()) {
             FmuContainer_LOG(fmi2Fatal, "logAll",
                              "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
                              hostname.c_str(), port);
             return false;
         }
 
-        this->rabbitMqHandlerSystemHealthPublish->bind();
+        this->rabbitMqHandlerSystemHealth->createChannel(1); //Channel where to publish system health data
+        this->rabbitMqHandlerSystemHealth->createChannel(2); //Channel where to consume system health data -> ctually rbmq consumes from all channels
+        //this means that, we should only have one publisher on the otherside that publishes data through the connection, through this channel.
+        this->routingKeySystemHealth.first = this->currentData.stringValues[RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH];
+        this->routingKeySystemHealth.first.append("_from_cosim");
+        this->routingKeySystemHealth.second = this->currentData.stringValues[RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH];
+        this->routingKeySystemHealth.second.append("_to_cosim");
+        this->rabbitMqHandlerSystemHealth->bind(1, this->routingKeySystemHealth.first);
+        this->rabbitMqHandlerSystemHealth->bind(2, this->routingKeySystemHealth.second);
 
-    } catch (RabbitMqHandlerException &ex) {
-        FmuContainer_LOG(fmi2Fatal, "logAll",
-                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
-                         ex.what());
-        return false;
-    }
-    ////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    //create a separate connection that deals with publishing the co-sim time to the rabbitmq server/////
-    this->rabbitMqHandlerSystemHealthConsume = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
-                                                       "system_health_rtime");
-    FmuContainer_LOG(fmi2OK, "logAll",
-                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
-    try {
-        if (!this->rabbitMqHandlerSystemHealthConsume->open()) {
-            FmuContainer_LOG(fmi2Fatal, "logAll",
-                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
-                             hostname.c_str(), port);
-            return false;
-        }
-
-        this->rabbitMqHandlerSystemHealthConsume->bind();
 
     } catch (RabbitMqHandlerException &ex) {
         FmuContainer_LOG(fmi2Fatal, "logAll",
@@ -334,10 +331,8 @@ bool FmuContainer::initializeCoreState() {
         string json;
         while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
                this->communicationTimeout) {
-
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
-
                 DataPoint result;
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
 
@@ -358,26 +353,6 @@ bool FmuContainer::initializeCoreState() {
                     }
                     for (auto &pair: result.booleanValues) {
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-
-                    //store input flags in core (if any) in the format map<valueRef:int, pair<flagName:string, value:bool>>
-                    //store input content in core (if any) in the format map<valueRef:int, pair<flagName:string, value:string>>
-                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
-                        if(it->first.find("flag") != string::npos){
-                            this->core->add_flag(it->second.valueReference, pair<string,bool>(it->first, this->currentData.booleanValues[it->second.valueReference]));
-                            if(this->currentData.booleanValues.count(it->second.valueReference+1) > 0){
-                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.booleanValues[it->second.valueReference+1])));
-                            }
-                            else if(this->currentData.integerValues.count(it->second.valueReference+1) > 0){
-                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.integerValues[it->second.valueReference+1])));
-                            }
-                            else if(this->currentData.stringValues.count(it->second.valueReference+1) > 0){
-                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, this->currentData.stringValues[it->second.valueReference+1]));
-                            }
-                            else if(this->currentData.doubleValues.count(it->second.valueReference+1) > 0){
-                                this->core->add_input_val(it->second.valueReference+1, pair<string,string>(it->first, to_string(this->currentData.doubleValues[it->second.valueReference+1])));
-                            }
-                        }
                     }
 
                     if (this->core->initialize()) {
@@ -424,10 +399,13 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
     simulationTime = std::round(simulationTime * precision) / precision;
 
-    //publish that rbmq entered the next round of do-step
-    string cosim_time = to_string(simulationTime);
-    this->rabbitMqHandlerSystemHealthPublish->publish("system_health_cosimtime", cosim_time);
-
+    //Get real time based on sim time, and format as string with %y-%m-%d-%H-%M-%S-
+    long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
+    string cosim_time;
+    this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
+    cosim_time = R"({("simAtTime":")" + cosim_time + R"("})";
+    cout << "COSIM TIME:" << cosim_time << endl;
+    this->rabbitMqHandlerSystemHealth->publish(this->routingKeySystemHealth.first, cosim_time, 1);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
 
@@ -455,11 +433,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         string json;
         while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
                this->communicationTimeout) {
-
+            //Note that consume, consumes from all channels.
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
-
-                
 
                 DataPoint result;
 
@@ -532,12 +508,13 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     if(!message.empty()){
                         message = R"({)" + message + R"("timestep:")" + startTimeStamp.str() + R"("})";
                         cout << "This is the message sent to rabbitmq: " << message << endl;
-                        this->rabbitMqHandlerPublish->publish("from_cosim", message);
+                        this->rabbitMqHandler->publish(this->routingKey.first, message, 1);
                     }
                     
                     //Check if there is info on the system real time
+                   
                     string systemHealthData;
-                    if (this->rabbitMqHandlerSystemHealthConsume->consume(systemHealthData)){
+                    if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
                         cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
                         //FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
 
@@ -555,9 +532,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         else  if (rTime_d > simulationTime){
                             FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime);
                         }
-
+                       
                     }
-
+                    
                     if (this->core->process(simulationTime)) {
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
                         return true;

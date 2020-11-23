@@ -15,9 +15,10 @@ result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 
 channel.queue_bind(exchange='fmi_digital_twin', queue=queue_name,
-                   routing_key='from_cosim')
+                   routing_key='linefollower_from_cosim')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
+print(' [*] I am consuming the commands sent from rbMQ')
 
 def callback(ch, method, properties, body):
     print("Received [x] %r" % body)
