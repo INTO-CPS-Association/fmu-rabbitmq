@@ -39,7 +39,7 @@ def publish():
             msg['time']= timet.isoformat()
             print(" [x] Sent %s" % json.dumps(msg))
             channel.basic_publish(exchange='fmi_digital_twin',
-						routing_key='linefollower',
+						routing_key='linefollower_to_cosim',
 						body=json.dumps(msg))
             #input("Press Enter to Continue")
             time.sleep(.1)

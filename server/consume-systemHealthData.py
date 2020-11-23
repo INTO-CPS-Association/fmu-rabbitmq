@@ -27,12 +27,13 @@ result2 = channelPublish.queue_declare(queue='', exclusive=True)
 queue_name2 = result2.method.queue
 
 channelConsume.queue_bind(exchange='fmi_digital_twin', queue=queue_name,
-                   routing_key='system_health_cosimtime')
+                   routing_key='system_health_from_cosim')
 
 channelPublish.queue_bind(exchange='fmi_digital_twin', queue=queue_name2,
-                   routing_key='system_health_rtime')
+                   routing_key='system_health_to_cosim')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
+print(' [*] I am consuming and publishing information related to system health')
 
 def callbackConsume(ch, method, properties, body):
     global newData, cosimTime
@@ -40,7 +41,7 @@ def callbackConsume(ch, method, properties, body):
     #cosimTime = datetime.datetime.strptime(body, "%Y-%m-%dT%H:%M:%S.%f%z")
     with lock:
         newData = True
-        cosimTime = float(body.decode())
+        cosimTime = body.decode()
         #print(cosimTime)
 
 def publishRtime():

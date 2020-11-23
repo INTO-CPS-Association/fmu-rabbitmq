@@ -143,19 +143,13 @@ public:
 
     friend ostream &operator<<(ostream &os, const FmuContainerCore &c);
 
-    void add_flag(int flagVRef, pair<string, bool> nameVal);
-
-    void update_flag(int flagVRef, pair<string, bool> nameVal);
-
-    void add_input_val(int inputVRef, pair<string, string> nameVal);
-
-    void update_input_val(int inputVRef, pair<string, string> nameVal);
-
     void sendCheckCompose(pair<string,string> input, string &message);
-    
-    void printFlagsInputs();
 
     std::chrono::milliseconds printMessage2SimTime(date::sys_time<std::chrono::milliseconds> rTime);
+
+    std::chrono::milliseconds simTimeToReal(long long simTime);
+    
+    void convertTimeToString(long long milliSecondsSinceEpoch, string &message);
 
 protected:
 

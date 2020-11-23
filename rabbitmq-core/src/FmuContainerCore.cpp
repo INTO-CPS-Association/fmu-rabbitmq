@@ -5,9 +5,11 @@
 #include "FmuContainerCore.h"
 
 #include <iostream>
+#include <iomanip>
+#include <chrono>
 
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead)
-        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false), inputFlags(), inputVals() {
+        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false){
 
 
 }
@@ -18,6 +20,24 @@ void FmuContainerCore::add(ScalarVariableId id, TimedScalarBasicValue value) {
 
 std::chrono::milliseconds FmuContainerCore::messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime) {
     return (messageTime - this->startOffsetTime);
+}
+
+std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
+    //cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() << endl;
+    //cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() + std::chrono::milliseconds(simTime).count() << endl;
+    return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
+}
+
+void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){
+    const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
+    const std::chrono::time_point<std::chrono::system_clock> tp_after_duration(durationSinceEpoch);
+    time_t time_after_duration = std::chrono::system_clock::to_time_t(tp_after_duration);
+    std::tm* formattedTime = std::localtime(&time_after_duration);
+    long long int milliseconds_remainder = milliSecondsSinceEpoch % 1000;
+    stringstream transTime;
+    transTime << put_time(std::localtime(&time_after_duration), "%y-%m-%d-%H-%M-%S-") << milliseconds_remainder;
+    message = transTime.str();
+    //cout <<"SIM time to REAL time"<< message << endl;
 }
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
@@ -360,33 +380,6 @@ void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::mill
        << " Value: " << val.second << "\n";
 }
 
-void FmuContainerCore::add_flag(int flagVRef, pair<string, bool> nameVal){
-    this->inputFlags.insert(pair<int, pair<string, bool>>(flagVRef, nameVal));
-    /*for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
-            cout << "ADD_FLAG:" << it->first << it->second.first << it->second.second << endl;
-        }*/
-}
-
-void FmuContainerCore::update_flag(int flagVRef, pair<string, bool> nameVal){
-    //this->inputFlags.insert(pair<string, pair<int, bool>>(flagName, vrVal));
-    this->inputFlags[flagVRef].second = nameVal.second;
-    //cout << "UPDATE_FLAG:" << flagVRef << this->inputFlags[flagVRef].first << this->inputFlags[flagVRef].second << endl;
-}
-
-void FmuContainerCore::add_input_val(int inputVRef, pair<string, string> nameVal){
-    this->inputVals.insert(pair<int, pair<string, string>>(inputVRef, nameVal));
-    /*for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
-            cout << "ADD_FLAG:" << it->first << it->second.first << it->second.second << endl;
-        }*/
-}
-
-void FmuContainerCore::update_input_val(int inputVRef, pair<string, string> nameVal){
-    //this->inputVals.insert(pair<string, pair<int, string>>(inputName, vrVal));
-    this->inputVals[inputVRef].second = nameVal.second;
-    //cout << "UPDATE_FLAG:" << inputVRef << this->inputVals[inputVRef].first << this->inputVals[inputVRef].second << endl;
-}
-
-//Left it here - look at todo
 void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &message){
     if(!message.empty()){
         //TODO change the message to send the content of the input and not the flag
@@ -395,15 +388,6 @@ void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &messag
     else{
         //TODO change the message to send the content of the input and not the flag
         message = R"(")" + input.first + R"(":)" + input.second + R"(,)";
-    }
-}
-
-void FmuContainerCore::printFlagsInputs(){
-    for(auto it = this->inputFlags.cbegin(); it != this->inputFlags.cend(); it++){
-            cout << "FLAG: " << it->first << " " << it->second.first << " " << it->second.second << endl;
-        }
-    for(auto it = this->inputVals.cbegin(); it != this->inputVals.cend(); it++){
-        cout << "INPUT: " << it->first << " " << it->second.first << " " << it->second.second << endl;
     }
 }
 

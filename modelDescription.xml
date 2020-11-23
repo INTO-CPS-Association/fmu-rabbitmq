@@ -65,6 +65,10 @@
         <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
             <Integer start="1"/>
         </ScalarVariable>
+        
+        <ScalarVariable name="config.routingkeySystemHealth" valueReference="9" variability="fixed" causality="parameter" initial="exact">
+            <String start="system_health"/>
+        </ScalarVariable>
 
 
     </ModelVariables>

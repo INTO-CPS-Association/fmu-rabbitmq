@@ -28,6 +28,7 @@
 #define RABBITMQ_FMU_PRECISION 6
 #define RABBITMQ_FMU_MAX_AGE 7
 #define RABBITMQ_FMU_LOOKAHEAD 8
+#define RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH 9
 
 using namespace std;
 
@@ -93,10 +94,7 @@ private:
     //this connection is for consuming from rabbitmq
     RabbitmqHandler *rabbitMqHandlerPublish;
     //this connection is for exchanging data regarding system health
-    //this connection is for consuming from rabbitmq
-    RabbitmqHandler *rabbitMqHandlerSystemHealthPublish;
-    //this connection is for exchanging data regarding system health
-    RabbitmqHandler *rabbitMqHandlerSystemHealthConsume;
+    RabbitmqHandler *rabbitMqHandlerSystemHealth;
 
    // bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
 
@@ -107,6 +105,8 @@ private:
     const bool loggingOn;
 
     unsigned long precision;
+
+    pair<string,string> routingKey, routingKeySystemHealth;//first string for publishing, second for consuming
 
 
     bool initializeCoreState();
