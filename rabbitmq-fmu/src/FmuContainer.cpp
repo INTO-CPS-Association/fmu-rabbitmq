@@ -405,6 +405,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
     cosim_time = R"({("simAtTime":")" + cosim_time + R"("})";
     cout << "COSIM TIME:" << cosim_time << endl;
+
+    FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
     this->rabbitMqHandlerSystemHealth->publish(this->routingKeySystemHealth.first, cosim_time, 1);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";

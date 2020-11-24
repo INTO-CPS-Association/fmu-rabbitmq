@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <fmiModelDescription fmiVersion="2.0" modelName="RabbitMq" guid="{cfc65592-ffff-4563-9705-1581b6e7071c}"
-                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="AU"
-                     license="-">
+                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="INTO-CPS"
+                     license="INTO-CPS">
     <CoSimulation modelIdentifier="rabbitmq" needsExecutionTool="true"
                   canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false"
                   maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="true"

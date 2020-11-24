@@ -23,8 +23,8 @@ std::chrono::milliseconds FmuContainerCore::messageTimeToSim(date::sys_time<std:
 }
 
 std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
-    //cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() << endl;
-    //cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() + std::chrono::milliseconds(simTime).count() << endl;
+    cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() << endl;
+    cout << "startoffset + time passed in [ms] " << this->startOffsetTime.time_since_epoch().count() + std::chrono::milliseconds(simTime).count() << endl;
     return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
 }
 
@@ -342,6 +342,10 @@ bool FmuContainerCore::check(double time) {
 
 
         auto valueTime = this->currentData.at(id).first;
+        std::stringstream temp;
+        temp << valueTime.time_since_epoch().count();
+        cout << "The time value of datapoint " << temp.str().c_str() << endl;
+        
         /*std::stringstream temp;
         temp << valueTime.time_since_epoch().count();
         cout << "The time value of datapoint " << temp.str().c_str() << endl;
@@ -382,11 +386,9 @@ void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::mill
 
 void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &message){
     if(!message.empty()){
-        //TODO change the message to send the content of the input and not the flag
         message += R"(")" + input.first + R"(":)" + input.second + R"(,)";
     }
     else{
-        //TODO change the message to send the content of the input and not the flag
         message = R"(")" + input.first + R"(":)" + input.second + R"(,)";
     }
 }

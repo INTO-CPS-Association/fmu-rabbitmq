@@ -3,11 +3,8 @@
 This project builds a FMU which uses a rabbitmq server feed live or log data into a simulation, as well as send data to an external entity (e.g. Gazebo simulation).
 
 Two types of data are considered, content data, and system health data.
-The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will
-send only the changed inputs to the entity outside the co-sim. 
-System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic
-if the 'real' time of the outside entity is published. If the latter information is available the fmu will calculate whetehr the co-sim is ahead or behind
-the outside entity. Note that the simulation will just continue as usual if this data is not available.
+The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu willsend only the changed inputs to the entity outside the co-sim. 
+System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the outside entity. Note that the simulation will just continue as usual if this data is not available.
 
 The FMU is configured using a script TBD for the output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
 * adding all model outputs as:
@@ -82,9 +79,8 @@ It can be configured by setting the following parameters:
 </ScalarVariable>
 ```
 
-In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. There are two channels for each connection, one channel that handles the publishing and the other that handles the consuming.
-Note that the variable with value reference=4 serves as a base for the configuration of the connection for the content data, whereas the variable with value reference=9 
-does the same for the connection for the system health data.
+In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. There are two channels for each connection, one channel that handles the publishing and the other that handles the consuming. Note that the variable with value reference=4 serves as a base for the configuration of the connection for the content data, whereas the variable with value reference=9  does the same for the connection for the system health data.
+
 The fmu configures the name of the channels as follows:
 ${routing key base}+"_from_cosim" for publishing, which would result in "linefollower_from_cosim" and "system_health_from_cosim" given the values in the above example. Data sent from the
 rabbitMQ can be consumed from these topics.
