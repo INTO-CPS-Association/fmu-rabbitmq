@@ -32,6 +32,25 @@ Messages published by the RMQFMU are also packaged in the json format, and will 
         "other_string_input":"hello rbMQ"
     }
     
+Message Format - System Health Data
+------------------------------------
+Messages to be consumed by the RMQFMU are to be in JSON format with two fields as shown in the example below. The key :code:`rtime` refers to the current timestep as perceived from the system sending a message to RMQFMU, whereas the key :code:`cosimtime` to the last known timestep in which the RMQFMU was operating. Note that the time should be in accordance with the ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
+
+.. code-block:: json
+
+    {
+        "rtime":"2019-01-04T16:41:24+02:00",
+        "cosimtime":"2019-01-04T16:41:24+02:00",
+    }
+
+Messages published by the RMQFMU are also packaged in the json format, and contain the current timestep in which the RMQFMU is operating. Note that the time is be in accordance with the ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
+
+.. code-block:: json
+
+    {
+        "simAtTime":"2019-01-04T16:41:24+02:00"
+    }
+    
     
 Model Description File
 ----------------------
