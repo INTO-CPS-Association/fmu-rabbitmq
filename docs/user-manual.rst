@@ -1,13 +1,16 @@
 User Manual
 ===========
-This page covers how to use RabbitMQ FMU (RMQFMU), whereas the internal workings are described in Developer Manual.
+The RabbitMQ FMU (RMQFMU) allows to publish and consume two types of data to/from a rabbitMQ server. 
+The two types of data are: content data, and system health data. For each type of data, a separate connection is used to the rabbitMQ server, with two channels, one for publishing and one for consuming respectively. 
+
+The rest of this page covers how to use RMQFMU, whereas the internal workings are described in Developer Manual (Data Handling).
 The two parts described are: The structure of a message and how to configure properties of RMQFMU via the modelDescription file.
 
 **NOTE: As the Model Description file itself is parsed by RMQFMU, a copy has to be placed inside the resources folder.**
 
-Message Format
----------------
-Messages are to be in JSON format with timestamps in ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
+Message Format - Content Data
+------------------------------
+Messages to be consumed by the RMQFMU are to be in JSON format with timestamps in ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
 A message shall contain a timestamp and one or more values. The example below contains two values.
 
 .. code-block:: json
@@ -18,11 +21,22 @@ A message shall contain a timestamp and one or more values. The example below co
         "other_variable":10.0
     }
 
+Messages published by the RMQFMU are also packaged in the json format, and will contain a timestep together with one or more values of the included inputs. Only inputs the value of which has changed between two consecutive timesteps are included in the message. If no input has changed, then no message is sent from the RMQFMU. An example is given below.
 
+.. code-block:: json
+
+    {
+        "timestep":"2019-01-04T16:41:24+02:00",
+        "input_bool_stop":1,
+        "input_int_speed":5,
+        "other_string_input":"hello rbMQ"
+    }
+    
+    
 Model Description File
 ----------------------
-:code:`ScalarVariables` within the Model Description File are used to both configure properties of RMQFMU and mapping message data to FMU outputs.
-The first 0-8 `valueReference` of the model description file are used for configuring RMQFMU. It is adviced **not** to use `valueReference` 0-19, as these might be used for future updates.
+:code:`ScalarVariables` within the Model Description File are used to configure properties of RMQFMU, mapping message data to FMU outputs, as well as FMU inputs to message data.
+The first 0-9 `valueReference` of the model description file are used for configuring RMQFMU. It is adviced **not** to use `valueReference` 0-19, as these might be used for future updates.
 Below is a description of the configuration of RMQFMU via scalar variables of the model description file:
 
 ValueReference 0 - hostname
@@ -37,8 +51,8 @@ ValueReference 2 - username
 ValueReference 3 - Password
     Defines the password for the RabbitMQ Server
 
-ValueReference 4 - Routing Key
-    Defines the Routing Key for the messages
+ValueReference 4 - Routing Key - content data
+    Defines the Routing Key for the content data messages
 
 ValueReference 5 - Communication Timeout
     Defines when to time out if the desired state cannot be reached.
@@ -55,6 +69,15 @@ ValueReference 7 - Max Age
 ValueReference 8 - Look Ahead
     The maximum number of queue messages that should be considered on each processing.
     Does not cause blocking behaviour if less messages are available.
+    
+ ValueReference 9 - Routing Key - system health data
+    Defines the Routing Key for the system health data messages
+
+Parameters with value reference 4 and 9 are used as a base to configure two different connections to the rabbitMQ server. 
+The parameter with value reference 4 is used to create the connection through which content data is exchanged. In this context two channels are created with routing keys as follows: :code:`"${param4Value}_from_cosim"` and :code:`"${param4Value}_to_cosim"`. Content data to be sent to RMQFMU should be published to :code:`"${param4Value}_to_cosim"`, whereas RMQFMU publishes content data to :code:`"${param4Value}_from_cosim"`.
+Similarly for the paramter with value reference 9. Two channels are created with routing keys as follows: :code:`"${param9Value}_from_cosim"` and :code:`"${param9Value}_to_cosim"`. System health data to be sent to RMQFMU should be published to :code:`"${param9Value}_to_cosim"`, whereas RMQFMU publishes system health data to :code:`"${param9Value}_from_cosim"`.
+
+**NOTE: If no system health data is published to RMQFMU then the operation of the fmu will continue normally, however no information regarding system health will be outputted from RMQFMU.**
 
 A mapping of message data to FMU output is carried out via the name property of a :code:`ScalarVariable`. For example: :code:`<ScalarVariable name="level" valueReference="20" variability="continuous" causality="output"><Real /></ScalarVariable>` maps the value of the key :code:`level` within a message to the output with :code:`valueReference 20`.
 
@@ -67,3 +90,5 @@ Remember, when adding an additional output this also has to be added to outputs 
             <Unknown index="1"/>
         </Outputs>
     </ModelStructure>
+    
+A mapping of an FMU input to a message is carried out via the name property of a :code:`ScalarVariable`. For example: :code:`<ScalarVariable name="feedback" valueReference="21" variability="continuous" causality="input"><Real /></ScalarVariable>` maps the value of the input with :code:`valueReference 21` to the key :code:`feedback` within a message.
