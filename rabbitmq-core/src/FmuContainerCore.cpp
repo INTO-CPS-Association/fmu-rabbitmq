@@ -37,10 +37,10 @@ void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, str
     long long int milliseconds_remainder = milliSecondsSinceEpoch % 1000;
     stringstream transTime, formatString;
     //transTime << put_time(std::localtime(&time_after_duration), "%Y-%m-%dT%H:%M:%S.") << milliseconds_remainder << "+01:00";
-    formatString << "%FT%T."<< milliseconds_remainder <<"%z";
+    formatString << "%FT%T."<< milliseconds_remainder <<"%Ez";
     //cout << "Format string: " << formatString.str().c_str() << endl;
     transTime << put_time(formattedTime, formatString.str().c_str());
-    message = transTime.str();
+    message = transTime.str().insert(transTime.str().length()-2, ":");
     //cout <<"SIM time to REAL time"<< message << endl;%Y-%m-%dT%H:%M:%S"
 }
 
