@@ -11,7 +11,7 @@ The initialization process of RabbitMQ FMU is peculiar in the sense that it need
 
 Functions
 ^^^^^^^^^
-Some functions are are described in this seciton that  are used in the diagram in the subsequent section.
+Some functions are described in this seciton that are used in the diagram in the subsequent section.
 
 RabbitMQFMU.configure()
     - Configure the RMQFMU based on the configuration within the model description file.
@@ -45,12 +45,13 @@ Flow of EnterInitializationMode
 
 
     Master -> FMUI: EnterInitializationMode
-    FMUI -> FMUI: configure()
-    FMUI -> server: Publish Ready message
+    FMUI -> FMUI: configure() connection for content data (CCD)
+    FMUI -> server: Publish Ready message on connection for content data
+    FMUI -> FMUI: configure() connection for system health data (CSHD)
     FMUI -> FMUI: initializeCoreState()
     FMUI -> FMUI: set StartTime = Time Now
         loop TimeNow - StartTime < communicationTimeOut
-            FMUI -> server: ConsumeSingleMessage(&msg)
+            FMUI -> server: ConsumeSingleMessage(&msg) | (CCD)
             alt There is a message
                 server --> FMUI: msg = message; return True
                 FMUI -> FMUC: AddToIncomingUnprocessed(msg)
@@ -108,6 +109,7 @@ Flow of DoStep Operation
 
     Master -> FMUI: doStep(currentCommunicationTime, communicationStepSize)
     FMUI -> FMUI: simulationTime = applyPrecision(\ncurrentCommunicationTime+communicationStepSize)
+    FMUI -> FMUC: Publish system health data | (CSHD)
     FMUI -> FMUC: process(simulationTime)
     group process function
         FMUC -> FMUC: check()
@@ -122,6 +124,15 @@ Flow of DoStep Operation
             alt There is a message
                 server --> FMUI: msg = message; return True
                 FMUI -> FMUC: AddToIncomingUnprocessed(msg)
+                alt There is change of inputs
+                    FMUI -> FMUC: Package json message
+                    FMUI -> server: Send message with changed inputs
+                end
+                FMUI -> server: consumeSingleMessage(&msgSH)
+                alt There is system health data
+                   server --> FMUI: msgSH = messageSH; return True
+                   FMUI -> FMUI: Calculate time discrepancy
+                end
                 FMUI -> FMUC: processResult = Process() // Described above
                 alt processResult == True
                     FMUI -> Master: True
