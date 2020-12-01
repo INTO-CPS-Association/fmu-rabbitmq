@@ -100,13 +100,14 @@ Similarly for the paramter with value reference 9. Two channels are created with
 
 A mapping of message data to FMU output is carried out via the name property of a :code:`ScalarVariable`. For example: :code:`<ScalarVariable name="level" valueReference="20" variability="continuous" causality="output"><Real /></ScalarVariable>` maps the value of the key :code:`level` within a message to the output with :code:`valueReference 20`.
 
-Remember, when adding an additional output this also has to be added to outputs in modelstructure. Note, that it uses index and not valuereference! Index is related to the order of the respective scalarvariable. I.e. the topmost scalar variable within ``ModelVariables`` has index 1. Example of adding an index to ``ModelStructure/Outputs``:
+Remember, when adding an additional output this also has to be added to outputs in modelstructure. Note, that it uses index and not valuereference! Index is related to the order of the respective scalarvariable. I.e. the topmost scalar variable within ``ModelVariables`` has index 1. Example of adding two indices to ``ModelStructure/Outputs``:
 
 .. code-block:: xml
 
     <ModelStructure>
         <Outputs>
             <Unknown index="1"/>
+            <Unknown index="2"/>
         </Outputs>
     </ModelStructure>
     
