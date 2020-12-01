@@ -46,7 +46,7 @@ Flow of EnterInitializationMode
 
     Master -> FMUI: EnterInitializationMode
     FMUI -> FMUI: configure() connection for content data (CCD)
-    FMUI -> server: Publish Ready message on connection for content data
+    FMUI -> server: Publish Ready message on CCD
     FMUI -> FMUI: configure() connection for system health data (CSHD)
     FMUI -> FMUI: initializeCoreState()
     FMUI -> FMUI: set StartTime = Time Now
