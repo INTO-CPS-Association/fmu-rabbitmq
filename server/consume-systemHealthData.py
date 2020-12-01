@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import pika
 import json
-import datetime
+from datetime import datetime, timezone
 import time
 import threading
-import datetime
 
 cosimTime = 0.0
 newData = False
@@ -37,11 +36,12 @@ print(' [*] I am consuming and publishing information related to system health')
 
 def callbackConsume(ch, method, properties, body):
     global newData, cosimTime
-    print("Received [x] %r" % body)
+    print("\nReceived [x] %r" % body)
     #cosimTime = datetime.datetime.strptime(body, "%Y-%m-%dT%H:%M:%S.%f%z")
     with lock:
         newData = True
         cosimTime = body.decode()
+        cosimTime = json.loads(cosimTime)
         #print(cosimTime)
 
 def publishRtime():
@@ -52,11 +52,17 @@ def publishRtime():
                 newData = False
                 msg = {}
                 
-                timeNow = datetime.datetime.now()
-                msg['rtime'] = timeNow.isoformat(timespec='milliseconds')+"0100"
-                msg['cosimtime'] = cosimTime
+                timeNow = datetime.now(timezone.utc).astimezone().isoformat(timespec='milliseconds')
+                
+                msg['rtime'] = timeNow
+
+                #timet = datetime.datetime.strptime(timeNow.isoformat(timespec='milliseconds'), "%Y-%m-%dT%H:%M:%S.%f%z")
+                #msg['time']= timet.isoformat(timespec='milliseconds')
+                
+                msg['cosimtime'] = cosimTime["simAtTime"]
+                print("\nSending [y] %s" % str(msg))
                 channelPublish.basic_publish(exchange='fmi_digital_twin',
-                                    routing_key='system_health_rtime',
+                                    routing_key='system_health_to_cosim',
                                     body=json.dumps(msg))
 
 channelConsume.basic_consume(

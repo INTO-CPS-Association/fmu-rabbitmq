@@ -189,8 +189,12 @@ int main() {
             bool changeInput = false;
             fmi2ValueReference vrefsReals[] = {RABBITMQ_FMU_COMMAND_STOP};
             fmi2ValueReference vrefsInt[] = {RABBITMQ_FMU_COMMAND_INT};
-            double reals[] = {3.5};
-            int ints[] = {5};
+            fmi2ValueReference vrefsBool[] = {22};
+            fmi2ValueReference vrefsStrs[] = {25};
+            fmi2Real reals[] = {3.5};
+            fmi2Integer ints[] = {5};
+            fmi2Boolean bools[] = {true};
+            fmi2String strs[] = {"hejsan"};
             for(int i = 0; i <= simDuration; i++){
                 showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
                                                     noSetFMUStatePriorToCurrentPoint));
@@ -203,11 +207,13 @@ int main() {
 
                 if(changeInput){
                     showStatus("fmi2SetReal", fmi2SetReal(c, vrefsReals, 1, reals));
+                    showStatus("fmi2SetString", fmi2SetString(c, vrefsStrs, 1, strs));
                     cout << "SHOULD have updated" << endl;
                 }
                 else{
 
                     showStatus("fmi2SetInteger", fmi2SetInteger(c, vrefsInt, 1, ints));
+                    showStatus("fmi2SetBoolean", fmi2SetBoolean(c, vrefsBool, 1, bools));
                 }
 
                 changeInput=!changeInput;

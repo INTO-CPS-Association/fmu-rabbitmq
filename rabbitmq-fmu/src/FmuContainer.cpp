@@ -403,10 +403,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
-    cosim_time = R"({("simAtTime":")" + cosim_time + R"("})";
-    cout << "COSIM TIME:" << cosim_time << endl;
+    cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
+    //cout << "COSIM TIME:" << cosim_time << endl;
 
-    FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
+    //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
     this->rabbitMqHandlerSystemHealth->publish(this->routingKeySystemHealth.first, cosim_time, 1);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
@@ -416,7 +416,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 //    std::string str = stream.str();
 //    const char *chr = str.c_str();
 //    FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]: %s", simulationTime, chr);
-
 //    cout << "Checking with existing messages\n";
     if (this->core->process(simulationTime)) {
         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
@@ -440,7 +439,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                 //data received
 
                 DataPoint result;
-
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
 
                     std::stringstream startTimeStamp;
@@ -498,7 +496,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
                                 if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
                                     cout << "INPUT has changed" << endl;
-                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, this->currentData.stringValues[it->second.valueReference]), message);
+                                    string str = "\"";
+                                    str.append(this->currentData.stringValues[it->second.valueReference]);
+                                    str.append("\"");
+                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, str), message);
                                     //Update previous to current value
                                     this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
                                 }
@@ -508,7 +509,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                     //if anything to send, publish to rabbitmq
                     if(!message.empty()){
-                        message = R"({)" + message + R"("timestep:")" + startTimeStamp.str() + R"("})";
+                        message = R"({)" + message + R"("timestep":")" + startTimeStamp.str() + R"("})";
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandler->publish(this->routingKey.first, message, 1);
                     }
@@ -516,25 +517,36 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     //Check if there is info on the system real time
                    
                     string systemHealthData;
-                    if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+                    bool tryAgain = true;
+
+                    while(tryAgain){
+                        tryAgain = false;
+                        if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+                        //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, 2, this->routingKeySystemHealth.second)){
                         cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
-                        //FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
+                        FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
 
-                        //TODO Extract rtime value from message
-                        date::sys_time<std::chrono::milliseconds> rTime;
-                        double simTime, rTime_d;
-                        MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str());
+                        //Extract rtime value from message
+                        date::sys_time<std::chrono::milliseconds> simTime, rTime;
+                        double simTime_d, rTime_d;
+                        if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
 
-                        rTime_d = this->core->printMessage2SimTime(rTime).count();
-                        FmuContainer_LOG(fmi2OK, "logAll", "at sim-time: %f [ms], rtime 2 simtime: %f", simTime, rTime_d);
+                            rTime_d = this->core->printMessage2SimTime(rTime).count();
+                            simTime_d = this->core->printMessage2SimTime(simTime).count();
+                            FmuContainer_LOG(fmi2OK, "logAll", "at sim-time: %f [ms], rtime 2 simtime: %f", simTime_d, rTime_d);
 
-                        if(rTime_d < simulationTime){
-                            FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f", simTime-rTime_d);
+                            if(rTime_d < simulationTime){
+                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f", simTime_d-rTime_d);
+                            }
+                            else  if (rTime_d > simulationTime){
+                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime_d);
+                            }
                         }
-                        else  if (rTime_d > simulationTime){
-                            FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime);
+                        else{
+                            cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+                            tryAgain=true;
+                            }
                         }
-                       
                     }
                     
                     if (this->core->process(simulationTime)) {
