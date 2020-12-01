@@ -37,7 +37,6 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 
         if (std::string("time") == memberName && d["time"].IsString()) {
             const char *timeString = d["time"].GetString();
-
             result.time = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
         } else {
@@ -86,11 +85,11 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 }
 
 bool
-MessageParser::parseSystemHealthMessage(double &simTime, date::sys_time<std::chrono::milliseconds> &rTime, const char *json){
+MessageParser::parseSystemHealthMessage(date::sys_time<std::chrono::milliseconds> &simTime, date::sys_time<std::chrono::milliseconds> &rTime, const char *json){
     Document d;
     d.Parse(json);
     bool hasData = false;
-
+    //cout << "JSON to parse: " << json << endl;
     for (Value::ConstMemberIterator itr = d.MemberBegin();
          itr != d.MemberEnd(); ++itr) {
         auto memberName = itr->name.GetString();
@@ -100,10 +99,16 @@ MessageParser::parseSystemHealthMessage(double &simTime, date::sys_time<std::chr
             const char *timeString = d["rtime"].GetString();
             rTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
-        } else if (std::string("cosimtime") == memberName && d["cosimtime"].IsDouble()) {
+        } else if (std::string("cosimtime") == memberName && d["cosimtime"].IsString()) {
             hasData = true;
-            simTime = d["cosimtime"].GetDouble();
+            const char *timeString = d["cosimtime"].GetString();
+            simTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
+        }
+        else{
+            // not known
+            cout << "Input data contains unknown member " << memberName << endl;
+            break;
         }
     }
     return hasData;

@@ -47,6 +47,7 @@ public :
     virtual bool createChannel(amqp_channel_t channelID);
     virtual void bind(amqp_channel_t channelID, const string &routingkey);
     void publish(const string &routingkey, const string &message, amqp_channel_t channelID);
+    bool getFromChannel(string &payload, amqp_channel_t channelID, string queue);
 
 private:
 

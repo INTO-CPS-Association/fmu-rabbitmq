@@ -15,7 +15,7 @@
 class MessageParser {
 public :
    static bool parse(map<string, ModelDescriptionParser::ScalarVariable> *nameToValueReference,const char *json,  DataPoint* output);
-   static bool parseSystemHealthMessage(double &simTime, date::sys_time<std::chrono::milliseconds> &rTime, const char *json);
+   static bool parseSystemHealthMessage(date::sys_time<std::chrono::milliseconds> &simTime, date::sys_time<std::chrono::milliseconds> &rTime, const char *json);
 };
 
 #endif //RABBITMQ_FMU_MESSAGEPARSER_H

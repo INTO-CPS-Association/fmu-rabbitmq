@@ -259,6 +259,7 @@ void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingK
             conn, channelID, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     queuename = amqp_bytes_malloc_dup(r->queue);
+    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queuename.bytes), queuename.len).c_str());
     if (queuename.bytes == NULL) {
         fprintf(stderr, "Out of memory while copying queue name");
         return;
@@ -284,4 +285,44 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
                                       amqp_cstring_bytes(routingkey.c_str()), 0, 0,
                                       &props, amqp_cstring_bytes(messagebody.c_str())),
                    "Publishing");
+}
+
+bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, string queue) {
+
+    amqp_rpc_reply_t res, res2;
+    amqp_message_t message;
+    amqp_boolean_t no_ack = false;
+
+
+    //amqp_maybe_release_buffers(conn);
+printf("were here, with queue name %s\n", queue.c_str());
+    //res = amqp_basic_get(conn, channelID, amqp_empty_bytes, no_ack);
+    res = amqp_basic_get(conn, channelID, queuename, no_ack);
+    printf("1:reply type %d\n", res.reply_type);
+
+
+    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queuename.bytes), queuename.len).c_str());
+    printf("2:reply type %d\n", res.reply_type);
+    if (AMQP_RESPONSE_NORMAL != res.reply_type) {
+        printf("6:reply type %d\n", res.reply_type);
+        return false;
+    }
+
+    printf("4:reply type %d\n", res.reply_type);
+
+    res2 = amqp_read_message(conn,channelID,&message,0);
+    printf("5:reply type %d\n", res2.reply_type);
+
+    if (AMQP_RESPONSE_NORMAL != res2.reply_type) {
+        printf("6:reply type %d\n", res2.reply_type);
+        return false;
+    }
+
+printf("then were here\n");
+    payload = std::string(reinterpret_cast< char const * >(message.body.bytes), message.body.len);
+
+printf("then were here\n %s", payload.c_str());
+    amqp_destroy_message(&message);
+    return true;
+
 }

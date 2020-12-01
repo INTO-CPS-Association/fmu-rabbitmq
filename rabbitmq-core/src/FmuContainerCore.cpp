@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <chrono>
 
+
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead)
         : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false){
 
@@ -28,16 +29,19 @@ std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
     return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
 }
 
-void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){
+void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){                
     const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
     const std::chrono::time_point<std::chrono::system_clock> tp_after_duration(durationSinceEpoch);
     time_t time_after_duration = std::chrono::system_clock::to_time_t(tp_after_duration);
-    std::tm* formattedTime = std::localtime(&time_after_duration);
+    std::tm* formattedTime = std::gmtime(&time_after_duration);
     long long int milliseconds_remainder = milliSecondsSinceEpoch % 1000;
-    stringstream transTime;
-    transTime << put_time(std::localtime(&time_after_duration), "%y-%m-%d-%H-%M-%S-") << milliseconds_remainder;
+    stringstream transTime, formatString;
+    //transTime << put_time(std::localtime(&time_after_duration), "%Y-%m-%dT%H:%M:%S.") << milliseconds_remainder << "+01:00";
+    formatString << "%FT%T."<< milliseconds_remainder <<"%z";
+    //cout << "Format string: " << formatString.str().c_str() << endl;
+    transTime << put_time(formattedTime, formatString.str().c_str());
     message = transTime.str();
-    //cout <<"SIM time to REAL time"<< message << endl;
+    //cout <<"SIM time to REAL time"<< message << endl;%Y-%m-%dT%H:%M:%S"
 }
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
@@ -261,7 +265,6 @@ bool FmuContainerCore:: process(double time ) {
     processIncoming();
 
 //read until time
-
     auto predicate = [time, this](FmuContainerCore::TimedScalarBasicValue &value) {
         return messageTimeToSim(value.first).count() <= time;
     };
@@ -342,15 +345,12 @@ bool FmuContainerCore::check(double time) {
 
 
         auto valueTime = this->currentData.at(id).first;
+        
         std::stringstream temp;
         temp << valueTime.time_since_epoch().count();
         cout << "The time value of datapoint " << temp.str().c_str() << endl;
-        
-        /*std::stringstream temp;
-        temp << valueTime.time_since_epoch().count();
-        cout << "The time value of datapoint " << temp.str().c_str() << endl;
         cout << "The time value of datapoint " << messageTimeToSim(valueTime).count() << endl;
-        */
+
         if (time < messageTimeToSim(valueTime).count()) {
             if (verbose) {
                 printf("Future value discovered. Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %f\n", id,
@@ -359,7 +359,6 @@ bool FmuContainerCore::check(double time) {
             }
             return false;
         }
-
         if ((messageTimeToSim(valueTime) + this->maxAge).count() < time) {
             if (verbose) {
                 printf("Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %9.f\n", id, this->maxAge.count(),
@@ -395,9 +394,9 @@ void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &messag
 
 std::chrono::milliseconds FmuContainerCore::printMessage2SimTime(date::sys_time<std::chrono::milliseconds> rTime){
     std::stringstream rtimeString, temp;
-    cout << "RTIME: "  << endl;
+    //cout << "RTIME: "  << endl;
     rtimeString << this->messageTimeToSim(rTime).count() << endl;
-    cout << "RTIME: " << rtimeString.str().c_str();
+    //cout << "RTIME: " << rtimeString.str().c_str();
     return this->messageTimeToSim(rTime);
 }
 
