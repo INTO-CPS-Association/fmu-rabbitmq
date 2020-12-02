@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-
+#include <cmath>
 
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead)
         : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false){
@@ -37,11 +37,19 @@ void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, str
     long long int milliseconds_remainder = milliSecondsSinceEpoch % 1000;
     stringstream transTime, formatString;
     //transTime << put_time(std::localtime(&time_after_duration), "%Y-%m-%dT%H:%M:%S.") << milliseconds_remainder << "+01:00";
-    formatString << "%FT%T."<< milliseconds_remainder <<"%Ez";
+    int no_digits = 0;
+    string appendZeros = "";
+    if(milliseconds_remainder>0){
+        no_digits = floor(log10(milliseconds_remainder))+1;
+        //cout << "Number of digits: " << no_digits << endl;
+        if(no_digits==1)appendZeros.append("00");
+        if(no_digits==2)appendZeros.append("0");
+    }
+    formatString << "%FT%T."<< appendZeros.c_str() << milliseconds_remainder <<"%Ez";
     //cout << "Format string: " << formatString.str().c_str() << endl;
     transTime << put_time(formattedTime, formatString.str().c_str());
     message = transTime.str().insert(transTime.str().length()-2, ":");
-    //cout <<"SIM time to REAL time"<< message << endl;%Y-%m-%dT%H:%M:%S"
+    //cout <<"SIM time to REAL time"<< message << endl;
 }
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
@@ -383,7 +391,7 @@ void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::mill
        << " Value: " << val.second << "\n";
 }
 
-void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &message){
+void FmuContainerCore::messageCompose(pair<string,string>input, string &message){
     if(!message.empty()){
         message += R"(")" + input.first + R"(":)" + input.second + R"(,)";
     }
@@ -392,7 +400,7 @@ void FmuContainerCore::sendCheckCompose(pair<string,string>input, string &messag
     }
 }
 
-std::chrono::milliseconds FmuContainerCore::printMessage2SimTime(date::sys_time<std::chrono::milliseconds> rTime){
+std::chrono::milliseconds FmuContainerCore::message2SimTime(date::sys_time<std::chrono::milliseconds> rTime){
     std::stringstream rtimeString, temp;
     //cout << "RTIME: "  << endl;
     rtimeString << this->messageTimeToSim(rTime).count() << endl;

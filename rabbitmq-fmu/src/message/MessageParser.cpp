@@ -88,19 +88,16 @@ bool
 MessageParser::parseSystemHealthMessage(date::sys_time<std::chrono::milliseconds> &simTime, date::sys_time<std::chrono::milliseconds> &rTime, const char *json){
     Document d;
     d.Parse(json);
-    bool hasData = false;
     //cout << "JSON to parse: " << json << endl;
     for (Value::ConstMemberIterator itr = d.MemberBegin();
          itr != d.MemberEnd(); ++itr) {
         auto memberName = itr->name.GetString();
             
         if (std::string("rtime") == memberName && d["rtime"].IsString()) {
-            hasData = true;
             const char *timeString = d["rtime"].GetString();
             rTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
         } else if (std::string("cosimtime") == memberName && d["cosimtime"].IsString()) {
-            hasData = true;
             const char *timeString = d["cosimtime"].GetString();
             simTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
 
@@ -111,5 +108,5 @@ MessageParser::parseSystemHealthMessage(date::sys_time<std::chrono::milliseconds
             break;
         }
     }
-    return hasData;
+    return d.HasMember("rtime") && d.HasMember("cosimtime");
 }

@@ -143,9 +143,9 @@ public:
 
     friend ostream &operator<<(ostream &os, const FmuContainerCore &c);
 
-    void sendCheckCompose(pair<string,string> input, string &message);
+    void messageCompose(pair<string,string> input, string &message);
 
-    std::chrono::milliseconds printMessage2SimTime(date::sys_time<std::chrono::milliseconds> rTime);
+    std::chrono::milliseconds message2SimTime(date::sys_time<std::chrono::milliseconds> rTime);
 
     std::chrono::milliseconds simTimeToReal(long long simTime);
     
