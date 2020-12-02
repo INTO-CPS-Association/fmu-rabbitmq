@@ -470,7 +470,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                                 if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
                                     cout << "INPUT has changed" << endl;
                                     val << this->currentData.doubleValues[it->second.valueReference];
-                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                                     //Update previous to current value
                                     this->previousInputs.doubleValues[it->second.valueReference] = this->currentData.doubleValues[it->second.valueReference];
                                 }
@@ -479,7 +479,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                                 if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
                                     cout << "INPUT has changed" << endl;
                                     val << this->currentData.booleanValues[it->second.valueReference];
-                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                                     //Update previous to current value
                                     this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
                                 }
@@ -488,7 +488,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                                 if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
                                     cout << "INPUT has changed" << endl;
                                     val << this->currentData.integerValues[it->second.valueReference];
-                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                                     //Update previous to current value
                                     this->previousInputs.integerValues[it->second.valueReference] = this->currentData.integerValues[it->second.valueReference];
                                 }
@@ -499,7 +499,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                                     string str = "\"";
                                     str.append(this->currentData.stringValues[it->second.valueReference]);
                                     str.append("\"");
-                                    this->core->sendCheckCompose(pair<string, string>(it->second.name, str), message);
+                                    this->core->messageCompose(pair<string, string>(it->second.name, str), message);
                                     //Update previous to current value
                                     this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
                                 }
@@ -520,32 +520,36 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     bool tryAgain = true;
 
                     while(tryAgain){
-                        tryAgain = false;
                         if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
-                        //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, 2, this->routingKeySystemHealth.second)){
-                        cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
-                        FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], rtime: %s", simulationTime, systemHealthData.c_str());
+                            //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, 2, this->routingKeySystemHealth.second)){
+                            cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
+                            FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s", simulationTime, systemHealthData.c_str());
 
-                        //Extract rtime value from message
-                        date::sys_time<std::chrono::milliseconds> simTime, rTime;
-                        double simTime_d, rTime_d;
-                        if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
+                            //Extract rtime value from message
+                            date::sys_time<std::chrono::milliseconds> simTime, rTime;
+                            double simTime_d, rTime_d;
+                            if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
 
-                            rTime_d = this->core->printMessage2SimTime(rTime).count();
-                            simTime_d = this->core->printMessage2SimTime(simTime).count();
-                            FmuContainer_LOG(fmi2OK, "logAll", "at sim-time: %f [ms], rtime 2 simtime: %f", simTime_d, rTime_d);
+                                rTime_d = this->core->message2SimTime(rTime).count();
+                                simTime_d = this->core->message2SimTime(simTime).count();
 
-                            if(rTime_d < simulationTime){
-                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f", simTime_d-rTime_d);
+                                cout << "New info on real-time of the system: " << rTime_d  << ", associated simulation time: " << simTime_d << ". Current simulation time: " << simulationTime << endl;
+                                    
+                                FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
+
+                                if(rTime_d < simTime_d){
+                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f", simTime_d-rTime_d);
+                                }
+                                else  if (rTime_d > simulationTime){
+                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime_d);
+                                }
                             }
-                            else  if (rTime_d > simulationTime){
-                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime_d);
-                            }
+                            else{
+                                cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+                                }
                         }
                         else{
-                            cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
-                            tryAgain=true;
-                            }
+                            tryAgain = false;
                         }
                     }
                     

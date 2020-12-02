@@ -89,10 +89,8 @@ private:
     DataPoint previousInputs;
     enum SvType{Real,Integer,Boolean,String};
     
-
+    //this connection is for exchanging data regarding actual state content, e.g., robot data
     RabbitmqHandler *rabbitMqHandler;
-    //this connection is for consuming from rabbitmq
-    RabbitmqHandler *rabbitMqHandlerPublish;
     //this connection is for exchanging data regarding system health
     RabbitmqHandler *rabbitMqHandlerSystemHealth;
 
