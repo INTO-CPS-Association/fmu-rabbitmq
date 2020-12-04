@@ -30,7 +30,7 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
          itr != d.MemberEnd(); ++itr) {
         auto memberName = itr->name.GetString();
 
-        if(string(memberName).rfind("internal_",0)==0)
+        if(string(memberName).rfind("internal_",0)==0 || string(memberName).rfind("simAtTime",0)==0)
         {
             continue;
         }
@@ -76,8 +76,12 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 
         }
     }
+    //Add faux assignment for the time_discrepancy output
+    if (! ((*nameToValueReference).find("time_discrepancy") == (*nameToValueReference).end()) ){
+        auto sv = (*nameToValueReference)["time_discrepancy"];
+        result.doubleValues[sv.valueReference] = 0.4242;
+    }
      *output = result;
-
    return hasData && d.HasMember("time");
 
 

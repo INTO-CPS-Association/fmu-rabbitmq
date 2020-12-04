@@ -171,8 +171,8 @@ int main() {
 
 #define RABBITMQ_FMU_LEVEL 20
 
-            size_t nvr = 1;
-            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL};
+            size_t nvr = 2;
+            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL,22};
             fmi2Real *value = new fmi2Real[nvr];
 
             showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
@@ -189,7 +189,7 @@ int main() {
             bool changeInput = false;
             fmi2ValueReference vrefsReals[] = {RABBITMQ_FMU_COMMAND_STOP};
             fmi2ValueReference vrefsInt[] = {RABBITMQ_FMU_COMMAND_INT};
-            fmi2ValueReference vrefsBool[] = {22};
+            fmi2ValueReference vrefsBool[] = {26};
             fmi2ValueReference vrefsStrs[] = {25};
             fmi2Real reals[] = {3.5};
             fmi2Integer ints[] = {5};
@@ -201,7 +201,7 @@ int main() {
 
                 showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
                 for (int i = 0; i < nvr; i++) {
-                    cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+                    cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl;
                 }
                 currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
 
