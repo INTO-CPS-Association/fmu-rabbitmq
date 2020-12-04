@@ -40,8 +40,8 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
         : m_functions(mFunctions), m_name(mName), nameToValueReference((nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), routingKey(), routingKeySystemHealth(){
-
+          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), 
+          routingKey(), routingKeySystemHealth(), timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead")};
@@ -274,7 +274,7 @@ bool FmuContainer::initialize() {
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
 
-    //Initialise previousInputs
+    //Initialise previousInputs and check whether the time_discrepancy is given
     for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
         if(it->second.input){
             //Init value 
@@ -292,8 +292,13 @@ bool FmuContainer::initialize() {
                 this->previousInputs.stringValues.insert(pair<unsigned int, string>(it->second.valueReference, it->second.s_value));
             }
         }
+        else if(it->second.output && it->first.compare("time_discrepancy")==0){
+            cout << "time discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
+            FmuContainer_LOG(fmi2OK, "logAll","time discrepancy presence: %d', with vref: %d s",it->first,it->second.valueReference);
+            this->timeOutputPresent = true;
+            this->timeOutputVRef = it->second.valueReference;
+        }
     }
-
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
@@ -301,7 +306,6 @@ bool FmuContainer::initialize() {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");
         return false;
     }
-
 
     std::stringstream startTimeStamp;
     startTimeStamp << this->core->getStartOffsetTime();
@@ -331,6 +335,7 @@ bool FmuContainer::initializeCoreState() {
         string json;
         while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
                this->communicationTimeout) {
+
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
                 DataPoint result;
@@ -398,8 +403,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 //         << " ms" << endl;
 
     simulationTime = std::round(simulationTime * precision) / precision;
-
-    //Get real time based on sim time, and format as string with %y-%m-%d-%H-%M-%S-
     long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
@@ -426,7 +429,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         FmuContainer_LOG(fmi2Fatal, "logAll", "Rabbitmq handle not initialized%s", "");
         return false;
     }
-
+    if(this->timeOutputPresent){
+        this->previousTimeOutputVal = this->core->getTimeDiscrepancyOutput(this->timeOutputVRef);
+    }
 //    cout << "Checking with new messages\n";
     auto start = std::chrono::system_clock::now();
     try {
@@ -512,12 +517,16 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         message = R"({)" + message + R"("timestep":")" + startTimeStamp.str() + R"("})";
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandler->publish(this->routingKey.first, message, 1);
+
+                        //Reset Inputs to what they were before send.
                     }
                     
                     //Check if there is info on the system real time
                    
                     string systemHealthData;
                     bool tryAgain = true;
+                    bool validData = false;
+                    double simTime_d, rTime_d;
 
                     while(tryAgain){
                         if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
@@ -527,9 +536,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                             //Extract rtime value from message
                             date::sys_time<std::chrono::milliseconds> simTime, rTime;
-                            double simTime_d, rTime_d;
                             if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
-
+                                validData = true;
                                 rTime_d = this->core->message2SimTime(rTime).count();
                                 simTime_d = this->core->message2SimTime(simTime).count();
 
@@ -537,12 +545,15 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                                     
                                 FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
 
+                                //If output time_discrepancy present, set its value
+
                                 if(rTime_d < simTime_d){
-                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f", simTime_d-rTime_d);
+                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
                                 }
                                 else  if (rTime_d > simulationTime){
-                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f", rTime_d-simTime_d);
+                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
                                 }
+
                             }
                             else{
                                 cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
@@ -553,8 +564,19 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         }
                     }
                     
-                    if (this->core->process(simulationTime)) {
+                    if (this->core->process(simulationTime)) {    
+                        if(this->timeOutputPresent){                   
+                            if(validData){
+                                cout << "It should be here setting the time_discreapncy output" << endl;
+                                this->core->setTimeDiscrepancyOutput(simTime_d-rTime_d, this->timeOutputVRef);
+                            }
+                            else{
+                                this->core->setTimeDiscrepancyOutput(this->previousTimeOutputVal, this->timeOutputVRef);
+                                FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
+                            }
+                        } 
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
+
                         return true;
                     }
 

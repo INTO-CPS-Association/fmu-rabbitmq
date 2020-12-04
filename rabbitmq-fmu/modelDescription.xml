@@ -15,7 +15,10 @@
     <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
     <ModelVariables>
 
-        <ScalarVariable name="xpos" valueReference="20" variability="continuous" causality="output">
+        <ScalarVariable name="time_discrepancy" valueReference="20" variability="continuous" causality="output">    
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="xpos" valueReference="22" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
         <ScalarVariable name="ypos" valueReference="23" variability="continuous" causality="output">
@@ -79,6 +82,7 @@
             <Unknown index="3"/>
             <Unknown index="4"/>
             <Unknown index="5"/>
+            <Unknown index="6"/>
         </Outputs>
     </ModelStructure>
 

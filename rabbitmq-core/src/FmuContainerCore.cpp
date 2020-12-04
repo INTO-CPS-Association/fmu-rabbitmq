@@ -384,7 +384,6 @@ void FmuContainerCore::setVerbose(bool verbose) {
 
 }
 
-
 void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::milliseconds> offset,
                FmuContainerCore::TimedScalarBasicValue val) {
     os << prefix << "Time: " << val.first.time_since_epoch().count() << " (" << (val.first - offset).count() << ")"
@@ -408,6 +407,21 @@ std::chrono::milliseconds FmuContainerCore::message2SimTime(date::sys_time<std::
     return this->messageTimeToSim(rTime);
 }
 
+void FmuContainerCore::setTimeDiscrepancyOutput(double timeDiff, int vref){
+    auto getValue = this->currentData.find(vref);
+    if (!(getValue == this->currentData.end())){
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << endl;
+        this->currentData.erase(vref);
+        getValue->second.second.d.d = timeDiff;
+        this->currentData.insert(this->currentData.begin(),std::make_pair(vref, std::make_pair(getValue->second.first, getValue->second.second)));
+    }
+}
+double FmuContainerCore::getTimeDiscrepancyOutput(int vref){
+    auto getValue = this->currentData.find(vref);
+    if (!(getValue == this->currentData.end())){
+        return getValue->second.second.d.d;
+    }
+}
 ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "------------------------------ INFO ------------------------------" << "\n";
     os << "Max age: " << c.maxAge.count() << "\n";

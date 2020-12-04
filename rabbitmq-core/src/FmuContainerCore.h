@@ -150,6 +150,10 @@ public:
     std::chrono::milliseconds simTimeToReal(long long simTime);
     
     void convertTimeToString(long long milliSecondsSinceEpoch, string &message);
+    
+    void setTimeDiscrepancyOutput(double time, int vref);
+    double getTimeDiscrepancyOutput(int vref);
+
 
 protected:
 
@@ -164,10 +168,6 @@ protected:
 
     std::map<ScalarVariableId, int> lookahead;
     std::chrono::milliseconds maxAge;
-
-
-    std::map<int, std::pair<string, bool>> inputFlags; //<vref, <name, value>>
-    std::map<int, std::pair<string, string>> inputVals; //<vref, <name, value>>
     std::string currentOutput; // current message without timestamp
     
 private:

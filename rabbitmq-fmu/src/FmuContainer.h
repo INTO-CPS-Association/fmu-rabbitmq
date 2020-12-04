@@ -106,6 +106,10 @@ private:
 
     pair<string,string> routingKey, routingKeySystemHealth;//first string for publishing, second for consuming
 
+    bool timeOutputPresent;
+    int timeOutputVRef;
+    double previousTimeOutputVal;
+
 
     bool initializeCoreState();
 
