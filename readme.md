@@ -1,10 +1,10 @@
 # Rabbitmq FMU
 
-This project builds a FMU which uses a rabbitmq server feed live or log data into a simulation, as well as send data to an external entity (e.g. Gazebo simulation).
+This project builds a FMU which uses a rabbitmq server to feed live or log data into a simulation, as well as send data to an external entity (e.g. Gazebo simulation).
 
 Two types of data are considered, content data, and system health data.
-The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu willsend only the changed inputs to the entity outside the co-sim. 
-System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the outside entity. Note that the simulation will just continue as usual if this data is not available.
+The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will send only the changed inputs to the entity outside the co-sim. 
+System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
 
 The FMU is configured using a script TBD for the output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
 * adding all model outputs as:
@@ -33,10 +33,10 @@ remember to add the outputs before the configuration variables
   <ScalarVariable name="command_stop" valueReference="22" variability="discrete" causality="input">
       <Boolean start="false" />
   </ScalarVariable>
-  <ScalarVariable name="command2" valueReference="23" variability="discrete" causality="input">
+  <ScalarVariable name="command2" valueReference="23" variability="continuous" causality="input">
       <Real start="3.2" />
   </ScalarVariable>
-  <ScalarVariable name="command3" valueReference="24" variability="discrete" causality="input">
+  <ScalarVariable name="command3" valueReference="24" variability="continuous" causality="input">
       <Integer start="2" />
   </ScalarVariable>
   <ScalarVariable name="command4" valueReference="25" variability="discrete" causality="input">
@@ -79,7 +79,7 @@ It can be configured by setting the following parameters:
 </ScalarVariable>
 ```
 
-In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. There are two channels for each connection, one channel that handles the publishing and the other that handles the consuming. Note that the variable with value reference=4 serves as a base for the configuration of the connection for the content data, whereas the variable with value reference=9  does the same for the connection for the system health data.
+In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. There are two channels for each connection, one channel that handles the publishing and the other that handles the consuming. Note that the variable with value reference=4 serves as a base for the configuration of the connection for the content data, whereas the variable with value reference=9 does the same for the connection for the system health data.
 
 The fmu configures the name of the channels as follows:
 ${routing key base}+"_from_cosim" for publishing, which would result in "linefollower_from_cosim" and "system_health_from_cosim" given the values in the above example. Data sent from the
@@ -166,6 +166,7 @@ Finally, on a fourth terminal run:
 ./build/darwin-x64/rabbitmq-fmu/rabbitmq-main
 ```
 
+Should the consume-systemHealthData.py crash and stop sending data to the rabbitmq fmu, simply restart the script.
 # Local development
 
 1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory. Example: `./scripts/darwin64_build.sh`
