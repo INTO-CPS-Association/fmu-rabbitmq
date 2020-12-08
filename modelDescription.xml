@@ -13,34 +13,30 @@
     </LogCategories>
 
     <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
-    <ModelVariables>
-
+    <ModelVariables> 
         <ScalarVariable name="xpos" valueReference="20" variability="continuous" causality="output">
             <Real />
-        </ScalarVariable>
+        </ScalarVariable>        
         <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
-        <ScalarVariable name="obs_xpos" valueReference="22" variability="continuous" causality="output">
-            <Real />
-        </ScalarVariable>
-        <ScalarVariable name="obs_ypos" valueReference="23" variability="continuous" causality="output">
-            <Real />
-        </ScalarVariable>
-        <ScalarVariable name="obstacles" valueReference="24" variability="discrete" causality="output">
-            <String />
-        </ScalarVariable>
-        <ScalarVariable name="simtime_discrepancy" valueReference="25" variability="continuous" causality="output">
-            <Real />
-        </ScalarVariable>
-        <ScalarVariable name="time_discrepancy" valueReference="26" variability="continuous" causality="output">
-            <Real />
+          <ScalarVariable name="time_discrepancy" valueReference="22" variability="discrete" causality="output">
+            <Real start="0.0" />
         </ScalarVariable>
 
-        <ScalarVariable name="command stop" valueReference="27" variability="discrete" causality="input">
+        <ScalarVariable name="command2" valueReference="23" variability="discrete" causality="input">
+            <Real start="3.2" />
+        </ScalarVariable>
+        <ScalarVariable name="command3" valueReference="24" variability="discrete" causality="input">
+            <Integer start="2" />
+        </ScalarVariable>
+        <ScalarVariable name="command4" valueReference="25" variability="discrete" causality="input">
+            <String start="hello rabbitmq" />
+        </ScalarVariable>
+
+        <ScalarVariable name="command_stop" valueReference="26" variability="discrete" causality="input">
             <Boolean start="false" />
         </ScalarVariable>
-
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>
@@ -67,11 +63,12 @@
             <Integer start="10"/>
         </ScalarVariable>
         <ScalarVariable name="config.maxage" valueReference="7" variability="fixed" causality="parameter" description="The max age of a value specified in ms," initial="exact">
-            <Integer start="1000"/>
+            <Integer start="100"/>
         </ScalarVariable>
         <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
             <Integer start="1"/>
         </ScalarVariable>
+        
         <ScalarVariable name="config.routingkeySystemHealth" valueReference="9" variability="fixed" causality="parameter" initial="exact">
             <String start="system_health"/>
         </ScalarVariable>
@@ -83,10 +80,6 @@
             <Unknown index="1"/>
             <Unknown index="2"/>
             <Unknown index="3"/>
-            <Unknown index="4"/>
-            <Unknown index="5"/>
-            <Unknown index="6"/>
-            <Unknown index="7"/>
         </Outputs>
     </ModelStructure>
 

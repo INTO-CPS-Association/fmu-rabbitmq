@@ -28,6 +28,7 @@
 #define RABBITMQ_FMU_PRECISION 6
 #define RABBITMQ_FMU_MAX_AGE 7
 #define RABBITMQ_FMU_LOOKAHEAD 8
+#define RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH 9
 
 using namespace std;
 
@@ -85,8 +86,13 @@ private:
 
     list<DataPoint> data;
     DataPoint currentData;
-
+    DataPoint previousInputs;
+    enum SvType{Real,Integer,Boolean,String};
+    
+    //this connection is for exchanging data regarding actual state content, e.g., robot data
     RabbitmqHandler *rabbitMqHandler;
+    //this connection is for exchanging data regarding system health
+    RabbitmqHandler *rabbitMqHandlerSystemHealth;
 
    // bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
 
@@ -97,6 +103,15 @@ private:
     const bool loggingOn;
 
     unsigned long precision;
+
+    pair<string,string> routingKey, routingKeySystemHealth;//first string for publishing, second for consuming
+
+    bool timeOutputPresent;
+    int timeOutputVRef;
+    bool simtimeOutputPresent;
+    int simtimeOutputVRef;
+    double previousTimeOutputVal;
+    double simpreviousTimeOutputVal;
 
 
     bool initializeCoreState();

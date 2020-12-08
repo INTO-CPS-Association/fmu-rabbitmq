@@ -209,3 +209,120 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
                                       &props, amqp_cstring_bytes(messagebody.c_str())),
                    "Publishing");
 }
+
+//Below methods that detach the creation of connections, channels, and exchanges.
+bool RabbitmqHandler::createConnection(){
+    if (this->connected) {
+        return this->connected;
+    }
+    conn = amqp_new_connection();
+
+    socket = amqp_tcp_socket_new(conn);
+    if (!socket) {
+        throw RabbitMqHandlerException("creating TCP socket");
+    }
+
+    auto status = amqp_socket_open(this->socket, this->hostname.c_str(), this->port);
+    if (status) {
+        throw RabbitMqHandlerException("opening TCP socket");
+    }
+
+    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
+                                   this->username.c_str(), this->password.c_str()),
+                        "Logging in");
+
+    this->connected = true;
+    return this->connected;
+}
+
+bool RabbitmqHandler::createChannel(amqp_channel_t channelID){
+    amqp_channel_open(conn, channelID);
+    
+    string printText = "Opening channel with ID: " + to_string(channelID);
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), printText.c_str());
+    declareExchange(channelID);
+    return true;
+}
+
+void RabbitmqHandler::declareExchange(amqp_channel_t channelID) {
+    amqp_exchange_declare(conn, channelID, amqp_cstring_bytes(this->exchange.c_str()),
+                          amqp_cstring_bytes(exchangetype.c_str()), 0, 0, 0, 0,
+                          amqp_empty_table);
+
+    string printText = "Declaring exchange on channel with ID: " + to_string(channelID);
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), printText.c_str());
+}
+
+void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey) {
+
+    amqp_queue_declare_ok_t *r = amqp_queue_declare(
+            conn, channelID, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
+    queuename = amqp_bytes_malloc_dup(r->queue);
+    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queuename.bytes), queuename.len).c_str());
+    if (queuename.bytes == NULL) {
+        fprintf(stderr, "Out of memory while copying queue name");
+        return;
+    }
+
+    amqp_queue_bind(conn, channelID, queuename, amqp_cstring_bytes(exchange.c_str()),
+                    amqp_cstring_bytes(queueBindingKey.c_str()), amqp_empty_table);
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
+
+    amqp_basic_consume(conn, channelID, queuename, amqp_empty_bytes, 0, 0, 1,
+                       amqp_empty_table);
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
+
+    bound = true;
+}
+
+void RabbitmqHandler::publish(const string &routingkey, const string &messagebody, amqp_channel_t channelID) {
+    amqp_basic_properties_t props;
+    props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
+    props.content_type = amqp_cstring_bytes("text/plain");
+    props.delivery_mode = 2; /* persistent delivery mode */
+    throw_on_error(amqp_basic_publish(conn, channelID, amqp_cstring_bytes(exchange.c_str()),
+                                      amqp_cstring_bytes(routingkey.c_str()), 0, 0,
+                                      &props, amqp_cstring_bytes(messagebody.c_str())),
+                   "Publishing");
+}
+
+bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, string queue) {
+
+    amqp_rpc_reply_t res, res2;
+    amqp_message_t message;
+    amqp_boolean_t no_ack = false;
+
+
+    //amqp_maybe_release_buffers(conn);
+printf("were here, with queue name %s\n", queue.c_str());
+    //res = amqp_basic_get(conn, channelID, amqp_empty_bytes, no_ack);
+    res = amqp_basic_get(conn, channelID, queuename, no_ack);
+    printf("1:reply type %d\n", res.reply_type);
+
+
+    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queuename.bytes), queuename.len).c_str());
+    printf("2:reply type %d\n", res.reply_type);
+    if (AMQP_RESPONSE_NORMAL != res.reply_type) {
+        printf("6:reply type %d\n", res.reply_type);
+        return false;
+    }
+
+    printf("4:reply type %d\n", res.reply_type);
+
+    res2 = amqp_read_message(conn,channelID,&message,0);
+    printf("5:reply type %d\n", res2.reply_type);
+
+    if (AMQP_RESPONSE_NORMAL != res2.reply_type) {
+        printf("6:reply type %d\n", res2.reply_type);
+        return false;
+    }
+
+printf("then were here\n");
+    payload = std::string(reinterpret_cast< char const * >(message.body.bytes), message.body.len);
+
+printf("then were here\n %s", payload.c_str());
+    amqp_destroy_message(&message);
+    return true;
+
+}
