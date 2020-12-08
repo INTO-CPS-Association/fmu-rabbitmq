@@ -15,26 +15,29 @@
     <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
     <ModelVariables>
 
-        <ScalarVariable name="time_discrepancy" valueReference="20" variability="continuous" causality="output">    
+        <ScalarVariable name="xpos" valueReference="20" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
-        <ScalarVariable name="xpos" valueReference="22" variability="continuous" causality="output">
+        <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
-        <ScalarVariable name="ypos" valueReference="23" variability="continuous" causality="output">
+        <ScalarVariable name="obs_xpos" valueReference="22" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
-        <ScalarVariable name="obs_xpos" valueReference="24" variability="continuous" causality="output">
+        <ScalarVariable name="obs_ypos" valueReference="23" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
-        <ScalarVariable name="obs_ypos" valueReference="25" variability="continuous" causality="output">
-            <Real />
-        </ScalarVariable>
-        <ScalarVariable name="obstacles" valueReference="26" variability="discrete" causality="output">
+        <ScalarVariable name="obstacles" valueReference="24" variability="discrete" causality="output">
             <String />
         </ScalarVariable>
+        <ScalarVariable name="simtime_discrepancy" valueReference="25" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="time_discrepancy" valueReference="26" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
 
-        <ScalarVariable name="command stop" valueReference="21" variability="discrete" causality="input">
+        <ScalarVariable name="command stop" valueReference="27" variability="discrete" causality="input">
             <Boolean start="false" />
         </ScalarVariable>
 
@@ -83,6 +86,7 @@
             <Unknown index="4"/>
             <Unknown index="5"/>
             <Unknown index="6"/>
+            <Unknown index="7"/>
         </Outputs>
     </ModelStructure>
 

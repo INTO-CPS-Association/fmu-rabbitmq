@@ -179,7 +179,7 @@ cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build/external/darwin-x86_64`
 
 1. Do a single feature development in a branch that is NOT development and NOT master.
 2. Once the feature is ready, merge it into the development branch.
-3. When it is decided that a release is due, due final fixes (if any) in development, and create a TAG.
+3. When it is decided that a release is due, do final fixes (if any) in development, and create a TAG.
 4. Finally to release it, switch to the master branch and merge with the TAG.
 
 Note that: the master branch always contains the latest release, whereas the development branch is always stable.  
