@@ -5,9 +5,12 @@
 #include "FmuContainerCore.h"
 
 #include <iostream>
+#include <iomanip>
+#include <chrono>
+#include <cmath>
 
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead)
-        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false) {
+        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false){
 
 
 }
@@ -18,6 +21,37 @@ void FmuContainerCore::add(ScalarVariableId id, TimedScalarBasicValue value) {
 
 std::chrono::milliseconds FmuContainerCore::messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime) {
     return (messageTime - this->startOffsetTime);
+}
+
+std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
+    if(verbose){
+        cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() << endl;
+        cout << "startoffset + time passed in [ms] " << this->startOffsetTime.time_since_epoch().count() + std::chrono::milliseconds(simTime).count() << endl;
+    }
+    return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
+}
+
+void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){                
+    const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
+    const std::chrono::time_point<std::chrono::system_clock> tp_after_duration(durationSinceEpoch);
+    time_t time_after_duration = std::chrono::system_clock::to_time_t(tp_after_duration);
+    std::tm* formattedTime = std::gmtime(&time_after_duration);
+    long long int milliseconds_remainder = milliSecondsSinceEpoch % 1000;
+    stringstream transTime, formatString;
+    //transTime << put_time(std::localtime(&time_after_duration), "%Y-%m-%dT%H:%M:%S.") << milliseconds_remainder << "+01:00";
+    int no_digits = 0;
+    string appendZeros = "";
+    if(milliseconds_remainder>0){
+        no_digits = floor(log10(milliseconds_remainder))+1;
+        //cout << "Number of digits: " << no_digits << endl;
+        if(no_digits==1)appendZeros.append("00");
+        if(no_digits==2)appendZeros.append("0");
+    }
+    formatString << "%FT%T."<< appendZeros.c_str() << milliseconds_remainder <<"%Ez";
+    //cout << "Format string: " << formatString.str().c_str() << endl;
+    transTime << put_time(formattedTime, formatString.str().c_str());
+    message = transTime.str().insert(transTime.str().length()-2, ":");
+    //cout <<"SIM time to REAL time"<< message << endl;
 }
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
@@ -241,7 +275,6 @@ bool FmuContainerCore:: process(double time ) {
     processIncoming();
 
 //read until time
-
     auto predicate = [time, this](FmuContainerCore::TimedScalarBasicValue &value) {
         return messageTimeToSim(value.first).count() <= time;
     };
@@ -322,6 +355,13 @@ bool FmuContainerCore::check(double time) {
 
 
         auto valueTime = this->currentData.at(id).first;
+        
+        std::stringstream temp;
+        temp << valueTime.time_since_epoch().count();
+        if(verbose){
+            cout << "The time value of datapoint " << temp.str().c_str() << endl;
+            cout << "The time value of datapoint " << messageTimeToSim(valueTime).count() << endl;
+        }
 
         if (time < messageTimeToSim(valueTime).count()) {
             if (verbose) {
@@ -331,7 +371,6 @@ bool FmuContainerCore::check(double time) {
             }
             return false;
         }
-
         if ((messageTimeToSim(valueTime) + this->maxAge).count() < time) {
             if (verbose) {
                 printf("Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %9.f\n", id, this->maxAge.count(),
@@ -349,14 +388,50 @@ void FmuContainerCore::setVerbose(bool verbose) {
 
 }
 
-
 void showValue(ostream &os, const char *prefix, date::sys_time<std::chrono::milliseconds> offset,
                FmuContainerCore::TimedScalarBasicValue val) {
     os << prefix << "Time: " << val.first.time_since_epoch().count() << " (" << (val.first - offset).count() << ")"
        << " Value: " << val.second << "\n";
 }
 
+void FmuContainerCore::messageCompose(pair<string,string>input, string &message){
+    if(!message.empty()){
+        message += R"(")" + input.first + R"(":)" + input.second + R"(,)";
+    }
+    else{
+        message = R"(")" + input.first + R"(":)" + input.second + R"(,)";
+    }
+}
 
+std::chrono::milliseconds FmuContainerCore::message2SimTime(date::sys_time<std::chrono::milliseconds> rTime){
+    std::stringstream rtimeString, temp;
+    //cout << "RTIME: "  << endl;
+    rtimeString << this->messageTimeToSim(rTime).count() << endl;
+    //cout << "RTIME: " << rtimeString.str().c_str();
+    return this->messageTimeToSim(rTime);
+}
+
+void FmuContainerCore::setTimeDiscrepancyOutput(double timeDiff, int vref){
+    auto getValue = this->currentData.find(vref);
+    if (!(getValue == this->currentData.end())){
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << "with vref: " << vref << endl;
+        this->currentData.erase(vref);
+        getValue->second.second.d.d = timeDiff;
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << "with vref: " << vref << endl;
+        this->currentData.insert(this->currentData.begin(),std::make_pair(vref, std::make_pair(getValue->second.first, getValue->second.second)));
+        if(verbose){
+            for(auto it = this->currentData.cbegin(); it != this->currentData.cend(); it++){
+                cout << "MY DATA: " << it->first << " " << it->second.second << endl;
+            }
+        }
+    }
+}
+double FmuContainerCore::getTimeDiscrepancyOutput(int vref){
+    auto getValue = this->currentData.find(vref);
+    if (!(getValue == this->currentData.end())){
+        return getValue->second.second.d.d;
+    }
+}
 ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "------------------------------ INFO ------------------------------" << "\n";
     os << "Max age: " << c.maxAge.count() << "\n";

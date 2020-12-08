@@ -147,6 +147,10 @@ int main() {
 #define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
 #define RABBITMQ_FMU_PRECISION 6
 
+#define RABBITMQ_FMU_SEND_FLAG_CSTOP 21
+#define RABBITMQ_FMU_COMMAND_STOP 23
+#define RABBITMQ_FMU_COMMAND_INT 24
+
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
                                           RABBITMQ_FMU_PORT};
             int intVals[] = {60, 10, 5672};
@@ -158,6 +162,8 @@ int main() {
             const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"};
             fmi2SetString(c, vrefsString, 4, stringVals);
 
+            //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
+
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
 
@@ -165,8 +171,8 @@ int main() {
 
 #define RABBITMQ_FMU_LEVEL 20
 
-            size_t nvr = 1;
-            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL};
+            size_t nvr = 2;
+            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL,22};
             fmi2Real *value = new fmi2Real[nvr];
 
             showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
@@ -176,18 +182,42 @@ int main() {
 
 
             fmi2Real currentCommunicationPoint = 0;
-            fmi2Real communicationStepSize = 10;
+            fmi2Real communicationStepSize = 0.1;
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
+            fmi2Real simDuration = 10;
+            bool changeInput = false;
+            fmi2ValueReference vrefsReals[] = {RABBITMQ_FMU_COMMAND_STOP};
+            fmi2ValueReference vrefsInt[] = {RABBITMQ_FMU_COMMAND_INT};
+            fmi2ValueReference vrefsBool[] = {26};
+            fmi2ValueReference vrefsStrs[] = {25};
+            fmi2Real reals[] = {3.5};
+            fmi2Integer ints[] = {5};
+            fmi2Boolean bools[] = {true};
+            fmi2String strs[] = {"hejsan"};
+            for(int i = 0; i <= simDuration; i++){
+                showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
+                                                    noSetFMUStatePriorToCurrentPoint));
 
-            showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
-                                                noSetFMUStatePriorToCurrentPoint));
+                showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
+                for (int i = 0; i < nvr; i++) {
+                    cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl;
+                }
+                currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
 
-            showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
-            for (int i = 0; i < nvr; i++) {
-                cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+                if(changeInput){
+                    showStatus("fmi2SetReal", fmi2SetReal(c, vrefsReals, 1, reals));
+                    showStatus("fmi2SetString", fmi2SetString(c, vrefsStrs, 1, strs));
+                    cout << "SHOULD have updated" << endl;
+                }
+                else{
+
+                    showStatus("fmi2SetInteger", fmi2SetInteger(c, vrefsInt, 1, ints));
+                    showStatus("fmi2SetBoolean", fmi2SetBoolean(c, vrefsBool, 1, bools));
+                }
+
+                changeInput=!changeInput;
             }
-
 
 //        fmi2Terminate(fmi2Component c)
         } catch (const char *status) {

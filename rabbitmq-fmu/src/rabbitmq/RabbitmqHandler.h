@@ -40,7 +40,14 @@ public :
     virtual void bind();
 
     virtual bool consume(string & json);
-void publish(const string & routingkey, const string &message);
+    void publish(const string & routingkey, const string &message);
+
+
+    virtual bool createConnection();
+    virtual bool createChannel(amqp_channel_t channelID);
+    virtual void bind(amqp_channel_t channelID, const string &routingkey);
+    void publish(const string &routingkey, const string &message, amqp_channel_t channelID);
+    bool getFromChannel(string &payload, amqp_channel_t channelID, string queue);
 
 private:
 
@@ -62,6 +69,7 @@ private:
 
     void throw_on_amqp_error(amqp_rpc_reply_t x, char const *context);
     void declareExchange();
+    void declareExchange(amqp_channel_t channelID);
     void throw_on_error(int x, char const *context);
 
 };

@@ -143,6 +143,18 @@ public:
 
     friend ostream &operator<<(ostream &os, const FmuContainerCore &c);
 
+    void messageCompose(pair<string,string> input, string &message);
+
+    std::chrono::milliseconds message2SimTime(date::sys_time<std::chrono::milliseconds> rTime);
+
+    std::chrono::milliseconds simTimeToReal(long long simTime);
+    
+    void convertTimeToString(long long milliSecondsSinceEpoch, string &message);
+    
+    void setTimeDiscrepancyOutput(double time, int vref);
+    double getTimeDiscrepancyOutput(int vref);
+
+
 protected:
 
 //TODO: these should be qualified by type because the svid is not globally unique
@@ -156,6 +168,8 @@ protected:
 
     std::map<ScalarVariableId, int> lookahead;
     std::chrono::milliseconds maxAge;
+    std::string currentOutput; // current message without timestamp
+    
 private:
 
     bool verbose;

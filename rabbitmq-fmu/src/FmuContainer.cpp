@@ -33,14 +33,16 @@ std::map<FmuContainerCore::ScalarVariableId, int> FmuContainer::calculateLookahe
     return lookahead;
 
 }
+
 FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginOn, const char *mName,
                            map<string, ModelDescriptionParser::ScalarVariable> nameToValueReference,
                            DataPoint initialDataPoint)
         : m_functions(mFunctions), m_name(mName), nameToValueReference((nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30), loggingOn(logginOn), precision(10) {
-
+          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), 
+          routingKey(), routingKeySystemHealth(), timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42), 
+          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead")};
@@ -58,6 +60,7 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
                              "Missing parameter. Value reference '%d', Description '%s'.", vRef,
                              description);
         }
+
     }
 
 }
@@ -68,8 +71,6 @@ FmuContainer::~FmuContainer() {
         delete this->rabbitMqHandler;
     }
 }
-
-
 
 bool FmuContainer::isLoggingOn() {
     return this->loggingOn;
@@ -92,7 +93,8 @@ bool FmuContainer::initialize() {
     auto stringConfigs = {std::make_pair(RABBITMQ_FMU_HOSTNAME_ID, "hostname"),
                           std::make_pair(RABBITMQ_FMU_USER, "username"),
                           std::make_pair(RABBITMQ_FMU_PWD, "password"),
-                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key")};
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key"),
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH, "routing key system health")};
 
 
     auto allParametersPresent = true;
@@ -133,14 +135,14 @@ bool FmuContainer::initialize() {
         }
         else if (vRef == RABBITMQ_FMU_MAX_AGE) {
             auto v = this->currentData.integerValues[vRef];
-                if (v < 0) {
-                    FmuContainer_LOG(fmi2Warning, "logWarn",
-                                     "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
-                                     vRef,
-                                     description, v, maxAgeBound);
-                    v = maxAgeBound;
-                }
-                maxAgeBound = v;
+            if (v < 0) {
+                FmuContainer_LOG(fmi2Warning, "logWarn",
+                                    "Invalid parameter value. Value reference '%d', Description '%s' Value '%d'. Defaulting to %d.",
+                                    vRef,
+                                    description, v, maxAgeBound);
+                v = maxAgeBound;
+            }
+            maxAgeBound = v;
         }
     }
 
@@ -174,6 +176,7 @@ bool FmuContainer::initialize() {
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
                      this->communicationTimeout, this->precision, precisionDecimalPlaces);
 
+    /*
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
                                                        routingKey);
 
@@ -201,15 +204,116 @@ bool FmuContainer::initialize() {
                      "Sending RabbitMQ ready message%s", "");
     this->rabbitMqHandler->publish(routingKey,
                                    R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})");
+    */
+    /////////////////////////////////////////////////////////////////////////////////////
+    //create a separate connection that deals with publishing to the rabbitmq server/////
+    this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       routingKey);//this routing key does not affect what is defined below.
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
+    try {
+        if (!this->rabbitMqHandler->createConnection()) {
+            FmuContainer_LOG(fmi2Fatal, "logAll",
+                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
+                             hostname.c_str(), port);
+            return false;
+        }
 
+        this->rabbitMqHandler->createChannel(1); //Channel where to publish data
+        this->rabbitMqHandler->createChannel(2); //Channel where to consume data
+        this->routingKey.first = routingKey;
+        this->routingKey.first.append("_from_cosim");
+        this->routingKey.second = routingKey;
+        this->routingKey.second.append("_to_cosim");
+        this->rabbitMqHandler->bind(1, this->routingKey.first);
+        this->rabbitMqHandler->bind(2, this->routingKey.second);
+
+    } catch (RabbitMqHandlerException &ex) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
+                         ex.what());
+        return false;
+    }
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "Sending RabbitMQ ready message%s", "");
+    this->rabbitMqHandler->publish(this->routingKey.second,
+                                   R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",2);
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    //create a separate connection that deals with publishing and consuming system health data, using a channel for eavh/////
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+                                                       "system_health");//this binding key is not really used in this context
+    FmuContainer_LOG(fmi2OK, "logAll",
+                     "Another rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
+    try {
+        if (!this->rabbitMqHandlerSystemHealth->createConnection()) {
+            FmuContainer_LOG(fmi2Fatal, "logAll",
+                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
+                             hostname.c_str(), port);
+            return false;
+        }
+
+        this->rabbitMqHandlerSystemHealth->createChannel(1); //Channel where to publish system health data
+        this->rabbitMqHandlerSystemHealth->createChannel(2); //Channel where to consume system health data -> ctually rbmq consumes from all channels
+        //this means that, we should only have one publisher on the otherside that publishes data through the connection, through this channel.
+        this->routingKeySystemHealth.first = this->currentData.stringValues[RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH];
+        this->routingKeySystemHealth.first.append("_from_cosim");
+        this->routingKeySystemHealth.second = this->currentData.stringValues[RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH];
+        this->routingKeySystemHealth.second.append("_to_cosim");
+        this->rabbitMqHandlerSystemHealth->bind(1, this->routingKeySystemHealth.first);
+        this->rabbitMqHandlerSystemHealth->bind(2, this->routingKeySystemHealth.second);
+
+
+    } catch (RabbitMqHandlerException &ex) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
+                         ex.what());
+        return false;
+    }
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    //Initialise previousInputs and check whether the time_discrepancy is given
+    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+        if(it->second.input){
+            //Init value 
+            //cout << "Input type: " << it->second.type << endl;
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
+                this->previousInputs.doubleValues.insert(pair<unsigned int, double>(it->second.valueReference, it->second.d_value));
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
+                this->previousInputs.booleanValues.insert(pair<unsigned int, bool>(it->second.valueReference, it->second.b_value));
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
+                this->previousInputs.integerValues.insert(pair<unsigned int, int>(it->second.valueReference, it->second.i_value));
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
+                this->previousInputs.stringValues.insert(pair<unsigned int, string>(it->second.valueReference, it->second.s_value));
+            }
+        }
+        else if(it->second.output && it->first.compare("time_discrepancy")==0){
+            cout << "time discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
+            FmuContainer_LOG(fmi2OK, "logAll","time discrepancy present with vref: %d s",it->second.valueReference);
+            this->timeOutputPresent = true;
+            this->timeOutputVRef = it->second.valueReference;
+        }
+        else if(it->second.output && it->first.compare("simtime_discrepancy")==0){
+            cout << "simtime discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
+            FmuContainer_LOG(fmi2OK, "logAll","simtime discrepancy present with vref: %d s",it->second.valueReference);
+            this->simtimeOutputPresent = true;
+            this->simtimeOutputVRef = it->second.valueReference;
+        }
+    }
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
+    //this->core->setVerbose(true);
 
     if (!initializeCoreState()) {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");
         return false;
     }
-
 
     std::stringstream startTimeStamp;
     startTimeStamp << this->core->getStartOffsetTime();
@@ -242,7 +346,6 @@ bool FmuContainer::initializeCoreState() {
 
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
-
                 DataPoint result;
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
 
@@ -308,7 +411,14 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 //         << " ms" << endl;
 
     simulationTime = std::round(simulationTime * precision) / precision;
+    long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
+    string cosim_time;
+    this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
+    cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
+    //cout << "COSIM TIME:" << cosim_time << endl;
 
+    //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
+    this->rabbitMqHandlerSystemHealth->publish(this->routingKeySystemHealth.first, cosim_time, 1);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
 
@@ -317,7 +427,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 //    std::string str = stream.str();
 //    const char *chr = str.c_str();
 //    FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]: %s", simulationTime, chr);
-
 //    cout << "Checking with existing messages\n";
     if (this->core->process(simulationTime)) {
         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
@@ -328,7 +437,12 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         FmuContainer_LOG(fmi2Fatal, "logAll", "Rabbitmq handle not initialized%s", "");
         return false;
     }
-
+    if(this->timeOutputPresent){
+        this->previousTimeOutputVal = this->core->getTimeDiscrepancyOutput(this->timeOutputVRef);
+    }
+    if(this->simtimeOutputPresent){
+        this->simpreviousTimeOutputVal = this->core->getTimeDiscrepancyOutput(this->simtimeOutputVRef);
+    }
 //    cout << "Checking with new messages\n";
     auto start = std::chrono::system_clock::now();
     try {
@@ -336,12 +450,11 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         string json;
         while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
                this->communicationTimeout) {
-
+            //Note that consume, consumes from all channels.
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
 
                 DataPoint result;
-
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
 
                     std::stringstream startTimeStamp;
@@ -363,8 +476,132 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         this->core->add(pair.first, std::make_pair(result.time, pair.second));
                     }
 
-                    if (this->core->process(simulationTime)) {
+                    //Check which of the inputs of the fmu has changed since the last step
+                    string message;
+                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+                        ostringstream val;
+                        if(it->second.input){
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
+                                cout << "CURRENT DATA: " << this->currentData.doubleValues[it->second.valueReference] << ", previous DATA: " <<this->previousInputs.doubleValues[it->second.valueReference] << endl;
+                                if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    val << this->currentData.doubleValues[it->second.valueReference];
+                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    //Update previous to current value
+                                    this->previousInputs.doubleValues[it->second.valueReference] = this->currentData.doubleValues[it->second.valueReference];
+                                }
+                            }
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
+                                if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    val << this->currentData.booleanValues[it->second.valueReference];
+                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    //Update previous to current value
+                                    this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
+                                }
+                            }
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
+                                if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    val << this->currentData.integerValues[it->second.valueReference];
+                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
+                                    //Update previous to current value
+                                    this->previousInputs.integerValues[it->second.valueReference] = this->currentData.integerValues[it->second.valueReference];
+                                }
+                            }
+                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
+                                if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
+                                    cout << "INPUT has changed" << endl;
+                                    string str = "\"";
+                                    str.append(this->currentData.stringValues[it->second.valueReference]);
+                                    str.append("\"");
+                                    this->core->messageCompose(pair<string, string>(it->second.name, str), message);
+                                    //Update previous to current value
+                                    this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
+                                }
+                            }
+                        }
+                    }                
+
+                    //if anything to send, publish to rabbitmq
+                    if(!message.empty()){
+                        message = R"({)" + message + R"("timestep":")" + startTimeStamp.str() + R"("})";
+                        cout << "This is the message sent to rabbitmq: " << message << endl;
+                        this->rabbitMqHandler->publish(this->routingKey.first, message, 1);
+
+                        //Reset Inputs to what they were before send.
+                    }
+                    
+                    //Check if there is info on the system real time
+                   
+                    string systemHealthData;
+                    bool tryAgain = true;
+                    bool validData = false;
+                    double simTime_d, rTime_d;
+
+                    while(tryAgain){
+                        if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+                            //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, 2, this->routingKeySystemHealth.second)){
+                            cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
+                            FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
+
+                            //Extract rtime value from message
+                            date::sys_time<std::chrono::milliseconds> simTime, rTime;
+                            if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
+                                validData = true;
+                                rTime_d = this->core->message2SimTime(rTime).count();
+                                simTime_d = this->core->message2SimTime(simTime).count();
+
+                                cout << "New info on real-time of the system: " << rTime_d  << ", associated simulation time: " << simTime_d << ". Current simulation time: " << simulationTime << endl;
+                                    
+                                FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
+
+                                //If output time_discrepancy present, set its value
+
+                                if(rTime_d < simTime_d){
+                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
+                                }
+                                else  if (rTime_d > simTime_d){
+                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
+                                }
+
+                            }
+                            else{
+                                cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+                                }
+                        }
+                        else{
+                            tryAgain = false;
+                        }
+                    }
+                    
+                    if (this->core->process(simulationTime)) {    
+                        if(this->timeOutputPresent){                   
+                            if(validData){
+                                cout << "It should be here setting the time_discreapncy output" << endl;
+                                FmuContainer_LOG(fmi2OK, "logAll", "Setting the time discrepancy output %.2f [ms]", simTime_d-rTime_d);
+
+                                this->core->setTimeDiscrepancyOutput(simTime_d-rTime_d, this->timeOutputVRef);
+                            }
+                            else{
+                                this->core->setTimeDiscrepancyOutput(this->previousTimeOutputVal, this->timeOutputVRef);
+                                FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
+                            }
+                        } 
+                        if(this->simtimeOutputPresent){                   
+                            if(validData){
+                                cout << "It should be here setting the time_discrepancy output" << endl;
+                                FmuContainer_LOG(fmi2OK, "logAll", "Setting the simtime discrepancy output %.2f [ms]", abs(simulationTime-simTime_d));
+
+                                this->core->setTimeDiscrepancyOutput(abs(simulationTime-simTime_d), this->simtimeOutputVRef);
+                            }
+                            else{
+                                this->core->setTimeDiscrepancyOutput(this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
+                                FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
+                            }
+                        } 
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
+
                         return true;
                     }
 

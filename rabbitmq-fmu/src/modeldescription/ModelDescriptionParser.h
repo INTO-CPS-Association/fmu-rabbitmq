@@ -24,6 +24,7 @@ public:
         unsigned int valueReference;
         enum SvType{Real,Integer,Boolean,String};
         bool output;
+        bool input;
         SvType type;
         union {
             double d_value;
