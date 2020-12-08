@@ -11,7 +11,7 @@ The initialization process of RabbitMQ FMU is peculiar in the sense that it need
 
 Functions
 ^^^^^^^^^
-Some functions are described in this seciton that are used in the diagram in the subsequent section.
+Some functions are described in this section that are used in the diagram in the subsequent section.
 
 RabbitMQFMU.configure()
     - Configure the RMQFMU based on the configuration within the model description file.
@@ -80,7 +80,7 @@ This section describes the doStep operation of RabbitMQ FMU.
 Functions
 ^^^^^^^^^^
 
-Some functions are are described in this seciton that  are used in the diagram in the subsequent section.
+Some functions are are described in this section that  are used in the diagram in the subsequent section.
 
 
 RabbitMQFMUCore.check
