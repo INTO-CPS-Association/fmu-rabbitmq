@@ -35,7 +35,6 @@ The FMU is configured using a script TBD for the output variables that are model
 ```
 remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
-* add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
 * adding all model inputs as:
 ```xml
@@ -53,6 +52,8 @@ If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is 
       <String start="hello rabbitmq" />
   </ScalarVariable>
 ```
+
+* add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
 It can be configured by setting the following parameters:
 
