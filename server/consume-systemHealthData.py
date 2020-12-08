@@ -26,7 +26,7 @@ result2 = channelPublish.queue_declare(queue='', exclusive=True)
 queue_name2 = result2.method.queue
 
 channelConsume.queue_bind(exchange='fmi_digital_twin', queue=queue_name,
-                   routing_key='system_health_from_cosim')
+                   routing_key='linefollower.system_health.from_cosim')
 
 channelPublish.queue_bind(exchange='fmi_digital_twin', queue=queue_name2,
                    routing_key='system_health_to_cosim')
@@ -62,7 +62,7 @@ def publishRtime():
                 msg['cosimtime'] = cosimTime["simAtTime"]
                 print("\nSending [y] %s" % str(msg))
                 channelPublish.basic_publish(exchange='fmi_digital_twin',
-                                    routing_key='system_health_to_cosim',
+                                    routing_key='linefollower.system_health.to_cosim',
                                     body=json.dumps(msg))
 
 channelConsume.basic_consume(
