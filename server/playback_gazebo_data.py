@@ -12,7 +12,7 @@ print("Creating queue")
 result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 channel.queue_bind(exchange='fmi_digital_twin', queue=queue_name,
-                   routing_key='linefollower_to_cosim')
+                   routing_key='linefollower.data.to_cosim')
 print(' [*] Waiting for logs. To exit press CTRL+C')
 def publish():
     dt=datetime.datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
@@ -40,7 +40,7 @@ def publish():
             msg['time']= timet.isoformat()
             print(" [x] Sent %s" % json.dumps(msg))
             channel.basic_publish(exchange='fmi_digital_twin',
-						routing_key='linefollower_to_cosim',
+						routing_key='linefollower.data.to_cosim',
 						body=json.dumps(msg))
             #input("Press Enter to Continue")
             time.sleep(.1)
