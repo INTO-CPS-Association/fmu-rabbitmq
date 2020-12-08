@@ -69,9 +69,6 @@
             <Integer start="1"/>
         </ScalarVariable>
         
-        <ScalarVariable name="config.routingkeySystemHealth" valueReference="9" variability="fixed" causality="parameter" initial="exact">
-            <String start="system_health"/>
-        </ScalarVariable>
 
 
     </ModelVariables>

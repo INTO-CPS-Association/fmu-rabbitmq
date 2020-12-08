@@ -93,8 +93,7 @@ bool FmuContainer::initialize() {
     auto stringConfigs = {std::make_pair(RABBITMQ_FMU_HOSTNAME_ID, "hostname"),
                           std::make_pair(RABBITMQ_FMU_USER, "username"),
                           std::make_pair(RABBITMQ_FMU_PWD, "password"),
-                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key"),
-                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH, "routing key system health")};
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key")};
 
 
     auto allParametersPresent = true;
@@ -222,9 +221,10 @@ bool FmuContainer::initialize() {
         this->rabbitMqHandler->createChannel(1); //Channel where to publish data
         this->rabbitMqHandler->createChannel(2); //Channel where to consume data
         this->routingKey.first = routingKey;
-        this->routingKey.first.append("_from_cosim");
+        this->routingKey.first.append(".data.from_cosim");
         this->routingKey.second = routingKey;
-        this->routingKey.second.append("_to_cosim");
+        this->routingKey.second.append(".data.to_cosim");
+        cout << "Routing key data: " << this->routingKey.first << " and " << this->routingKey.second << endl;
         this->rabbitMqHandler->bind(1, this->routingKey.first);
         this->rabbitMqHandler->bind(2, this->routingKey.second);
 
@@ -258,10 +258,11 @@ bool FmuContainer::initialize() {
         this->rabbitMqHandlerSystemHealth->createChannel(1); //Channel where to publish system health data
         this->rabbitMqHandlerSystemHealth->createChannel(2); //Channel where to consume system health data -> ctually rbmq consumes from all channels
         //this means that, we should only have one publisher on the otherside that publishes data through the connection, through this channel.
-        this->routingKeySystemHealth.first = this->currentData.stringValues[RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH];
-        this->routingKeySystemHealth.first.append("_from_cosim");
-        this->routingKeySystemHealth.second = this->currentData.stringValues[RABBITMQ_FMU_ROUTING_KEY_SYSTEM_HEALTH];
-        this->routingKeySystemHealth.second.append("_to_cosim");
+        this->routingKeySystemHealth.first = routingKey;
+        this->routingKeySystemHealth.first.append(".system_health.from_cosim");
+        this->routingKeySystemHealth.second = routingKey;
+        this->routingKeySystemHealth.second.append(".system_health.to_cosim");
+        cout << "Routing key system health: " << this->routingKeySystemHealth.first << " and " << this->routingKeySystemHealth.second << endl;
         this->rabbitMqHandlerSystemHealth->bind(1, this->routingKeySystemHealth.first);
         this->rabbitMqHandlerSystemHealth->bind(2, this->routingKeySystemHealth.second);
 
