@@ -1,7 +1,7 @@
 User Manual
 ===========
 The RabbitMQ FMU (RMQFMU) allows to publish and consume two types of data to/from a rabbitMQ server. 
-The two types of data are: content data, and system health data. For each type of data, a separate connection is used to the rabbitMQ server, with two channels, one for publishing and one for consuming respectively. 
+The two types of data are: content data, and system health data. For each type of data, a separate connection is used to the rabbitMQ server, with two channels, one for publishing to RMQFMU and one for consuming from RMQFMU. 
 
 The rest of this page covers how to use RMQFMU, whereas the internal workings are described in Developer Manual (Data Handling).
 The two parts described are: The structure of a message and how to configure properties of RMQFMU via the modelDescription file.
@@ -51,7 +51,7 @@ Messages published by the RMQFMU are also packaged in the json format, and conta
         "simAtTime":"2019-01-04T16:41:24+02:00"
     }
     
-Note that, the RMQFMU will calculate the time discrepancy between the co-sim and outside world based on ``rtime`` and ``cosimtime``. Initially these values will be transformed into internal co-simulation time, afterwards the difference ``cosimtime``-``rtime`` will be used to set the ``time_discrepancy`` output of RMQFMU. Furthermore, the difference between the current simulation time and `cosimtime` will be used to set the ``simtime_discrepancy`` output of RMQFMU. Normally this should be zero, as the RMQFMU will set the output based on the latest system health message. 
+Note that, the RMQFMU will calculate the time discrepancy between the co-sim and outside world based on ``rtime`` and ``cosimtime``. Initially these values will be transformed into internal co-simulation time, afterwards the difference ``cosimtime``-``rtime`` will be used to set the ``time_discrepancy`` output of RMQFMU. Furthermore, the difference between the current simulation time and ``cosimtime` will be used to set the ``simtime_discrepancy`` output of RMQFMU. Normally this should be zero, as the RMQFMU will set the output based on the latest system health message. 
 Finally, consuming system health data is not blocking. If no data is available when a :code:`consume()` is performed, the co-simulation will proceed to the next step, using the previously calculated values if the outputs ``simtime_discrepancy`` and ``time_discrepancy`` are given in the modelDescription.xml.
 
 Model Description File
