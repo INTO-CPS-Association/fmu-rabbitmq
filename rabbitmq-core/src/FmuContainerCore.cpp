@@ -24,8 +24,10 @@ std::chrono::milliseconds FmuContainerCore::messageTimeToSim(date::sys_time<std:
 }
 
 std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
-    cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() << endl;
-    cout << "startoffset + time passed in [ms] " << this->startOffsetTime.time_since_epoch().count() + std::chrono::milliseconds(simTime).count() << endl;
+    if(verbose){
+        cout << "startoffset " << this->startOffsetTime.time_since_epoch().count() << endl;
+        cout << "startoffset + time passed in [ms] " << this->startOffsetTime.time_since_epoch().count() + std::chrono::milliseconds(simTime).count() << endl;
+    }
     return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
 }
 
@@ -356,8 +358,10 @@ bool FmuContainerCore::check(double time) {
         
         std::stringstream temp;
         temp << valueTime.time_since_epoch().count();
-        cout << "The time value of datapoint " << temp.str().c_str() << endl;
-        cout << "The time value of datapoint " << messageTimeToSim(valueTime).count() << endl;
+        if(verbose){
+            cout << "The time value of datapoint " << temp.str().c_str() << endl;
+            cout << "The time value of datapoint " << messageTimeToSim(valueTime).count() << endl;
+        }
 
         if (time < messageTimeToSim(valueTime).count()) {
             if (verbose) {
@@ -410,10 +414,16 @@ std::chrono::milliseconds FmuContainerCore::message2SimTime(date::sys_time<std::
 void FmuContainerCore::setTimeDiscrepancyOutput(double timeDiff, int vref){
     auto getValue = this->currentData.find(vref);
     if (!(getValue == this->currentData.end())){
-        //cout << "data we care about, royal we: " << getValue->second.second.d.d << endl;
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << "with vref: " << vref << endl;
         this->currentData.erase(vref);
         getValue->second.second.d.d = timeDiff;
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << "with vref: " << vref << endl;
         this->currentData.insert(this->currentData.begin(),std::make_pair(vref, std::make_pair(getValue->second.first, getValue->second.second)));
+        if(verbose){
+            for(auto it = this->currentData.cbegin(); it != this->currentData.cend(); it++){
+                cout << "MY DATA: " << it->first << " " << it->second.second << endl;
+            }
+        }
     }
 }
 double FmuContainerCore::getTimeDiscrepancyOutput(int vref){

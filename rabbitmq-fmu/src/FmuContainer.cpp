@@ -41,7 +41,8 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
           communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), 
-          routingKey(), routingKeySystemHealth(), timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42){
+          routingKey(), routingKeySystemHealth(), timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42), 
+          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead")};
@@ -235,7 +236,7 @@ bool FmuContainer::initialize() {
     }
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Sending RabbitMQ ready message%s", "");
-    this->rabbitMqHandler->publish(routingKey,
+    this->rabbitMqHandler->publish(this->routingKey.second,
                                    R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",2);
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +279,7 @@ bool FmuContainer::initialize() {
     for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
         if(it->second.input){
             //Init value 
-            cout << "Input type: " << it->second.type << endl;
+            //cout << "Input type: " << it->second.type << endl;
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
                 this->previousInputs.doubleValues.insert(pair<unsigned int, double>(it->second.valueReference, it->second.d_value));
             }
@@ -294,13 +295,20 @@ bool FmuContainer::initialize() {
         }
         else if(it->second.output && it->first.compare("time_discrepancy")==0){
             cout << "time discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
-            FmuContainer_LOG(fmi2OK, "logAll","time discrepancy presence: %d', with vref: %d s",it->first,it->second.valueReference);
+            FmuContainer_LOG(fmi2OK, "logAll","time discrepancy present with vref: %d s",it->second.valueReference);
             this->timeOutputPresent = true;
             this->timeOutputVRef = it->second.valueReference;
+        }
+        else if(it->second.output && it->first.compare("simtime_discrepancy")==0){
+            cout << "simtime discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
+            FmuContainer_LOG(fmi2OK, "logAll","simtime discrepancy present with vref: %d s",it->second.valueReference);
+            this->simtimeOutputPresent = true;
+            this->simtimeOutputVRef = it->second.valueReference;
         }
     }
     //Create container core
     this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
+    //this->core->setVerbose(true);
 
     if (!initializeCoreState()) {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");
@@ -432,6 +440,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     if(this->timeOutputPresent){
         this->previousTimeOutputVal = this->core->getTimeDiscrepancyOutput(this->timeOutputVRef);
     }
+    if(this->simtimeOutputPresent){
+        this->simpreviousTimeOutputVal = this->core->getTimeDiscrepancyOutput(this->simtimeOutputVRef);
+    }
 //    cout << "Checking with new messages\n";
     auto start = std::chrono::system_clock::now();
     try {
@@ -531,8 +542,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     while(tryAgain){
                         if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
                             //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, 2, this->routingKeySystemHealth.second)){
-                            cout << "New info on real-time of the system: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
-                            FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s", simulationTime, systemHealthData.c_str());
+                            cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
+                            FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
 
                             //Extract rtime value from message
                             date::sys_time<std::chrono::milliseconds> simTime, rTime;
@@ -550,7 +561,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                                 if(rTime_d < simTime_d){
                                     FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
                                 }
-                                else  if (rTime_d > simulationTime){
+                                else  if (rTime_d > simTime_d){
                                     FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
                                 }
 
@@ -568,10 +579,24 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         if(this->timeOutputPresent){                   
                             if(validData){
                                 cout << "It should be here setting the time_discreapncy output" << endl;
+                                FmuContainer_LOG(fmi2OK, "logAll", "Setting the time discrepancy output %.2f [ms]", simTime_d-rTime_d);
+
                                 this->core->setTimeDiscrepancyOutput(simTime_d-rTime_d, this->timeOutputVRef);
                             }
                             else{
                                 this->core->setTimeDiscrepancyOutput(this->previousTimeOutputVal, this->timeOutputVRef);
+                                FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
+                            }
+                        } 
+                        if(this->simtimeOutputPresent){                   
+                            if(validData){
+                                cout << "It should be here setting the time_discrepancy output" << endl;
+                                FmuContainer_LOG(fmi2OK, "logAll", "Setting the simtime discrepancy output %.2f [ms]", abs(simulationTime-simTime_d));
+
+                                this->core->setTimeDiscrepancyOutput(abs(simulationTime-simTime_d), this->simtimeOutputVRef);
+                            }
+                            else{
+                                this->core->setTimeDiscrepancyOutput(this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
                                 FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
                             }
                         } 

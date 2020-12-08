@@ -108,7 +108,10 @@ private:
 
     bool timeOutputPresent;
     int timeOutputVRef;
+    bool simtimeOutputPresent;
+    int simtimeOutputVRef;
     double previousTimeOutputVal;
+    double simpreviousTimeOutputVal;
 
 
     bool initializeCoreState();

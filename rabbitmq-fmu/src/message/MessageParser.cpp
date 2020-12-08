@@ -48,15 +48,25 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
                 hasData = true;
                 auto sv = (*nameToValueReference)[memberName];
 
+                cout << "Input data contains KNOWN member " << memberName << endl;
                 switch (sv.type) {
                     case SvType::Integer:
                         if (d[memberName].IsInt()){
                             result.integerValues[sv.valueReference] = d[memberName].GetInt();
                         }
+                        else if (d[memberName].IsDouble()){
+                            result.integerValues[sv.valueReference] = (int) d[memberName].GetDouble();
+                        }
+                        else{
+                            cout << "[ERROR]: Bad Type for "<< memberName << ". Expected int or double (to be cast as int)." << endl;
+                        }
                         break;
                     case SvType::Real:
-                        if (d[memberName].IsDouble()){
+                        if (d[memberName].IsDouble() || d[memberName].IsInt()){
                             result.doubleValues[sv.valueReference] = d[memberName].GetDouble();
+                        }
+                        else{
+                            cout << "[ERROR]: Bad Type for "<< memberName << ". Expected double or int to be cast as double." << endl;
                         }
 //                        cout << "Got message with double name='"<<memberName<<"' ref="<<sv.valueReference<<"' value = "<<result.doubleValues[sv.valueReference]<<endl;
                         break;
@@ -64,10 +74,16 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
                         if (d[memberName].IsBool()){
                             result.booleanValues[sv.valueReference] = d[memberName].GetBool();
                         }
+                        else{
+                            cout << "[ERROR]: Bad Type for "<< memberName << ". Expected bool." << endl;
+                        }
                         break;
                     case SvType::String:
                         if (d[memberName].IsString()){
                             result.stringValues[sv.valueReference] = string(d[memberName].GetString());
+                        }
+                        else{
+                            cout << "[ERROR]: Bad Type for "<< memberName << ". Expected string." << endl;
                         }
                         break;
                 }
@@ -80,6 +96,10 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
     if (! ((*nameToValueReference).find("time_discrepancy") == (*nameToValueReference).end()) ){
         auto sv = (*nameToValueReference)["time_discrepancy"];
         result.doubleValues[sv.valueReference] = 0.4242;
+    }
+    if (! ((*nameToValueReference).find("simtime_discrepancy") == (*nameToValueReference).end()) ){
+        auto sv = (*nameToValueReference)["simtime_discrepancy"];
+        result.doubleValues[sv.valueReference] = 0.4243;
     }
      *output = result;
    return hasData && d.HasMember("time");
