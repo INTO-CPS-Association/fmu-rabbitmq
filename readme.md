@@ -87,12 +87,12 @@ It can be configured by setting the following parameters:
 </ScalarVariable> 
 ```
 
-In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. There are two channels for each connection, one channel that handles the publishing and the other that handles the consuming. Note that the variable with value reference=4 serves as a base for the configuration of the connection for the content data, whereas the variable with value reference=9 does the same for the connection for the system health data.
+In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variable with value reference=4 serves as a base for the configuration of the connections for both content and system health data. 
 
 The fmu configures the name of the channels as follows:
-${routing key base}+"_from_cosim" for publishing, which would result in "linefollower_from_cosim" and "system_health_from_cosim" given the values in the above example. Data sent from the
+${routing key base}+".data."+"from_cosim" for publishing, which would result in "linefollower.data.from_cosim" and "linefollower.system_health.from_cosim" given the values in the above example. Data sent from the
 rabbitMQ can be consumed from these topics.
-${routing key base}+"_to_cosim" for consuming, which would result in "linefollower_to_cosim" and "system_health_to_cosim" given the values in the above example. Data to be sent
+${routing key base}+"_to_cosim" for consuming, which would result in "linefollower.data.to_cosim" and "linefollower.system_health.to_cosim" given the values in the above example. Data to be sent
 to the rabbitMQ should be published to these topics.
 
 ## Dockerized RabbitMq
