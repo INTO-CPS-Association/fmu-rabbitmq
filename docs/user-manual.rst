@@ -21,7 +21,7 @@ A message shall contain a timestamp and one or more values. The example below co
         "other_variable":10.0
     }
 
-Messages published by the RMQFMU are also packaged in the json format, and will contain a timestep together with one or more values of the included inputs. Only inputs the value of which has changed between two consecutive timesteps are included in the message. If no input has changed, then no message is sent from the RMQFMU. An example is given below.
+Messages published by the RMQFMU are also packaged in the json format, and will contain a timestep together with one or more values of the included inputs. Only those inputs the value of which has changed between two consecutive timesteps are included in the message. If no input has changed, then no message is sent from the RMQFMU. An example is given below.
 
 .. code-block:: json
 
@@ -34,7 +34,7 @@ Messages published by the RMQFMU are also packaged in the json format, and will 
     
 Message Format - System Health Data
 ------------------------------------
-Messages to be consumed by the RMQFMU are to be in JSON format with two fields as shown in the example below. The key :code:`rtime` refers to the current timestep as perceived from the system sending a message to RMQFMU, whereas the key :code:`cosimtime` to the last known timestep in which the RMQFMU was operating. Note that the time should be in accordance with the ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
+Messages to be consumed by the RMQFMU are to be in JSON format with two fields as shown in the example below. The key :code:`rtime` refers to the current timestep as perceived from the system outside of the co-simuluation sending a message to RMQFMU, whereas the key :code:`cosimtime` to the latest timestep sent by the RMQFMU. Note that the time should be in accordance with the ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
 
 .. code-block:: json
 
@@ -43,7 +43,7 @@ Messages to be consumed by the RMQFMU are to be in JSON format with two fields a
         "cosimtime":"2019-01-04T16:41:24+02:00",
     }
 
-Messages published by the RMQFMU are also packaged in the json format, and contain the current timestep in which the RMQFMU is operating. Note that the time is be in accordance with the ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
+Messages published by the RMQFMU are also packaged in the json format, and contain the current timestep in which the RMQFMU is operating. Note that the time is to be in accordance with the ISO 8061 with UTC offset - i.e.: :code:`2019-01-04T16:41:24+02:00`.
 
 .. code-block:: json
 
@@ -51,7 +51,9 @@ Messages published by the RMQFMU are also packaged in the json format, and conta
         "simAtTime":"2019-01-04T16:41:24+02:00"
     }
     
-    
+Note that, the RMQFMU will calculate the time discrepancy between the co-sim and outside world based on ``rtime`` and ``cosimtime``. Initially these values will be transformed into internal co-simulation time, afterwards the difference ``cosimtime``-``rtime`` will be used to set the ``time_discrepancy`` output of RMQFMU. Furthermore, the difference between the current simulation time and `cosimtime` will be used to set the ``simtime_discrepancy`` output of RMQFMU. Normally this should be zero, as the RMQFMU will set the output based on the latest system health message. 
+Finally, consuming system health data is not blocking. If no data is available when a :code:`consume()` is performed, the co-simulation will proceed to the next step, using the previously calculated values if the outputs ``simtime_discrepancy`` and ``time_discrepancy`` are given in the modelDescription.xml.
+
 Model Description File
 ----------------------
 :code:`ScalarVariables` within the Model Description File are used to configure properties of RMQFMU, mapping message data to FMU outputs, as well as FMU inputs to message data.
@@ -88,13 +90,13 @@ ValueReference 7 - Max Age
 ValueReference 8 - Look Ahead
     The maximum number of queue messages that should be considered on each processing.
     Does not cause blocking behaviour if less messages are available.
-    
- ValueReference 9 - Routing Key - system health data
-    Defines the Routing Key for the system health data messages
 
-Parameters with value reference 4 and 9 are used as a base to configure two different connections to the rabbitMQ server. 
-The parameter with value reference 4 is used to create the connection through which content data is exchanged. In this context two channels are created with routing keys as follows: :code:`"${param4Value}_from_cosim"` and :code:`"${param4Value}_to_cosim"`. Content data to be sent to RMQFMU should be published to :code:`"${param4Value}_to_cosim"`, whereas RMQFMU publishes content data to :code:`"${param4Value}_from_cosim"`.
-Similarly for the paramter with value reference 9. Two channels are created with routing keys as follows: :code:`"${param9Value}_from_cosim"` and :code:`"${param9Value}_to_cosim"`. System health data to be sent to RMQFMU should be published to :code:`"${param9Value}_to_cosim"`, whereas RMQFMU publishes system health data to :code:`"${param9Value}_from_cosim"`.
+The parameter with value reference 4 is used as a base to configure two different connections to the rabbitMQ server, with two channels each. 
+Based on the ``routingKey`` the fmu configures the name of the channels as follows:
+:code:`${routing key base}+".{data|system_health}."+"from_cosim"` for publishing, which would result in ``linefollower.data.from_cosim`` and ``linefollower.system_health.from_cosim`` given the values in the above example. Data sent from the
+rabbitMQ can be consumed from these topics.
+:code:`${routing key base}+".{data|system_health}."+"to_cosim"` for consuming, which would result in ``linefollower.data.to_cosim`` and ``linefollower.system_health.to_cosim`` given the values in the above example. Data to be sent
+to the rabbitMQ should be published to these topics.
 
 **NOTE: If no system health data is published to RMQFMU then the operation of the fmu will continue normally, however no information regarding system health will be outputted from RMQFMU.**
 
