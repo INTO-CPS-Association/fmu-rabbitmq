@@ -16,15 +16,25 @@ The FMU is configured using a script TBD for the output variables that are model
   <ScalarVariable name="level-2" valueReference="21" variability="continuous" causality="output">
     <Real />
   </ScalarVariable>
+    
+  <ScalarVariable name="simtime_discrepancy" valueReference="22" variability="continuous" causality="output">
+    <Real />
+  </ScalarVariable>
+ <ScalarVariable name="time_discrepancy" valueReference="23" variability="continuous" causality="output">
+    <Real />
+</ScalarVariable>
 </ModelVariables>
 <ModelStructure>
   <Outputs>
     <Unknown index="1"/>
     <Unknown index="2"/>
+    <Unknown index="3"/>
+    <Unknown index="4"/>
   </Outputs>
 </ModelStructure>
 ```
-remember to add the outputs before the configuration variables
+remember to add the outputs before the configuration variables.
+If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
 * add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
 * adding all model inputs as:
@@ -73,10 +83,7 @@ It can be configured by setting the following parameters:
 </ScalarVariable>
 <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
     <Integer start="1"/>
-</ScalarVariable>
-<ScalarVariable name="config.routingkeySystemHealth" valueReference="9" variability="fixed" causality="parameter" initial="exact">
-    <String start="system_health"/>
-</ScalarVariable>
+</ScalarVariable> 
 ```
 
 In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. There are two channels for each connection, one channel that handles the publishing and the other that handles the consuming. Note that the variable with value reference=4 serves as a base for the configuration of the connection for the content data, whereas the variable with value reference=9 does the same for the connection for the system health data.
