@@ -10,6 +10,7 @@
 #include <ctime>
 #include <string>
 
+#include <iomanip>
 #ifdef _WIN32
 #define timegm _mkgmtime
 #endif
