@@ -37,7 +37,7 @@
             <Real />
         </ScalarVariable>
 
-        <ScalarVariable name="command stop" valueReference="27" variability="discrete" causality="input">
+        <ScalarVariable name="command_stop" valueReference="27" variability="discrete" causality="input">
             <Boolean start="false" />
         </ScalarVariable>
 
