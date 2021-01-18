@@ -235,48 +235,47 @@ bool RabbitmqHandler::createConnection(){
     return this->connected;
 }
 
-bool RabbitmqHandler::createChannel(amqp_channel_t channelID){
+bool RabbitmqHandler::createChannel(amqp_channel_t channelID, string exchange, string exchangetype){
     amqp_channel_open(conn, channelID);
     
     string printText = "Opening channel with ID: " + to_string(channelID);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), printText.c_str());
-    declareExchange(channelID);
+    declareExchange(channelID, exchange, exchangetype);
     return true;
 }
 
-void RabbitmqHandler::declareExchange(amqp_channel_t channelID) {
-    amqp_exchange_declare(conn, channelID, amqp_cstring_bytes(this->exchange.c_str()),
+void RabbitmqHandler::declareExchange(amqp_channel_t channelID, string exchange, string exchangetype) {
+    amqp_exchange_declare(conn, channelID, amqp_cstring_bytes(exchange.c_str()),
                           amqp_cstring_bytes(exchangetype.c_str()), 0, 0, 0, 0,
                           amqp_empty_table);
-
-    string printText = "Declaring exchange on channel with ID: " + to_string(channelID);
+    string printText = "Declaring exchange on channel with ID: " + to_string(channelID) + "\nExchange name: " + exchange.c_str() + " exchange type: " + exchangetype.c_str();
     throw_on_amqp_error(amqp_get_rpc_reply(conn), printText.c_str());
 }
 
-void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey) {
+void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey, amqp_bytes_t &queue, string exchange) {
 
     amqp_queue_declare_ok_t *r = amqp_queue_declare(
             conn, channelID, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
-    queuename = amqp_bytes_malloc_dup(r->queue);
-    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queuename.bytes), queuename.len).c_str());
-    if (queuename.bytes == NULL) {
+    queue = amqp_bytes_malloc_dup(r->queue);
+    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
+    if (queue.bytes == NULL) {
         fprintf(stderr, "Out of memory while copying queue name");
         return;
     }
 
-    amqp_queue_bind(conn, channelID, queuename, amqp_cstring_bytes(exchange.c_str()),
+    amqp_queue_bind(conn, channelID, queue, amqp_cstring_bytes(exchange.c_str()),
                     amqp_cstring_bytes(queueBindingKey.c_str()), amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
-    amqp_basic_consume(conn, channelID, queuename, amqp_empty_bytes, 0, 0, 1,
+    amqp_basic_consume(conn, channelID, queue, amqp_empty_bytes, 0, 0, 1,
                        amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
     bound = true;
 }
-
-void RabbitmqHandler::publish(const string &routingkey, const string &messagebody, amqp_channel_t channelID) {
+                   
+void RabbitmqHandler::publish(const string &routingkey, const string &messagebody, amqp_channel_t channelID, string exchange) {
     amqp_basic_properties_t props;
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
     props.content_type = amqp_cstring_bytes("text/plain");
@@ -285,9 +284,11 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
                                       amqp_cstring_bytes(routingkey.c_str()), 0, 0,
                                       &props, amqp_cstring_bytes(messagebody.c_str())),
                    "Publishing");
+
+    printf("after it published \n");
 }
 
-bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, string queue) {
+bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, amqp_bytes_t queue) {
 
     amqp_rpc_reply_t res, res2;
     amqp_message_t message;
@@ -295,9 +296,9 @@ bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, 
 
 
     //amqp_maybe_release_buffers(conn);
-printf("were here, with queue name %s\n", queue.c_str());
+printf("were here, with queue name %s\n", queue);
     //res = amqp_basic_get(conn, channelID, amqp_empty_bytes, no_ack);
-    res = amqp_basic_get(conn, channelID, queuename, no_ack);
+    res = amqp_basic_get(conn, channelID, queue, no_ack);
     printf("1:reply type %d\n", res.reply_type);
 
 

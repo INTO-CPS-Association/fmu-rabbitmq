@@ -8,13 +8,13 @@ connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 
 print("Declaring exchange")
-channel.exchange_declare(exchange='fmi_digital_twin', exchange_type='direct')
+channel.exchange_declare(exchange='fmi_digital_twin_cd', exchange_type='direct')
 
 print("Creating queue")
 result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 
-channel.queue_bind(exchange='fmi_digital_twin', queue=queue_name,
+channel.queue_bind(exchange='fmi_digital_twin_cd', queue=queue_name,
                    routing_key='linefollower.data.from_cosim')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')

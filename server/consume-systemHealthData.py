@@ -16,8 +16,8 @@ channelConsume = connection.channel()
 channelPublish = connectionPublish.channel()
 
 print("Declaring exchange")
-channelConsume.exchange_declare(exchange='fmi_digital_twin', exchange_type='direct')
-channelPublish.exchange_declare(exchange='fmi_digital_twin', exchange_type='direct')
+channelConsume.exchange_declare(exchange='fmi_digital_twin_sh', exchange_type='direct')
+channelPublish.exchange_declare(exchange='fmi_digital_twin_sh', exchange_type='direct')
 
 print("Creating queue")
 result = channelConsume.queue_declare(queue='', exclusive=True)
@@ -25,10 +25,10 @@ queue_name = result.method.queue
 result2 = channelPublish.queue_declare(queue='', exclusive=True)
 queue_name2 = result2.method.queue
 
-channelConsume.queue_bind(exchange='fmi_digital_twin', queue=queue_name,
+channelConsume.queue_bind(exchange='fmi_digital_twin_sh', queue=queue_name,
                    routing_key='linefollower.system_health.from_cosim')
 
-channelPublish.queue_bind(exchange='fmi_digital_twin', queue=queue_name2,
+channelPublish.queue_bind(exchange='fmi_digital_twin_sh', queue=queue_name2,
                    routing_key='system_health_to_cosim')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
@@ -61,7 +61,7 @@ def publishRtime():
                 
                 msg['cosimtime'] = cosimTime["simAtTime"]
                 print("\nSending [y] %s" % str(msg))
-                channelPublish.basic_publish(exchange='fmi_digital_twin',
+                channelPublish.basic_publish(exchange='fmi_digital_twin_sh',
                                     routing_key='linefollower.system_health.to_cosim',
                                     body=json.dumps(msg))
 

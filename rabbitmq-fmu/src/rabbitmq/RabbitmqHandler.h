@@ -31,6 +31,7 @@ class RabbitmqHandler {
 
 public :
     RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
+
     ~RabbitmqHandler();
 
     virtual bool open();
@@ -44,10 +45,10 @@ public :
 
 
     virtual bool createConnection();
-    virtual bool createChannel(amqp_channel_t channelID);
-    virtual void bind(amqp_channel_t channelID, const string &routingkey);
-    void publish(const string &routingkey, const string &message, amqp_channel_t channelID);
-    bool getFromChannel(string &payload, amqp_channel_t channelID, string queue);
+    virtual bool createChannel(amqp_channel_t channelID, string exchange, string exchangetype);
+    virtual void bind(amqp_channel_t channelID, const string &routingkey, amqp_bytes_t &queue, string exchange);
+    void publish(const string &routingkey, const string &message, amqp_channel_t channelID, string exchange);
+    bool getFromChannel(string &payload, amqp_channel_t channelID, amqp_bytes_t queue);
 
 private:
 
@@ -64,12 +65,12 @@ private:
 
     amqp_socket_t *socket = nullptr;
     amqp_connection_state_t conn;
-    amqp_bytes_t queuename;
+    amqp_bytes_t queuename;//relevant to RabbitmqHandler::bind()
     struct timeval timeout;
 
     void throw_on_amqp_error(amqp_rpc_reply_t x, char const *context);
     void declareExchange();
-    void declareExchange(amqp_channel_t channelID);
+    void declareExchange(amqp_channel_t channelID, string exchange, string exchangetype);
     void throw_on_error(int x, char const *context);
 
 };
