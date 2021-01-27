@@ -32,7 +32,7 @@ def publish():
             msg['ypos']=ypos            
             msg['obs_xpos']=1000
             msg['obs_ypos']=1000
-            msg['obstacles']="jalla"
+            msg['obstacles']="youza"
             msg['test_int']=1.6
 			#dt = dt+ datetime.timedelta(seconds=float(row['step-size']))
 			#msg['time']= dt.isoformat()

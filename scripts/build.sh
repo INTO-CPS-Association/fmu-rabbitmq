@@ -30,7 +30,7 @@ echo Build dependencies
 
 build_xercersc()
 {
- $1 cmake -B$2 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$3 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
+ $1 cmake -B$2 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$3 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c -lamqp_time
  $1 make -C$2 -j8
  $1 make -C$2 install
 }

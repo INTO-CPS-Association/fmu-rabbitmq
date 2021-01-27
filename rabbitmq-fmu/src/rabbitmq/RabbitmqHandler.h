@@ -21,6 +21,7 @@ extern "C"
 
 
 #include <amqp_tcp_socket.h>
+#include <amqp_time.h>
 }
 
 #include "RabbitMqHandlerException.h"
@@ -47,8 +48,22 @@ public :
     virtual bool createConnection();
     virtual bool createChannel(amqp_channel_t channelID, string exchange, string exchangetype);
     virtual void bind(amqp_channel_t channelID, const string &routingkey, amqp_bytes_t &queue, string exchange);
+    virtual void bind(amqp_channel_t channelID, const string &routingkey, const char* qname, string exchange);
     void publish(const string &routingkey, const string &message, amqp_channel_t channelID, string exchange);
-    bool getFromChannel(string &payload, amqp_channel_t channelID, amqp_bytes_t queue);
+
+    virtual bool createChannel(amqp_channel_t channelID);
+    virtual void queue_declare(amqp_channel_t channelID, const char *queue_name_);
+    virtual bool getFromChannel(string &payload, amqp_channel_t channelID, const char*  queueName);
+    void declareExchange(amqp_channel_t channelID, string exchange, string exchangetype);
+    void bindExchange(amqp_channel_t channelID, string exchange, string exchangetype); 
+
+
+    string exchangeCD, exchangetypeCD;
+    string exchangeSH, exchangetypeSH;
+    string queuenameCD, queuenameSH;
+    string routingKeySH;
+
+    int channelPub, channelSub;
 
 private:
 
@@ -70,7 +85,6 @@ private:
 
     void throw_on_amqp_error(amqp_rpc_reply_t x, char const *context);
     void declareExchange();
-    void declareExchange(amqp_channel_t channelID, string exchange, string exchangetype);
     void throw_on_error(int x, char const *context);
 
 };

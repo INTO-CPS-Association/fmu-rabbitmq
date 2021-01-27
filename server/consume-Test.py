@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 import pika
-import json
-from datetime import datetime, timezone
-import time
 import threading
 
 cosimTime = 0.0
@@ -22,14 +19,13 @@ channelPublish.exchange_declare(exchange='fmi_digital_twin_sh', exchange_type='d
 print("Creating queue")
 result = channelConsume.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
-
-qnamepub = "get_system_health_data"
-result2 = channelPublish.queue_declare(queue=qnamepub, exclusive=False, auto_delete=True)
+result2 = channelPublish.queue_declare(queue='boasorte', exclusive=False, auto_delete=False)
+queue_name2 = result2.method.queue
 
 channelConsume.queue_bind(exchange='fmi_digital_twin_sh', queue=queue_name,
                    routing_key='linefollower.system_health.from_cosim')
 
-channelPublish.queue_bind(exchange='fmi_digital_twin_sh', queue=qnamepub,
+channelPublish.queue_bind(exchange='fmi_digital_twin_sh', queue="boasorte",
                    routing_key='linefollower.system_health.to_cosim')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
@@ -38,34 +34,25 @@ print(' [*] I am consuming and publishing information related to system health')
 def callbackConsume(ch, method, properties, body):
     global newData, cosimTime
     print("\nReceived [x] %r" % body)
-    #cosimTime = datetime.datetime.strptime(body, "%Y-%m-%dT%H:%M:%S.%f%z")
     with lock:
         newData = True
         cosimTime = body.decode()
-        cosimTime = json.loads(cosimTime)
-        #print(cosimTime)
 
 def publishRtime():
     global newData
+    ping_count = 0
     while not thread_stop:
         if newData:
-        #if True:
+            ping_count = ping_count + 1
+            message = "Back ping count: " + str(ping_count)
             with lock:
                 newData = False
                 msg = {}
-                
-                msg['rtime'] = datetime.now(timezone.utc).astimezone().isoformat(timespec='milliseconds')
-                #msg['rtime'] = '2020-11-04T10:47:59.210000+01:00'
 
-                #timet = datetime.datetime.strptime(timeNow.isoformat(timespec='milliseconds'), "%Y-%m-%dT%H:%M:%S.%f%z")
-                #msg['time']= timet.isoformat(timespec='milliseconds')
-                
-                #msg['cosimtime'] = '2020-11-04T10:47:59.210000+01:00'
-                msg['cosimtime'] = cosimTime["simAtTime"]
                 print("\nSending [y] %s" % str(msg))
                 channelPublish.basic_publish(exchange='fmi_digital_twin_sh',
                                     routing_key='linefollower.system_health.to_cosim',
-                                    body=json.dumps(msg))
+                                    body=message)
                 #time.sleep(1)
 
 channelConsume.basic_consume(
