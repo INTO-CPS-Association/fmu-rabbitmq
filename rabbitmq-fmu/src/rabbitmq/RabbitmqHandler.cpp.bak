@@ -45,18 +45,6 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
     this->exchangetype = "direct";
     this->queueBindinngKey = queueBindingKey;
 
-    
-    string exchangeCD, exchangetypeCD;
-    string exchangeSH, exchangetypeSH;
-    string queuenameCD, queuenameSH;
-
-    this->exchangeSH = "fmi_digital_twin_sh";
-    this->exchangetypeSH = "direct";
-    this->queuenameSH = "get_system_health_data";
-
-    this->channelPub = 1;
-    this->channelSub = 2;
-
     this->timeout.tv_sec = 1;
     this->timeout.tv_usec = 0;
 }
@@ -267,30 +255,6 @@ void RabbitmqHandler::declareExchange(amqp_channel_t channelID, string exchange,
     throw_on_amqp_error(amqp_get_rpc_reply(conn), printText.c_str());
 }
 
-void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey, const char* qname, string exchange) {
-
-    amqp_bytes_t queue = amqp_bytes_malloc_dup(amqp_cstring_bytes(qname));
-    amqp_queue_declare_ok_t *r = amqp_queue_declare(
-            conn, channelID, queue, 0, 0, 0, 0, amqp_empty_table);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
-    
-    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
-    if (queue.bytes == NULL) {
-        fprintf(stderr, "Out of memory while copying queue name");
-        return;
-    }
-
-    amqp_queue_bind(conn, channelID, queue, amqp_cstring_bytes(exchange.c_str()),
-                    amqp_cstring_bytes(queueBindingKey.c_str()), amqp_empty_table);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
-
-    amqp_basic_consume(conn, channelID, queue, amqp_empty_bytes, 0, 0, 1,
-                       amqp_empty_table);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
-
-    bound = true;
-}
-                   
 void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey, amqp_bytes_t &queue, string exchange) {
 
     amqp_queue_declare_ok_t *r = amqp_queue_declare(
@@ -325,63 +289,44 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
                    "Publishing");
 }
 
-////////////////
-////////////////
+bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, amqp_bytes_t queue) {
 
+    amqp_rpc_reply_t res, res2;
+    amqp_message_t message;
+    amqp_boolean_t no_ack = false;
 
-bool RabbitmqHandler::createChannel(amqp_channel_t channelID){
-    amqp_channel_open_ok_t *res = amqp_channel_open(conn, channelID);
-    assert(res != NULL);
-    string printText = "Opened channel with ID: " + to_string(channelID);
-    printf("\n%s", printText.c_str());
-    return true;
-}
+printf("were here, with queue name %s, on channel %d\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str(), channelID);
 
-void RabbitmqHandler::queue_declare(amqp_channel_t channelID, const char *queueName) {
-    string printText = "Declaring queue on channel with ID: " + to_string(channelID);
-    printf("\n%s\n", printText.c_str());
-    amqp_queue_declare_ok_t *res = amqp_queue_declare(
-      conn, channelID, amqp_cstring_bytes(queueName),
-      /*passive*/ 0,
-      /*durable*/ 0,
-      /*exclusive*/ 0,
-      /*auto_delete*/ 1, amqp_empty_table);
-    assert(res != NULL);           
-}
-
-bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, const char* queueName) {
-    
-    amqp_rpc_reply_t rpc_reply;
     amqp_time_t deadline;
-    struct timeval timeout = {5, 0};
+    struct timeval timeout = { 1 , 0 };//same timeout used in consume(json)
     int time_rc = amqp_time_from_now(&deadline, &timeout);
     assert(time_rc == AMQP_STATUS_OK);
 
-    printf("basic_get from: %s, through channel: %d\n", queueName, channelID);
-
     do {
-        rpc_reply = amqp_basic_get(conn, channelID,
-                                amqp_cstring_bytes(queueName), /*no_ack*/ 1);
-    } while (rpc_reply.reply_type == AMQP_RESPONSE_NORMAL &&
-            rpc_reply.reply.id == AMQP_BASIC_GET_EMPTY_METHOD &&
-            amqp_time_has_past(deadline) == AMQP_STATUS_OK);
+        res = amqp_basic_get(conn, channelID, queue, no_ack);
+    } while (res.reply_type == AMQP_RESPONSE_NORMAL &&
+            res.reply.id == AMQP_BASIC_GET_EMPTY_METHOD 
+            && amqp_time_has_past(deadline) == AMQP_STATUS_OK);
 
-    if(rpc_reply.reply_type != AMQP_RESPONSE_NORMAL || rpc_reply.reply.id != AMQP_BASIC_GET_OK_METHOD){
-
-        printf("No message, error codes: rpc_reply.reply_type %d, and rpc_reply.reply.id %d\n", rpc_reply.reply_type, rpc_reply.reply.id);
+    if (AMQP_RESPONSE_NORMAL != res.reply_type || AMQP_BASIC_GET_OK_METHOD != res.reply.id) {
+        printf("amqp_basic_get error codes amqp_response_normal %d, amqp_basic_get_ok_method %d\n", res.reply_type, res.reply.id);
         return false;
     }
 
-    amqp_message_t message;
-    rpc_reply =
-        amqp_read_message(conn, channelID, &message, 0);
-    assert(rpc_reply.reply_type == AMQP_RESPONSE_NORMAL);
+    printf("amqp_basic_get outcome %d\n", res.reply_type);
+    printf("amqp_basic_get outcome %d\n", res.reply.id);
+
+    res2 = amqp_read_message(conn,channelID,&message,0);
+    printf("5:reply type %d\n", res2.reply_type);
+
+    if (AMQP_RESPONSE_NORMAL != res2.reply_type) {
+        printf("6:reply type %d\n", res2.reply_type);
+        return false;
+    }
 
     payload = std::string(reinterpret_cast< char const * >(message.body.bytes), message.body.len);
 
-
-    printf("RECEIVED MESSAGE: %s\n", payload.c_str());
-
+printf("then were here\n %s", payload.c_str());
     amqp_destroy_message(&message);
     return true;
 

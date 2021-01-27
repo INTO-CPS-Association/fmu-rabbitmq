@@ -217,6 +217,7 @@ bool FmuContainer::initialize() {
                              hostname.c_str(), port);
             return false;
         }
+        
         this->exchange.first = "fmi_digital_twin_cd";
         this->exchangetype.first = "direct";
         this->rabbitMqHandler->createChannel(this->channelPub, this->exchange.first, this->exchangetype.first); //Channel where to publish data
@@ -240,8 +241,9 @@ bool FmuContainer::initialize() {
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Sending RabbitMQ ready message%s", "");
     this->rabbitMqHandler->publish(this->routingKey.second,
-                                   R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",this->channelPub, this->exchange.first);
+                                   R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",this->channelSub, this->exchange.first);
     ////////////////////////////////////////////////////////////////////////////////////
+
     ////////////////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -257,19 +259,18 @@ bool FmuContainer::initialize() {
                              hostname.c_str(), port);
             return false;
         }
+        //Create channel for handling the publishing
+        this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelPub); //Channel where to publish system health data
+        //Declare exchange
+        this->rabbitMqHandlerSystemHealth->declareExchange(this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->exchangeSH, this->rabbitMqHandlerSystemHealth->exchangetypeSH);
+        this->rabbitMqHandlerSystemHealth->routingKeySH = routingKey;
+        this->rabbitMqHandlerSystemHealth->routingKeySH.append(".system_health.from_cosim");
 
-        this->exchange.second = "fmi_digital_twin_sh";
-        this->exchangetype.second = "direct";
-        this->rabbitMqHandlerSystemHealth->createChannel(this->channelPub, this->exchange.second, this->exchangetype.second); //Channel where to publish system health data
-        this->rabbitMqHandlerSystemHealth->createChannel(this->channelSub, this->exchange.second, this->exchangetype.second); //Channel where to consume system health data -> ctually rbmq consumes from all channels
-        //this means that, we should only have one publisher on the otherside that publishes data through the connection, through this channel.
-        this->routingKeySystemHealth.first = routingKey;
-        this->routingKeySystemHealth.first.append(".system_health.from_cosim");
-        this->routingKeySystemHealth.second = routingKey;
-        this->routingKeySystemHealth.second.append(".system_health.to_cosim");
-        cout << "Routing key system health: " << this->routingKeySystemHealth.first << " and " << this->routingKeySystemHealth.second << endl;
-        this->rabbitMqHandlerSystemHealth->bind(this->channelPub, this->routingKeySystemHealth.first, this->queuenameSystemHealth.first, this->exchange.second);
-        this->rabbitMqHandlerSystemHealth->bind(this->channelSub, this->routingKeySystemHealth.second, this->queuenameSystemHealth.second, this->exchange.second);
+
+        //Create channel for handling the consuming
+        this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelSub); //Channel where to consume system health data 
+        //Declare queue from which to consume
+        this->rabbitMqHandlerSystemHealth->queue_declare(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str());
 
 
     } catch (RabbitMqHandlerException &ex) {
@@ -421,10 +422,11 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
     cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
-    //cout << "COSIM TIME:" << cosim_time << endl;
+    cout << "Sending to rabbitmq: COSIM TIME:\n" << cosim_time << endl;
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
-    this->rabbitMqHandlerSystemHealth->publish(this->routingKeySystemHealth.first, cosim_time, this->channelPub, this->exchange.second);
+    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKeySH, cosim_time, 
+                                        this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->exchangeSH);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
 
@@ -534,7 +536,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         message = R"({)" + message + R"("timestep":")" + startTimeStamp.str() + R"("})";
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandler->publish(this->routingKey.first, message, this->channelPub, this->exchange.first);
-                        cout << "Where does it segment fault";
+                        cout << "Where does it segment fault"  << endl;
                         //Reset Inputs to what they were before send.
                     }
                     
@@ -545,41 +547,34 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     bool validData = false;
                     double simTime_d, rTime_d;
 
-                    while(tryAgain){
-                        cout << "Where does it segment fault";
-                        //if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
-                        if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, 2, this->queuenameSystemHealth.second)){
-                            cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
-                            FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
+                    if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str())){
+                        cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
+                        FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
 
-                            //Extract rtime value from message
-                            date::sys_time<std::chrono::milliseconds> simTime, rTime;
-                            if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
-                                validData = true;
-                                rTime_d = this->core->message2SimTime(rTime).count();
-                                simTime_d = this->core->message2SimTime(simTime).count();
+                        //Extract rtime value from message
+                        date::sys_time<std::chrono::milliseconds> simTime, rTime;
+                        if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
+                            validData = true;
+                            rTime_d = this->core->message2SimTime(rTime).count();
+                            simTime_d = this->core->message2SimTime(simTime).count();
 
-                                cout << "New info on real-time of the system: " << rTime_d  << ", associated simulation time: " << simTime_d << ". Current simulation time: " << simulationTime << endl;
-                                    
-                                FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
+                            cout << "New info on real-time of the system: " << rTime_d  << ", associated simulation time: " << simTime_d << ". Current simulation time: " << simulationTime << endl;
+                                
+                            FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
 
-                                //If output time_discrepancy present, set its value
+                            //If output time_discrepancy present, set its value
 
-                                if(rTime_d < simTime_d){
-                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
-                                }
-                                else  if (rTime_d > simTime_d){
-                                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
-                                }
-
+                            if(rTime_d < simTime_d){
+                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
                             }
-                            else{
-                                cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
-                                }
+                            else  if (rTime_d > simTime_d){
+                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
+                            }
+
                         }
                         else{
-                            tryAgain = false;
-                        }
+                            cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+                            }
                     }
                     
                     if (this->core->process(simulationTime)) {    

@@ -50,7 +50,6 @@ if (NOT BUILD_SHARED_LIBS)
     add_definitions(-DAMQP_STATIC)
 endif ()
 
-
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
 list(FILTER CPP_FILES EXCLUDE REGEX "main.cpp")
 file(GLOB C_FILES src/*.c)
@@ -137,6 +136,9 @@ target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbit
 #    add_test(it-test-${PROJECT_NAME} ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
 #endif ()
 
+# ---------------------------- Small TESTS ------------------------------
+add_executable (BasicConsumer test/basic_consumer.cpp)
+target_link_libraries(BasicConsumer gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
 #################################### INSTALL targets ####################################
 target_architecture(arch)
