@@ -5,7 +5,7 @@
 #include "RabbitmqHandler.h"
 #include <stdarg.h>  // For va_start, etc.
 #include <memory>    // For std::unique_ptr
-
+#include <cassert>
 
 static std::string string_format(const std::string fmt_str, ...) {
     int final_n, n = ((int) fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */

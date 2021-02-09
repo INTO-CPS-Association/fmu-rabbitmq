@@ -172,8 +172,8 @@ int main() {
 
 #define RABBITMQ_FMU_LEVEL 20
 
-            size_t nvr = 2;
-            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL,22};
+            size_t nvr = 3;
+            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_LEVEL,21,22};
             fmi2Real *value = new fmi2Real[nvr];
 
             showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));

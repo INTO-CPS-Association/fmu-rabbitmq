@@ -10,6 +10,7 @@
 #include <iostream>
 #include <map>
 #include <cmath>
+#include <thread>
 #include "fmi2Functions.h"
 #include "DataPoint.h"
 #include "modeldescription/ModelDescriptionParser.h"
@@ -18,6 +19,7 @@
 #include "rabbitmq/RabbitmqHandler.h"
 #include "Iso8601TimeParser.h"
 #include "FmuContainerCore.h"
+#include <condition_variable>
 
 #define RABBITMQ_FMU_HOSTNAME_ID 0
 #define RABBITMQ_FMU_PORT 1
@@ -87,7 +89,7 @@ private:
     DataPoint currentData;
     DataPoint previousInputs;
     enum SvType{Real,Integer,Boolean,String};
-    
+
     //this connection is for exchanging data regarding actual state content, e.g., robot data
     RabbitmqHandler *rabbitMqHandler;
     //this connection is for exchanging data regarding system health
@@ -120,6 +122,13 @@ private:
     bool initializeCoreState();
 
     map<FmuContainerCore::ScalarVariableId, int> calculateLookahead(int lookaheadBound);
+
+#ifdef USE_RBMQ_FMU_THREAD
+    void consumerThreadFunc();
+    thread consumerThread;
+    bool consumerThreadStop;
+    std::condition_variable cv;
+#endif
 };
 
 
