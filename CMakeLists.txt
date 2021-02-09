@@ -58,6 +58,27 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # When done tweaking common stuff, configure the components (subprojects).
 # NOTE: The order matters! The most independent ones should go first.
 
+# set(USE_RBMQ_FMU_THREAD OFF CACHE BOOL "" FORCE)
+# set(USE_RBMQ_FMU_PROF OFF CACHE BOOL "" FORCE)
+
+option(USE_RBMQ_FMU_THREAD "Use RBMQ consumer thread" ON)
+message("USE_RBMQ_FMU_THREAD: ${USE_RBMQ_FMU_THREAD}")
+if (USE_RBMQ_FMU_THREAD)
+    add_definitions(-DUSE_RBMQ_FMU_THREAD)
+endif ()
+
+option(USE_RBMQ_FMU_HEALTH_THREAD "Use RBMQ health thread" ON)
+message("USE_RBMQ_FMU_HEALTH_THREAD: ${USE_RBMQ_FMU_HEALTH_THREAD}")
+if (USE_RBMQ_FMU_HEALTH_THREAD)
+    add_definitions(-DUSE_RBMQ_FMU_HEALTH_THREAD)
+endif ()
+
+option(USE_RBMQ_FMU_PROF "Use RBMQ profiling of step function" OFF)
+message("USE_RBMQ_FMU_PROF: ${USE_RBMQ_FMU_PROF}")
+if (USE_RBMQ_FMU_PROF)
+    add_definitions(-DUSE_RBMQ_FMU_PROF)
+endif ()
+
 set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(thirdparty/rapidjson)

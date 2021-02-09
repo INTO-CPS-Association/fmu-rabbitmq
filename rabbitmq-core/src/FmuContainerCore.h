@@ -14,6 +14,7 @@
 #include <map>
 #include <ctime>
 #include <iostream>
+#include <mutex>
 
 using namespace std;
 
@@ -154,6 +155,17 @@ public:
     void setTimeDiscrepancyOutput(double time, int vref);
     double getTimeDiscrepancyOutput(int vref);
 
+#ifdef USE_RBMQ_FMU_THREAD
+    bool hasUnprocessed(void);
+    std::mutex m;
+#endif
+
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+    typedef pair<date::sys_time<std::chrono::milliseconds>, date::sys_time<std::chrono::milliseconds>> HealthData;
+    bool hasUnprocessedHealth(void);
+    std::mutex mHealth;
+    std::list<HealthData> incomingUnprocessedHealth;
+#endif
 
 protected:
 
@@ -187,6 +199,4 @@ private:
     template<typename Predicate>
     void processLookahead(Predicate predicate);
 };
-
-
 #endif //RABBITMQFMUPROJECT_FMUCONTAINERCORE_H

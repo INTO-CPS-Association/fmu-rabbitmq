@@ -62,8 +62,12 @@ void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
 void FmuContainerCore::processIncoming() {
     //sort
 
+
     for (auto &pair: this->incomingUnprocessed) {
 
+#ifdef USE_RBMQ_FMU_THREAD
+        m.lock();
+#endif
         auto id = pair.first;
         if (verbose) {
             cout << "\t --  Incoming unprocessed: id=" << id << " - size=" << pair.second.size()
@@ -88,8 +92,11 @@ void FmuContainerCore::processIncoming() {
         }
         //move
         this->incomingLookahead[id].splice(this->incomingLookahead[id].end(), pair.second,
-                                           pair.second.begin(), it);
+                pair.second.begin(), it);
 
+#ifdef USE_RBMQ_FMU_THREAD
+        m.unlock();
+#endif
         //sort
         this->incomingLookahead[id].sort(
                 [](const TimedScalarBasicValue &a, const TimedScalarBasicValue &b) { return a.first < b.first; });
@@ -97,16 +104,25 @@ void FmuContainerCore::processIncoming() {
         if (verbose) {
             std::cout << "\t --> Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size()
                       << ": ";
+#ifdef USE_RBMQ_FMU_THREAD
+            m.lock();
+#endif
             showL(this->incomingUnprocessed[id]);
             cout << std::endl;
             std::cout << "\t --> Incoming lookahead  : id=" << id << " - size=" << this->incomingLookahead[id].size()
                       << ": ";
             showL(this->incomingLookahead[id]);
             cout << std::endl << endl;
+#ifdef USE_RBMQ_FMU_THREAD
+            m.unlock();
+#endif
         }
     }
 
 
+#ifdef USE_RBMQ_FMU_THREAD
+    m.lock();
+#endif
     if (!this->incomingUnprocessed.empty()) {
         if (verbose) {
             cout << "Cleaning incomingUnprocessed" << endl;
@@ -131,6 +147,9 @@ void FmuContainerCore::processIncoming() {
             }
         }
     }
+#ifdef USE_RBMQ_FMU_THREAD
+    m.unlock();
+#endif
 }
 
 bool FmuContainerCore::hasValueFor(map<ScalarVariableId, TimedScalarBasicValue> &currentData,
@@ -432,6 +451,19 @@ double FmuContainerCore::getTimeDiscrepancyOutput(int vref){
         return getValue->second.second.d.d;
     }
 }
+
+#ifdef USE_RBMQ_FMU_THREAD
+bool FmuContainerCore::hasUnprocessed(void){
+    return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
+}
+#endif
+
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+bool FmuContainerCore::hasUnprocessedHealth(void){
+    return !this->incomingUnprocessedHealth.empty();
+}
+#endif
+
 ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "------------------------------ INFO ------------------------------" << "\n";
     os << "Max age: " << c.maxAge.count() << "\n";
