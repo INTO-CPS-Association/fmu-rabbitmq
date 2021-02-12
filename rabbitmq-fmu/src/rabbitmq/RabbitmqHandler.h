@@ -48,7 +48,7 @@ public :
     virtual bool createConnection();
     virtual bool createChannel(amqp_channel_t channelID, string exchange, string exchangetype);
     virtual void bind(amqp_channel_t channelID, const string &routingkey, amqp_bytes_t &queue, string exchange);
-    virtual void bind(amqp_channel_t channelID, const string &routingkey, const char* qname, string exchange);
+    virtual void bind(amqp_channel_t channelID, const string &routingkey, string exchange);
     void publish(const string &routingkey, const string &message, amqp_channel_t channelID, string exchange);
 
     virtual bool createChannel(amqp_channel_t channelID);
@@ -62,6 +62,7 @@ public :
     string exchangeSH, exchangetypeSH;
     string queuenameCD, queuenameSH;
     string routingKeySH;
+    string bindingKeySH;
 
     int channelPub, channelSub;
 
