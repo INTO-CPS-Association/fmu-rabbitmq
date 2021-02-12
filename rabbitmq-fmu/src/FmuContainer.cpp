@@ -265,12 +265,16 @@ bool FmuContainer::initialize() {
         this->rabbitMqHandlerSystemHealth->declareExchange(this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->exchangeSH, this->rabbitMqHandlerSystemHealth->exchangetypeSH);
         this->rabbitMqHandlerSystemHealth->routingKeySH = routingKey;
         this->rabbitMqHandlerSystemHealth->routingKeySH.append(".system_health.from_cosim");
-
+        this->rabbitMqHandlerSystemHealth->bindingKeySH = routingKey;
+        this->rabbitMqHandlerSystemHealth->bindingKeySH.append(".system_health.to_cosim");
 
         //Create channel for handling the consuming
         this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelSub); //Channel where to consume system health data 
         //Declare queue from which to consume
-        this->rabbitMqHandlerSystemHealth->queue_declare(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str());
+        //this->rabbitMqHandlerSystemHealth->queue_declare(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str());
+        //this->rabbitMqHandlerSystemHealth->bind(this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->routingKeySH, this->rabbitMqHandlerSystemHealth->exchangeSH);
+
+        this->rabbitMqHandlerSystemHealth->bind(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->bindingKeySH, this->rabbitMqHandlerSystemHealth->exchangeSH);
 
 
     } catch (RabbitMqHandlerException &ex) {
@@ -547,7 +551,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     bool validData = false;
                     double simTime_d, rTime_d;
 
-                    if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str())){
+                    //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str())){
+                        if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+
                         cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
                         FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
 
