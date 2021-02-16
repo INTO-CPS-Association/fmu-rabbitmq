@@ -70,17 +70,19 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
 }
 
 FmuContainer::~FmuContainer() {
-    if (this->rabbitMqHandler) {
-        this->rabbitMqHandler->close();
-        delete this->rabbitMqHandler;
-    }
-
 #ifdef USE_RBMQ_FMU_THREAD
+    consumerThreadStop = true;
     if (this->consumerThread.joinable())
     {
         this->consumerThread.join();
     }
 #endif
+
+    if (this->rabbitMqHandler) {
+        this->rabbitMqHandler->close();
+        delete this->rabbitMqHandler;
+    }
+
 }
 
 bool FmuContainer::isLoggingOn() {
