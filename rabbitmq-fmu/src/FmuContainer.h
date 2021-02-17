@@ -128,6 +128,10 @@ private:
     thread consumerThread;
     bool consumerThreadStop;
     std::condition_variable cv;
+
+    void healthThreadFunc();
+    thread healthThread;
+    bool healthThreadStop;
 #endif
 };
 

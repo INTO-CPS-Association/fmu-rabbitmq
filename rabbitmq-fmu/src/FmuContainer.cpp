@@ -53,6 +53,7 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
 
 #ifdef USE_RBMQ_FMU_THREAD
     consumerThreadStop = false;
+    healthThreadStop = false;
 #endif 
 
     for (auto const &value: intConfigs) {
@@ -75,6 +76,12 @@ FmuContainer::~FmuContainer() {
     if (this->consumerThread.joinable())
     {
         this->consumerThread.join();
+    }
+
+    healthThreadStop = true;
+    if (this->healthThread.joinable())
+    {
+        this->healthThread.join();
     }
 #endif
 
@@ -125,7 +132,7 @@ void FmuContainer::consumerThreadFunc(void) {
                 for (auto &pair: result.booleanValues) {
                     this->core->add(pair.first, std::make_pair(result.time, pair.second));
                 }
-                this->core->m.unlock();
+                lock.unlock();
                 cv.notify_one();
             } else {
                 FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
@@ -134,6 +141,33 @@ void FmuContainer::consumerThreadFunc(void) {
     }
 }
 #endif //USE_RBMQ_FMU_THREAD
+
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+void FmuContainer::healthThreadFunc(void) {
+    string systemHealthData;
+    bool tryAgain = true;
+    bool validData = false;
+    double simTime_d, rTime_d;
+
+    while (!healthThreadStop) {
+        if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+
+            cout << "New health message: " << systemHealthData << endl;
+            //Extract rtime value from message
+            date::sys_time<std::chrono::milliseconds> simTime, rTime;
+            if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
+                FmuContainerCore::HealthData healthData = std::make_pair(rTime, simTime); 
+                std::unique_lock<std::mutex> lock(this->core->mHealth);
+                this->core->incomingUnprocessedHealth.push_back(healthData);
+                lock.unlock();
+            }
+            else{
+                cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+            }
+        }
+    }
+}
+#endif //USE_RBMQ_FMU_HEALTH_THREAD
 
 bool FmuContainer::initialize() {
     FmuContainer_LOG(fmi2OK, "logAll", "Preparing initialization. Looking Up configuration parameters%s", "");
@@ -380,6 +414,10 @@ bool FmuContainer::initialize() {
     this->consumerThread = std::thread(&FmuContainer::consumerThreadFunc, this);
 #endif //USE_RBMQ_FMU_THREAD
 
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+    this->healthThread = std::thread(&FmuContainer::healthThreadFunc, this);
+#endif //USE_RBMQ_FMU_HEALTH_THREAD
+
     std::stringstream startTimeStamp;
     startTimeStamp << this->core->getStartOffsetTime();
 
@@ -577,7 +615,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 #else
             std::unique_lock<std::mutex> lock(this->core->m);
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
-            this->core->m.unlock();
+            lock.unlock();
 #endif //!USE_RBMQ_FMU_THREAD
                     LOG_TIME(2);
 
@@ -646,8 +684,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     bool validData = false;
                     double simTime_d, rTime_d;
 
+#ifndef USE_RBMQ_FMU_HEALTH_THREAD
                     //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str())){
-                        if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+                    if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
 
                         cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
                         FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
@@ -659,6 +698,20 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                             rTime_d = this->core->message2SimTime(rTime).count();
                             simTime_d = this->core->message2SimTime(simTime).count();
 
+#else
+                    FmuContainerCore::HealthData healthData;
+                    std::unique_lock<std::mutex> hlock(this->core->mHealth);
+                    validData = this->core->hasUnprocessedHealth();
+                    if (validData) {
+                       healthData = this->core->incomingUnprocessedHealth.front();
+                       this->core->incomingUnprocessedHealth.pop_front();
+                    }
+                    hlock.unlock();
+
+                    if (validData) {
+                       rTime_d = this->core->message2SimTime(healthData.first).count();
+                       simTime_d = this->core->message2SimTime(healthData.second).count();
+#endif //!USE_RBMQ_FMU_HEALTH_THREAD
                             cout << "New info on real-time of the system: " << rTime_d  << ", associated simulation time: " << simTime_d << ". Current simulation time: " << simulationTime << endl;
                                 
                             FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
@@ -676,7 +729,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         else{
                             cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
                             }
+#ifndef USE_RBMQ_FMU_HEALTH_THREAD
                     }
+#endif //!USE_RBMQ_FMU_HEALTH_THREAD
                     
                     LOG_TIME(4);
                     if (this->core->process(simulationTime)) {    
