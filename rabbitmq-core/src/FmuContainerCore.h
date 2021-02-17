@@ -160,6 +160,13 @@ public:
     std::mutex m;
 #endif
 
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+    typedef pair<date::sys_time<std::chrono::milliseconds>, date::sys_time<std::chrono::milliseconds>> HealthData;
+    bool hasUnprocessedHealth(void);
+    std::mutex mHealth;
+    std::list<HealthData> incomingUnprocessedHealth;
+#endif
+
 protected:
 
 //TODO: these should be qualified by type because the svid is not globally unique

@@ -458,6 +458,12 @@ bool FmuContainerCore::hasUnprocessed(void){
 }
 #endif
 
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+bool FmuContainerCore::hasUnprocessedHealth(void){
+    return !this->incomingUnprocessedHealth.empty();
+}
+#endif
+
 ostream &operator<<(ostream &os, const FmuContainerCore &c) {
     os << "------------------------------ INFO ------------------------------" << "\n";
     os << "Max age: " << c.maxAge.count() << "\n";
