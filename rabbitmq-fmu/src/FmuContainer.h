@@ -76,6 +76,8 @@ public:
 
     bool isLoggingOn();
 
+    int coreIncomingSize();
+
 private:
 
     FmuContainerCore *core;

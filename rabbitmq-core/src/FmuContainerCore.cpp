@@ -457,6 +457,9 @@ bool FmuContainerCore::hasUnprocessed(void){
     return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
 }
 #endif
+int FmuContainerCore::incomingSize(void){
+    return this->incomingUnprocessed[10].size();
+}
 
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
 bool FmuContainerCore::hasUnprocessedHealth(void){

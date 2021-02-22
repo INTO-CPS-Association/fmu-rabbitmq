@@ -921,5 +921,8 @@ bool FmuContainer::setString(const fmi2ValueReference *vr, size_t nvr, const fmi
     }
 }
 
+int FmuContainer::coreIncomingSize(void){
+    return this->core->incomingSize();
+}
 
 

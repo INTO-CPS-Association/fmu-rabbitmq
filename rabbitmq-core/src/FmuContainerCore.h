@@ -159,6 +159,7 @@ public:
     bool hasUnprocessed(void);
     std::mutex m;
 #endif
+    int incomingSize(void);
 
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
     typedef pair<date::sys_time<std::chrono::milliseconds>, date::sys_time<std::chrono::milliseconds>> HealthData;
