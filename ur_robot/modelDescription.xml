@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<fmiModelDescription fmiVersion="2.0" modelName="RabbitMq" guid="{cfc65592-ffff-4563-9705-1581b6e7071c}"
+                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="INTO-CPS"
+                     license="INTO-CPS">
+    <CoSimulation modelIdentifier="rabbitmq" needsExecutionTool="true"
+                  canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false"
+                  maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="true"
+                  canNotUseMemoryManagementFunctions="true" canGetAndSetFMUstate="false" canSerializeFMUstate="false"
+                  providesDirectionalDerivative="false"/>
+
+    <LogCategories>
+        <Category name="logAll"/>
+    </LogCategories>
+
+    <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
+    <ModelVariables>
+       <!-- <ScalarVariable name = "timestamp"  valueReference                  = "100" variability = "discrete"  causality = "output"> -->
+       <!--     <Real /> -->
+       <!-- </ScalarVariable> -->
+       <ScalarVariable name = "target_q_0" valueReference                  = "100" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_q_1" valueReference                  = "101" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_q_2" valueReference                  = "102" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_q_3" valueReference                  = "103" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_q_4" valueReference                  = "104" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_q_5" valueReference                  = "105" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qd_0" valueReference                 = "106" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qd_1" valueReference                 = "107" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qd_2" valueReference                 = "108" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qd_3" valueReference                 = "109" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qd_4" valueReference                 = "110" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qd_5" valueReference                 = "111" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qdd_0" valueReference                = "112" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qdd_1" valueReference                = "113" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qdd_2" valueReference                = "114" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qdd_3" valueReference                = "115" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qdd_4" valueReference                = "116" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_qdd_5" valueReference                = "117" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_current_0" valueReference            = "118" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_current_1" valueReference            = "119" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_current_2" valueReference            = "120" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_current_3" valueReference            = "121" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_current_4" valueReference            = "122" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_current_5" valueReference            = "123" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_moment_0" valueReference             = "124" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_moment_1" valueReference             = "125" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_moment_2" valueReference             = "126" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_moment_3" valueReference             = "127" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_moment_4" valueReference             = "128" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_moment_5" valueReference             = "129" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_q_0" valueReference                  = "130" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_q_1" valueReference                  = "131" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_q_2" valueReference                  = "132" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_q_3" valueReference                  = "133" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_q_4" valueReference                  = "134" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_q_5" valueReference                  = "135" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_qd_0" valueReference                 = "136" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_qd_1" valueReference                 = "137" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_qd_2" valueReference                 = "138" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_qd_3" valueReference                 = "139" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_qd_4" valueReference                 = "140" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_qd_5" valueReference                 = "141" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_current_0" valueReference            = "142" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_current_1" valueReference            = "143" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_current_2" valueReference            = "144" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_current_3" valueReference            = "145" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_current_4" valueReference            = "146" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_current_5" valueReference            = "147" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_control_output_0" valueReference      = "148" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_control_output_1" valueReference      = "149" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_control_output_2" valueReference      = "150" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_control_output_3" valueReference      = "151" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_control_output_4" valueReference      = "152" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_control_output_5" valueReference      = "153" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_pose_0" valueReference           = "154" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_pose_1" valueReference           = "155" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_pose_2" valueReference           = "156" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_pose_3" valueReference           = "157" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_pose_4" valueReference           = "158" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_pose_5" valueReference           = "159" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_speed_0" valueReference          = "160" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_speed_1" valueReference          = "161" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_speed_2" valueReference          = "162" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_speed_3" valueReference          = "163" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_speed_4" valueReference          = "164" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_speed_5" valueReference          = "165" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_force_0" valueReference          = "166" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_force_1" valueReference          = "167" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_force_2" valueReference          = "168" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_force_3" valueReference          = "169" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_force_4" valueReference          = "170" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_TCP_force_5" valueReference          = "171" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_pose_0" valueReference           = "172" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_pose_1" valueReference           = "173" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_pose_2" valueReference           = "174" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_pose_3" valueReference           = "175" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_pose_4" valueReference           = "176" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_pose_5" valueReference           = "177" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_speed_0" valueReference          = "178" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_speed_1" valueReference          = "179" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_speed_2" valueReference          = "180" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_speed_3" valueReference          = "181" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_speed_4" valueReference          = "182" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_TCP_speed_5" valueReference          = "183" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_digital_input_bits" valueReference   = "184" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_temperatures_0" valueReference        = "185" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_temperatures_1" valueReference        = "186" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_temperatures_2" valueReference        = "187" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_temperatures_3" valueReference        = "188" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_temperatures_4" valueReference        = "189" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_temperatures_5" valueReference        = "190" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_execution_time" valueReference       = "191" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "robot_mode" valueReference                  = "192" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_mode_0" valueReference                = "193" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_mode_1" valueReference                = "194" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_mode_2" valueReference                = "195" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_mode_3" valueReference                = "196" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_mode_4" valueReference                = "197" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "joint_mode_5" valueReference                = "198" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "safety_mode" valueReference                 = "199" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_tool_accelerometer_0" valueReference = "200" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_tool_accelerometer_1" valueReference = "201" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_tool_accelerometer_2" valueReference = "202" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "speed_scaling" valueReference               = "203" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "target_speed_fraction" valueReference       = "204" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_momentum" valueReference             = "205" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_main_voltage" valueReference         = "206" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_robot_voltage" valueReference        = "207" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_robot_current" valueReference        = "208" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_joint_voltage_0" valueReference      = "209" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_joint_voltage_1" valueReference      = "210" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_joint_voltage_2" valueReference      = "211" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_joint_voltage_3" valueReference      = "212" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_joint_voltage_4" valueReference      = "213" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name = "actual_joint_voltage_5" valueReference      = "214" variability = "continous" causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name  = "actual_digital_output_bits" valueReference = "215" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+       <ScalarVariable name  = "runtime_state" valueReference              = "216" variability = "discrete"  causality = "output">
+           <Real />
+       </ScalarVariable>
+        <ScalarVariable name = "time_discrepancy" valueReference           = "22" variability  = "discrete" causality  = "output">
+            <Real start      = "0.0" />
+        </ScalarVariable>
+
+        <ScalarVariable name = "command2" valueReference                   = "23" variability  = "discrete" causality  = "input">
+            <Real start      = "3.2" />
+        </ScalarVariable>
+        <ScalarVariable name = "command3" valueReference                   = "24" variability  = "discrete" causality  = "input">
+            <Integer start   = "2" />
+        </ScalarVariable>
+        <ScalarVariable name = "command4" valueReference                   = "25" variability  = "discrete" causality  = "input">
+            <String start    = "hello rabbitmq" />
+        </ScalarVariable>
+
+        <ScalarVariable name = "command_stop" valueReference               = "26" variability  = "discrete" causality  = "input">
+            <Boolean start   = "false" />
+        </ScalarVariable>
+
+        <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
+            <String start="localhost"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.port" valueReference="1" variability="fixed" causality="parameter" initial="exact">
+            <Integer start="5672"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.username" valueReference="2" variability="fixed" causality="parameter" initial="exact">
+            <String start="guest"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.password" valueReference="3" variability="fixed" causality="parameter" initial="exact">
+            <String start="guest"/>
+        </ScalarVariable>
+
+
+        <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower"/>
+        </ScalarVariable>
+
+        <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
+            <Integer start="60"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.precision" valueReference="6" variability="fixed" causality="parameter" description="Communication step comparison precision. Number of decimals to consider" initial="exact">
+            <Integer start="10"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.maxage" valueReference="7" variability="fixed" causality="parameter" description="The max age of a value specified in ms," initial="exact">
+            <Integer start="100"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
+            <Integer start="1"/>
+        </ScalarVariable>
+
+
+
+    </ModelVariables>
+    <ModelStructure>
+        <Outputs>
+            <Unknown index="1"/>
+            <Unknown index="2"/>
+            <Unknown index="3"/>
+        </Outputs>
+    </ModelStructure>
+
+
+</fmiModelDescription>
