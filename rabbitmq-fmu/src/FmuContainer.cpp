@@ -516,7 +516,7 @@ std::chrono::high_resolution_clock::time_point log_time_last;
 #define LOG_TIME_ELAPSED(x, y) \
     std::chrono::duration_cast<std::chrono::microseconds>(log_time[y] - log_time[x]).count()
 #define LOG_TIME_PRINT \
-    fprintf(stderr, "HE: 0:%ld, 1:+%ld, 2:+%ld, 3:+%ld, 4:+%ld, 5:+%ld\n", \
+    fprintf(stderr, "GI: 0:%ld, 1:+%ld, 2:+%ld, 3:+%ld, 4:+%ld, 5:+%ld\n", \
          std::chrono::duration_cast<std::chrono::microseconds>(log_time[0] - log_time_last).count(), \
          LOG_TIME_ELAPSED(0,1), \
          LOG_TIME_ELAPSED(1,2), \
