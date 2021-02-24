@@ -53,6 +53,8 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
 
 #ifdef USE_RBMQ_FMU_THREAD
     consumerThreadStop = false;
+#endif 
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
     healthThreadStop = false;
 #endif 
 
@@ -77,7 +79,9 @@ FmuContainer::~FmuContainer() {
     {
         this->consumerThread.join();
     }
+#endif 
 
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
     healthThreadStop = true;
     if (this->healthThread.joinable())
     {
@@ -763,6 +767,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                         LOG_TIME(5);
                         LOG_TIME_PRINT;
+                        cout << "************ Exit 2 FmuContainer::step ***************" << endl;
                         return true;
                     }
 
