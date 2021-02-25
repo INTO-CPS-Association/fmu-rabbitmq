@@ -1,6 +1,5 @@
 function plot_profiling2(filename)
     %file = 'oldmain_1ms.txt';
-    %filename = 'oldmain_1ms'
     %to handle big numbers for visualization
     format long g;
     
