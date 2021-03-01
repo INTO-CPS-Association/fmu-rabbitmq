@@ -17,6 +17,9 @@
        <!-- <ScalarVariable name = "timestamp"  valueReference                  = "100" variability = "discrete"  causality = "output"> -->
        <!--     <Real /> -->
        <!-- </ScalarVariable> -->
+       <ScalarVariable name = "seqno"  valueReference                      = "10" variability = "discrete"  causality = "output">
+           <Integer />
+       </ScalarVariable>
        <ScalarVariable name = "target_q_0" valueReference                  = "100" variability = "continuous" causality = "output">
            <Real />
        </ScalarVariable>
