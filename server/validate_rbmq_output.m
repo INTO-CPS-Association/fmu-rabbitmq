@@ -2,7 +2,7 @@ clear;
 format long
 
 maxage = 2
-outputs = 'outputs_maxage200ms.csv';
+outputs = 'outputs_maxage2000ms.csv';
 gt_data = 'ur_robot.csv';
 %Get data that is sent to the rabbitmq
 ground_truth = readtable(gt_data);
@@ -44,7 +44,7 @@ hold off
 % simulation
 
 % first convert the sim time to the gt time
-sim_time = processed_data{:, 1} + ground_truth{seqno+1, 1};
+sim_time = processed_data{:, 1} + ground_truth{seqno(1)+1, 1};
 
 figure
 hold on
