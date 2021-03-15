@@ -61,7 +61,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # set(USE_RBMQ_FMU_THREAD OFF CACHE BOOL "" FORCE)
 # set(USE_RBMQ_FMU_PROF OFF CACHE BOOL "" FORCE)
 
-option(USE_RBMQ_FMU_THREAD "Use RBMQ consumer thread" ON)
+option(USE_RBMQ_FMU_THREAD "Use RBMQ consumer thread" OFF)
 message("USE_RBMQ_FMU_THREAD: ${USE_RBMQ_FMU_THREAD}")
 if (USE_RBMQ_FMU_THREAD)
     add_definitions(-DUSE_RBMQ_FMU_THREAD)

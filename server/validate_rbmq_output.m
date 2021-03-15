@@ -2,7 +2,7 @@ clear;
 format long
 
 maxage = 2
-outputs = 'outputs_maxage2000ms.csv';
+outputs = 'outputs_ctoff_maxage2000ms.csv';
 gt_data = 'ur_robot.csv';
 %Get data that is sent to the rabbitmq
 ground_truth = readtable(gt_data);
