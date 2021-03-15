@@ -228,6 +228,8 @@ int main(int argc, char *argv[]) {
                 }
 
                 changeInput=!changeInput;
+                sleep(1);
+
             }
 
 //        fmi2Terminate(fmi2Component c)

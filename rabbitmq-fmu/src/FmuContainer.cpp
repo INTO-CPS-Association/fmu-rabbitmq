@@ -156,7 +156,7 @@ void FmuContainer::healthThreadFunc(void) {
     while (!healthThreadStop) {
         if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
 
-            cout << "New health message: " << systemHealthData << endl;
+            FmuContainer_LOG(fmi2OK, "logAll", "New health message %s", systemHealthData.c_str());
             //Extract rtime value from message
             date::sys_time<std::chrono::milliseconds> simTime, rTime;
             if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
@@ -166,7 +166,7 @@ void FmuContainer::healthThreadFunc(void) {
                 lock.unlock();
             }
             else{
-                cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+                FmuContainer_LOG(fmi2OK, "logAll", "Ignoring (either bad json or own message): %s", systemHealthData.c_str());
             }
         }
     }
@@ -393,13 +393,11 @@ bool FmuContainer::initialize() {
             }
         }
         else if(it->second.output && it->first.compare("time_discrepancy")==0){
-            cout << "time discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
             FmuContainer_LOG(fmi2OK, "logAll","time discrepancy present with vref: %d s",it->second.valueReference);
             this->timeOutputPresent = true;
             this->timeOutputVRef = it->second.valueReference;
         }
         else if(it->second.output && it->first.compare("simtime_discrepancy")==0){
-            cout << "simtime discrepancy presence: " <<  it->first << " with vref: " << it->second.valueReference << endl;
             FmuContainer_LOG(fmi2OK, "logAll","simtime discrepancy present with vref: %d s",it->second.valueReference);
             this->simtimeOutputPresent = true;
             this->simtimeOutputVRef = it->second.valueReference;
@@ -525,15 +523,16 @@ std::chrono::high_resolution_clock::time_point log_time_last;
 
 bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicationStepSize) {
     auto simulationTime = secondsToMs(currentCommunicationPoint + communicationStepSize);
-    cout << "************ Enter FmuContainer::step ***************" << endl;
-    cout << "Step time " << currentCommunicationPoint + communicationStepSize << " s converted time " << simulationTime << " ms" << endl;
+
+    FmuContainer_LOG(fmi2OK, "logAll", "************ Enter FmuContainer::step ***************%s", "");
+    FmuContainer_LOG(fmi2OK, "logAll", "Step time %f s converted time %f ms", currentCommunicationPoint + communicationStepSize, simulationTime);
 
     simulationTime = std::round(simulationTime * precision) / precision;
     long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
     cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
-    cout << "Sending to rabbitmq: COSIM TIME:\n" << cosim_time << endl;
+    FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", cosim_time.c_str());
 
 #ifdef USE_RBMQ_FMU_PROF
     log_time_last = log_time[0];
@@ -554,7 +553,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 #ifndef USE_RBMQ_FMU_THREAD
     if (this->core->process(simulationTime)) {
         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
-        cout << "************ Exit 1 FmuContainer::step ***************" << endl;
+
+        FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 1 FmuContainer::step ***************%s", "");
         LOG_TIME(1); LOG_TIME(2); LOG_TIME(3); LOG_TIME(4); LOG_TIME(5); 
         LOG_TIME_PRINT;
         return true;
@@ -626,7 +626,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str())){
                     if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
 
-                        cout << "New message: " << systemHealthData << ", current simulation time: " << simulationTime << endl;
                         FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
 
                         //Extract rtime value from message
@@ -664,7 +663,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                         }
                         else{
-                            cout << "Ignoring (either bad json or own message): " << systemHealthData.c_str() << endl << "Will try consume once more" << endl;
+                                FmuContainer_LOG(fmi2OK, "logAll", "Ignoring (either bad json or own message): %s", systemHealthData.c_str());
                             }
 #ifndef USE_RBMQ_FMU_HEALTH_THREAD
                     }
@@ -672,31 +671,18 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     
                     LOG_TIME(4);
                     if (this->core->process(simulationTime)) {    
-                        if(this->timeOutputPresent){                   
-                            if(validData){
-                                FmuContainer_LOG(fmi2OK, "logAll", "Setting the time discrepancy output %.2f [ms]", simTime_d-rTime_d);
-                                this->core->setTimeDiscrepancyOutput(simTime_d-rTime_d, this->timeOutputVRef);
-                            }
-                            else{
-                                this->core->setTimeDiscrepancyOutput(this->previousTimeOutputVal, this->timeOutputVRef);
-                                FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
-                            }
+                        if(this->timeOutputPresent){     
+                            this->core->setTimeDiscrepancyOutput(validData, simTime_d-rTime_d, this->previousTimeOutputVal, this->timeOutputVRef);
                         } 
-                        if(this->simtimeOutputPresent){                   
-                            if(validData){
-                                FmuContainer_LOG(fmi2OK, "logAll", "Setting the simtime discrepancy output %.2f [ms]", abs(simulationTime-simTime_d));
-                                this->core->setTimeDiscrepancyOutput(abs(simulationTime-simTime_d), this->simtimeOutputVRef);
-                            }
-                            else{
-                                this->core->setTimeDiscrepancyOutput(this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
-                                FmuContainer_LOG(fmi2OK, "logWarn", "There is no valid data for the calculation of the %s output, keeping previous value", "time_discrepancy");
-                            }
+                        if(this->simtimeOutputPresent){     
+                            this->core->setTimeDiscrepancyOutput(validData, abs(simulationTime-simTime_d), this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
                         } 
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
 
                         LOG_TIME(5);
                         LOG_TIME_PRINT;
-                        cout << "************ Exit 2 FmuContainer::step ***************" << endl;
+
+                        FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 2 FmuContainer::step ***************%s", "");
                         return true;
                     }
 
@@ -724,9 +710,12 @@ void FmuContainer::checkInputs(string &message){
         ostringstream val;
         if(it->second.input){
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
-                cout << "CURRENT DATA: " << this->currentData.doubleValues[it->second.valueReference] << ", previous DATA: " <<this->previousInputs.doubleValues[it->second.valueReference] << endl;
                 if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
-                    cout << "INPUT has changed" << endl;
+                    double previous, current;
+                    previous = this->previousInputs.doubleValues[it->second.valueReference];
+                    current = this->currentData.doubleValues[it->second.valueReference];
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %f, previous data: %f", current, previous);
+
                     val << this->currentData.doubleValues[it->second.valueReference];
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
@@ -735,7 +724,11 @@ void FmuContainer::checkInputs(string &message){
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
                 if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
-                    cout << "INPUT has changed" << endl;
+                    
+                    bool previous, current;
+                    previous = this->previousInputs.booleanValues[it->second.valueReference];
+                    current = this->currentData.booleanValues[it->second.valueReference];
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %d, previous data: %d", current, previous);
                     val << this->currentData.booleanValues[it->second.valueReference];
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
@@ -744,7 +737,10 @@ void FmuContainer::checkInputs(string &message){
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
                 if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
-                    cout << "INPUT has changed" << endl;
+                    int previous, current;
+                    previous = this->previousInputs.integerValues[it->second.valueReference];
+                    current = this->currentData.integerValues[it->second.valueReference];
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %d, previous data: %d", current, previous);
                     val << this->currentData.integerValues[it->second.valueReference];
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
@@ -753,7 +749,10 @@ void FmuContainer::checkInputs(string &message){
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
                 if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
-                    cout << "INPUT has changed" << endl;
+                    string previous, current;
+                    previous = this->previousInputs.stringValues[it->second.valueReference];
+                    current = this->currentData.stringValues[it->second.valueReference];
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %s, previous data: %s", current.c_str(), previous.c_str());
                     string str = "\"";
                     str.append(this->currentData.stringValues[it->second.valueReference]);
                     str.append("\"");

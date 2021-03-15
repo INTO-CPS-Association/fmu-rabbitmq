@@ -429,7 +429,7 @@ std::chrono::milliseconds FmuContainerCore::message2SimTime(date::sys_time<std::
     //cout << "RTIME: " << rtimeString.str().c_str();
     return this->messageTimeToSim(rTime);
 }
-
+/*
 void FmuContainerCore::setTimeDiscrepancyOutput(double timeDiff, int vref){
     auto getValue = this->currentData.find(vref);
     if (!(getValue == this->currentData.end())){
@@ -444,7 +444,30 @@ void FmuContainerCore::setTimeDiscrepancyOutput(double timeDiff, int vref){
             }
         }
     }
+}*/
+
+void FmuContainerCore::setTimeDiscrepancyOutput(bool valid, double timeDiffNew, double timeDiffOld, int vref){
+    auto getValue = this->currentData.find(vref);
+    if (!(getValue == this->currentData.end())){
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << "with vref: " << vref << endl;
+        this->currentData.erase(vref);
+        if(valid){
+            getValue->second.second.d.d = timeDiffNew;
+        }
+        else{
+            getValue->second.second.d.d = timeDiffOld;
+        }
+        //cout << "data we care about, royal we: " << getValue->second.second.d.d << "with vref: " << vref << endl;
+        this->currentData.insert(this->currentData.begin(),std::make_pair(vref, std::make_pair(getValue->second.first, getValue->second.second)));
+        if(verbose){
+            for(auto it = this->currentData.cbegin(); it != this->currentData.cend(); it++){
+                //cout << "MY DATA: " << it->first << " " << it->second.second << endl;
+            }
+        }
+    }
+
 }
+
 double FmuContainerCore::getTimeDiscrepancyOutput(int vref){
     auto getValue = this->currentData.find(vref);
     if (!(getValue == this->currentData.end())){
