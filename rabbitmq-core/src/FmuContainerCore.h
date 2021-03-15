@@ -152,7 +152,8 @@ public:
     
     void convertTimeToString(long long milliSecondsSinceEpoch, string &message);
     
-    void setTimeDiscrepancyOutput(double time, int vref);
+    //void setTimeDiscrepancyOutput(double time, int vref);
+    void setTimeDiscrepancyOutput(bool valid, double timeDiffNew, double timeDiffOld, int vref);
     double getTimeDiscrepancyOutput(int vref);
 
 #ifdef USE_RBMQ_FMU_THREAD

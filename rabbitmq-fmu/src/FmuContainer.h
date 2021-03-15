@@ -101,17 +101,15 @@ private:
 
     std::chrono::milliseconds messageTimeToSim( date::sys_time<std::chrono::milliseconds> messageTime);
 
+    void checkInputs(string &message);
+
+    void addToCore(DataPoint result);
+
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
 
     const bool loggingOn;
 
     unsigned long precision;
-
-    pair<string,string> routingKey, routingKeySystemHealth;//first string for publishing, second for consuming
-    pair<amqp_bytes_t,amqp_bytes_t> queuenameContentData, queuenameSystemHealth;//first queuename for publishing, second for consuming
-    amqp_channel_t channelPub, channelSub;
-    pair<string,string> exchange; // connection cd on first, sh on second
-    pair<string,string> exchangetype; // connection cd on first, sh on second
 
     bool timeOutputPresent;
     int timeOutputVRef;
