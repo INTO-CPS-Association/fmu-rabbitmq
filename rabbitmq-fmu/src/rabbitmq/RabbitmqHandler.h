@@ -57,14 +57,12 @@ public :
     void declareExchange(amqp_channel_t channelID, string exchange, string exchangetype);
     void bindExchange(amqp_channel_t channelID, string exchange, string exchangetype); 
 
-
-    string exchangeCD, exchangetypeCD;
-    string exchangeSH, exchangetypeSH;
-    string queuenameCD, queuenameSH;
-    string routingKeySH;
-    string bindingKeySH;
+    string routingKeyCD, routingKeySH;
+    string bindingKeyCD, bindingKeySH;
 
     int channelPub, channelSub;
+    pair<string,string> rbmqExchange; // connection cd on first, sh on second
+    pair<string,string> rbmqExchangetype; // connection cd on first, sh on second
 
 private:
 
@@ -72,9 +70,12 @@ private:
     int port;
     string username;
     string password;
+
+    //Obsolete********************
     string queueBindinngKey;
-    string exchange;
-    string exchangetype;
+    string exchange, exchangetype;
+    void declareExchange();
+    //End Obsolete****************
 
     bool connected;
     bool bound;
@@ -85,7 +86,6 @@ private:
     struct timeval timeout;
 
     void throw_on_amqp_error(amqp_rpc_reply_t x, char const *context);
-    void declareExchange();
     void throw_on_error(int x, char const *context);
 
 };

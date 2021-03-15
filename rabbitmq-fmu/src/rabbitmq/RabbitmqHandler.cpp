@@ -41,21 +41,38 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
     this->username = username;
     this->password = password;
     this->connected = false;
+
+    //Obsolete********************************
     this->exchange = exchange;
     this->exchangetype = "direct";
+
     this->queueBindinngKey = queueBindingKey;
-
-    
-    string exchangeCD, exchangetypeCD;
-    string exchangeSH, exchangetypeSH;
-    string queuenameCD, queuenameSH;
-
-    this->exchangeSH = "fmi_digital_twin_sh";
-    this->exchangetypeSH = "direct";
-    this->queuenameSH = "get_system_health_data";
-
+    //End Obsolete****************************
+ 
     this->channelPub = 1;
     this->channelSub = 2;
+
+    this->rbmqExchange.first = exchange;
+    this->rbmqExchange.first.append("_cd");
+    this->rbmqExchangetype.first = "direct";
+
+    this->rbmqExchange.second = exchange;
+    this->rbmqExchange.second.append("_sh");
+    this->rbmqExchangetype.second = "direct";
+
+    //for publishing
+    this->routingKeyCD = queueBindingKey;
+    this->routingKeyCD.append(".data.from_cosim");
+    //for consuming
+    this->bindingKeyCD = queueBindingKey;
+    this->bindingKeyCD.append(".data.to_cosim");
+
+    //for publishing
+    this->routingKeySH = queueBindingKey;
+    this->routingKeySH.append(".system_health.from_cosim");
+    //for consuming
+    this->bindingKeySH = queueBindingKey;
+    this->bindingKeySH.append(".system_health.to_cosim");
 
     this->timeout.tv_sec = 1;
     this->timeout.tv_usec = 0;
@@ -144,6 +161,7 @@ void RabbitmqHandler::close() {
     }
 }
 
+//The three functions below use the old exchange variable. They don't wo
 void RabbitmqHandler::declareExchange() {
     amqp_exchange_declare(conn, 1, amqp_cstring_bytes(this->exchange.c_str()),
                           amqp_cstring_bytes(exchangetype.c_str()), 0, 0, 0, 0,
@@ -174,6 +192,16 @@ void RabbitmqHandler::bind() {
     bound = true;
 }
 
+void RabbitmqHandler::publish(const string &routingkey, const string &messagebody) {
+    amqp_basic_properties_t props;
+    props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
+    props.content_type = amqp_cstring_bytes("text/plain");
+    props.delivery_mode = 2; // persistent delivery mode 
+    throw_on_error(amqp_basic_publish(conn, 1, amqp_cstring_bytes(exchange.c_str()),
+                                      amqp_cstring_bytes(routingkey.c_str()), 0, 0,
+                                      &props, amqp_cstring_bytes(messagebody.c_str())),
+                   "Publishing");
+}
 
 bool RabbitmqHandler::consume(string &payload) {
 
@@ -212,16 +240,6 @@ bool RabbitmqHandler::consume(string &payload) {
 
 }
 
-void RabbitmqHandler::publish(const string &routingkey, const string &messagebody) {
-    amqp_basic_properties_t props;
-    props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
-    props.content_type = amqp_cstring_bytes("text/plain");
-    props.delivery_mode = 2; /* persistent delivery mode */
-    throw_on_error(amqp_basic_publish(conn, 1, amqp_cstring_bytes(exchange.c_str()),
-                                      amqp_cstring_bytes(routingkey.c_str()), 0, 0,
-                                      &props, amqp_cstring_bytes(messagebody.c_str())),
-                   "Publishing");
-}
 
 //Below methods that detach the creation of connections, channels, and exchanges.
 bool RabbitmqHandler::createConnection(){
@@ -273,7 +291,7 @@ void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingK
             conn, channelID, amqp_empty_bytes, 0, 0, 0, 0, amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     amqp_bytes_t queue = amqp_bytes_malloc_dup(r->queue);
-    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
+    //printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
     if (queue.bytes == NULL) {
         fprintf(stderr, "Out of memory while copying queue name");
         return;
@@ -296,7 +314,7 @@ void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingK
             conn, channelID, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     queue = amqp_bytes_malloc_dup(r->queue);
-    printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
+    //printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
     if (queue.bytes == NULL) {
         fprintf(stderr, "Out of memory while copying queue name");
         return;
