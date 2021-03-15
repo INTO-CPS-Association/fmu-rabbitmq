@@ -625,59 +625,14 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                     //Check which of the inputs of the fmu has changed since the last step
                     string message;
-                    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
-                        ostringstream val;
-                        if(it->second.input){
-                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
-                                cout << "CURRENT DATA: " << this->currentData.doubleValues[it->second.valueReference] << ", previous DATA: " <<this->previousInputs.doubleValues[it->second.valueReference] << endl;
-                                if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
-                                    cout << "INPUT has changed" << endl;
-                                    val << this->currentData.doubleValues[it->second.valueReference];
-                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
-                                    //Update previous to current value
-                                    this->previousInputs.doubleValues[it->second.valueReference] = this->currentData.doubleValues[it->second.valueReference];
-                                }
-                            }
-                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
-                                if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
-                                    cout << "INPUT has changed" << endl;
-                                    val << this->currentData.booleanValues[it->second.valueReference];
-                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
-                                    //Update previous to current value
-                                    this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
-                                }
-                            }
-                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
-                                if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
-                                    cout << "INPUT has changed" << endl;
-                                    val << this->currentData.integerValues[it->second.valueReference];
-                                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
-                                    //Update previous to current value
-                                    this->previousInputs.integerValues[it->second.valueReference] = this->currentData.integerValues[it->second.valueReference];
-                                }
-                            }
-                            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
-                                if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
-                                    cout << "INPUT has changed" << endl;
-                                    string str = "\"";
-                                    str.append(this->currentData.stringValues[it->second.valueReference]);
-                                    str.append("\"");
-                                    this->core->messageCompose(pair<string, string>(it->second.name, str), message);
-                                    //Update previous to current value
-                                    this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
-                                }
-                            }
-                        }
-                    }                
-
+                    this->checkInputs(message);
+                              
                     //if anything to send, publish to rabbitmq
                     if(!message.empty()){
                         // XXX: changed startTimeStamp.str() to cosim_time ???
                         message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
                         cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandler->publish(this->routingKey.first, message, this->channelPub, this->exchange.first);
-                        cout << "Where does it segment fault"  << endl;
-                        //Reset Inputs to what they were before send.
                     }
                     
                     LOG_TIME(3);
@@ -787,6 +742,53 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
     return false;
 
+}
+
+void FmuContainer::checkInputs(string &message){
+    for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
+        ostringstream val;
+        if(it->second.input){
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
+                cout << "CURRENT DATA: " << this->currentData.doubleValues[it->second.valueReference] << ", previous DATA: " <<this->previousInputs.doubleValues[it->second.valueReference] << endl;
+                if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
+                    cout << "INPUT has changed" << endl;
+                    val << this->currentData.doubleValues[it->second.valueReference];
+                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
+                    //Update previous to current value
+                    this->previousInputs.doubleValues[it->second.valueReference] = this->currentData.doubleValues[it->second.valueReference];
+                }
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
+                if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
+                    cout << "INPUT has changed" << endl;
+                    val << this->currentData.booleanValues[it->second.valueReference];
+                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
+                    //Update previous to current value
+                    this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
+                }
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
+                if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
+                    cout << "INPUT has changed" << endl;
+                    val << this->currentData.integerValues[it->second.valueReference];
+                    this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
+                    //Update previous to current value
+                    this->previousInputs.integerValues[it->second.valueReference] = this->currentData.integerValues[it->second.valueReference];
+                }
+            }
+            if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
+                if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
+                    cout << "INPUT has changed" << endl;
+                    string str = "\"";
+                    str.append(this->currentData.stringValues[it->second.valueReference]);
+                    str.append("\"");
+                    this->core->messageCompose(pair<string, string>(it->second.name, str), message);
+                    //Update previous to current value
+                    this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
+                }
+            }
+        }
+    }      
 }
 
 /*####################################################

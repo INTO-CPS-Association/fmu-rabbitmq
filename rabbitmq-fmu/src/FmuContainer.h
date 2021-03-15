@@ -99,6 +99,8 @@ private:
 
     std::chrono::milliseconds messageTimeToSim( date::sys_time<std::chrono::milliseconds> messageTime);
 
+    void checkInputs(string &message);
+
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
 
     const bool loggingOn;
