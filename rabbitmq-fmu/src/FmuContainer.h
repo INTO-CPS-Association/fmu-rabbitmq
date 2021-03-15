@@ -101,6 +101,8 @@ private:
 
     void checkInputs(string &message);
 
+    void addToCore(DataPoint result);
+
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
 
     const bool loggingOn;

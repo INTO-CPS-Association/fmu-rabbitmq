@@ -462,18 +462,8 @@ bool FmuContainer::initializeCoreState() {
                     FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(),
                                      json.c_str());
 
-                    for (auto &pair: result.integerValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-                    for (auto &pair: result.stringValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-                    for (auto &pair: result.doubleValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-                    for (auto &pair: result.booleanValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
+                    //propagate new data to core
+                    this->addToCore(result);
 
                     if (this->core->initialize()) {
 
@@ -603,19 +593,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                     FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(),
                                      json.c_str());
-
-                    for (auto &pair: result.integerValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-                    for (auto &pair: result.stringValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-                    for (auto &pair: result.doubleValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
-                    for (auto &pair: result.booleanValues) {
-                        this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    }
+                    //update core with the new data
+                    this->addToCore(result);
 #else
             std::unique_lock<std::mutex> lock(this->core->m);
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
@@ -631,8 +610,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     if(!message.empty()){
                         // XXX: changed startTimeStamp.str() to cosim_time ???
                         message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
-                        cout << "This is the message sent to rabbitmq: " << message << endl;
                         this->rabbitMqHandler->publish(this->routingKey.first, message, this->channelPub, this->exchange.first);
+                        FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
                     }
                     
                     LOG_TIME(3);
@@ -671,7 +650,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                        rTime_d = this->core->message2SimTime(healthData.first).count();
                        simTime_d = this->core->message2SimTime(healthData.second).count();
 #endif //!USE_RBMQ_FMU_HEALTH_THREAD
-                            cout << "New info on real-time of the system: " << rTime_d  << ", associated simulation time: " << simTime_d << ". Current simulation time: " << simulationTime << endl;
                                 
                             FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
 
@@ -696,9 +674,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     if (this->core->process(simulationTime)) {    
                         if(this->timeOutputPresent){                   
                             if(validData){
-                                cout << "It should be here setting the time_discreapncy output" << endl;
                                 FmuContainer_LOG(fmi2OK, "logAll", "Setting the time discrepancy output %.2f [ms]", simTime_d-rTime_d);
-
                                 this->core->setTimeDiscrepancyOutput(simTime_d-rTime_d, this->timeOutputVRef);
                             }
                             else{
@@ -708,9 +684,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                         } 
                         if(this->simtimeOutputPresent){                   
                             if(validData){
-                                cout << "It should be here setting the time_discrepancy output" << endl;
                                 FmuContainer_LOG(fmi2OK, "logAll", "Setting the simtime discrepancy output %.2f [ms]", abs(simulationTime-simTime_d));
-
                                 this->core->setTimeDiscrepancyOutput(abs(simulationTime-simTime_d), this->simtimeOutputVRef);
                             }
                             else{
@@ -744,6 +718,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
 }
 
+//Check if there is a a change of the inputs between two consequent timesteps
 void FmuContainer::checkInputs(string &message){
     for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
         ostringstream val;
@@ -791,6 +766,20 @@ void FmuContainer::checkInputs(string &message){
     }      
 }
 
+void FmuContainer::addToCore(DataPoint result){
+    for (auto &pair: result.integerValues) {
+        this->core->add(pair.first, std::make_pair(result.time, pair.second));
+    }
+    for (auto &pair: result.stringValues) {
+        this->core->add(pair.first, std::make_pair(result.time, pair.second));
+    }
+    for (auto &pair: result.doubleValues) {
+        this->core->add(pair.first, std::make_pair(result.time, pair.second));
+    }
+    for (auto &pair: result.booleanValues) {
+        this->core->add(pair.first, std::make_pair(result.time, pair.second));
+    }
+}
 /*####################################################
  *  Custom
  ###################################################*/
