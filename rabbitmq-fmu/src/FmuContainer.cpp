@@ -41,8 +41,8 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
           communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), 
-          routingKey(), routingKeySystemHealth(), timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42), 
-          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43), channelPub(1), channelSub(2){
+          timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42), 
+          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead")};
@@ -283,7 +283,7 @@ bool FmuContainer::initialize() {
                              "Routing key data: %s for pub and %s for sub",
                              this->rabbitMqHandler->routingKeyCD.c_str(), this->rabbitMqHandler->bindingKeyCD.c_str());
         //We bind only the queue from which we want to get the data.
-        this->rabbitMqHandler->bind(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->bindingKeyCD, this->queuenameContentData.second, this->rabbitMqHandler->rbmqExchange.first);
+        this->rabbitMqHandler->bind(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->bindingKeyCD, this->rabbitMqHandler->rbmqExchange.first);
 
 
     } catch (RabbitMqHandlerException &ex) {

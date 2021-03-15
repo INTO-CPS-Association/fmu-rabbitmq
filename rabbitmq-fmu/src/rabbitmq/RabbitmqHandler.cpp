@@ -119,6 +119,7 @@ void RabbitmqHandler::throw_on_amqp_error(amqp_rpc_reply_t x, char const *contex
     }
 }
 
+//Obsolete************************************
 bool RabbitmqHandler::open() {
 
     if (this->connected) {
@@ -148,6 +149,7 @@ bool RabbitmqHandler::open() {
 
     return this->connected;
 }
+//End Obsolete*********************************
 
 void RabbitmqHandler::close() {
     if (this->connected) {
@@ -161,7 +163,7 @@ void RabbitmqHandler::close() {
     }
 }
 
-//The three functions below use the old exchange variable. They don't wo
+//Obsolete************************************
 void RabbitmqHandler::declareExchange() {
     amqp_exchange_declare(conn, 1, amqp_cstring_bytes(this->exchange.c_str()),
                           amqp_cstring_bytes(exchangetype.c_str()), 0, 0, 0, 0,
@@ -202,6 +204,7 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
                                       &props, amqp_cstring_bytes(messagebody.c_str())),
                    "Publishing");
 }
+//End Obsolete*********************************
 
 bool RabbitmqHandler::consume(string &payload) {
 
@@ -341,10 +344,6 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
                                       &props, amqp_cstring_bytes(messagebody.c_str())),
                    "Publishing");
 }
-
-////////////////
-////////////////
-
 
 bool RabbitmqHandler::createChannel(amqp_channel_t channelID){
     amqp_channel_open_ok_t *res = amqp_channel_open(conn, channelID);

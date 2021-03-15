@@ -228,7 +228,6 @@ int main(int argc, char *argv[]) {
                 }
 
                 changeInput=!changeInput;
-                sleep(1);
 
             }
 

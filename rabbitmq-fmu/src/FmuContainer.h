@@ -109,12 +109,6 @@ private:
 
     unsigned long precision;
 
-    pair<string,string> routingKey, routingKeySystemHealth;//first string for publishing, second for consuming
-    pair<amqp_bytes_t,amqp_bytes_t> queuenameContentData, queuenameSystemHealth;//first queuename for publishing, second for consuming
-    amqp_channel_t channelPub, channelSub;
-    pair<string,string> exchange; // connection cd on first, sh on second
-    pair<string,string> exchangetype; // connection cd on first, sh on second
-
     bool timeOutputPresent;
     int timeOutputVRef;
     bool simtimeOutputPresent;

@@ -35,14 +35,16 @@ public :
 
     ~RabbitmqHandler();
 
+    //Obsolete********************
     virtual bool open();
-
+    virtual void bind();
+    void publish(const string & routingkey, const string &message);
+    
+    //End Obsolete****************
     virtual void close();
 
-    virtual void bind();
 
     virtual bool consume(string & json);
-    void publish(const string & routingkey, const string &message);
 
 
     virtual bool createConnection();
@@ -60,7 +62,7 @@ public :
     string routingKeyCD, routingKeySH;
     string bindingKeyCD, bindingKeySH;
 
-    int channelPub, channelSub;
+    amqp_channel_t channelPub, channelSub;
     pair<string,string> rbmqExchange; // connection cd on first, sh on second
     pair<string,string> rbmqExchangetype; // connection cd on first, sh on second
 
