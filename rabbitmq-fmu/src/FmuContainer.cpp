@@ -580,7 +580,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     if (this->core->process(simulationTime)) {    
                         if(this->timeOutputPresent){                   
                             if(validData){
-                                cout << "It should be here setting the time_discreapncy output" << endl;
+                                cout << "It should be here setting the time_discrepancy output" << endl;
                                 FmuContainer_LOG(fmi2OK, "logAll", "Setting the time discrepancy output %.2f [ms]", simTime_d-rTime_d);
 
                                 this->core->setTimeDiscrepancyOutput(simTime_d-rTime_d, this->timeOutputVRef);

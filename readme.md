@@ -2,12 +2,12 @@
 
 This project builds a FMU which uses a rabbitmq server to feed live or log data into a simulation, as well as send data to an external entity (e.g. Gazebo simulation).
 
-Two types of data are considered, content data, and system health data.
+Two types of data are considered, content data and system health data.
 The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will send only the changed inputs to the entity outside the co-sim. 
-System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
+System health data are auxilliary, that is the fmu will publish its current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
 
-The FMU is configured using a script TBD for the output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
-* adding all model outputs as:
+The FMU is configured using a script TBD for the output variables that are model specific or manually by (Value References 0-19 are reserved for development):
+* Adding all model outputs as:
 ```xml
 <ModelVariables>
   <ScalarVariable name="level" valueReference="20" variability="continuous" causality="output">
@@ -33,10 +33,10 @@ The FMU is configured using a script TBD for the output variables that are model
   </Outputs>
 </ModelStructure>
 ```
-remember to add the outputs before the configuration variables.
+Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
 
-* adding all model inputs as:
+* Adding all model inputs as:
 ```xml
 <ModelVariables>
   <ScalarVariable name="command_stop" valueReference="22" variability="discrete" causality="input">
@@ -53,7 +53,7 @@ If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is 
   </ScalarVariable>
 ```
 
-* add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
+* Adding the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
 It can be configured by setting the following parameters:
 
@@ -90,10 +90,10 @@ It can be configured by setting the following parameters:
 In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variable with value reference=4 serves as a base for the configuration of the connections for both content and system health data. 
 
 The fmu configures the name of the channels as follows:
-${routing key base}+".{data|system_health}."+"from_cosim" for publishing, which would result in "linefollower.data.from_cosim" and "linefollower.system_health.from_cosim" given the values in the above example. Data sent from the
-rabbitMQ can be consumed from these topics.
-${routing key base}+".{data|system_health}."+"to_cosim" for consuming, which would result in "linefollower.data.to_cosim" and "linefollower.system_health.to_cosim" given the values in the above example. Data to be sent
-to the rabbitMQ should be published to these topics.
+* ${routing key base}+".{data|system_health}."+"from_cosim" for FMU-RabbitMQ publishing, which would result in "linefollower.data.from_cosim" and "linefollower.system_health.from_cosim" given the values in the above example. Data sent from the
+FMU-RabbitMQ can be consumed from these topics.
+* ${routing key base}+".{data|system_health}."+"to_cosim" for FMU-RabbitMQ consuming, which would result in "linefollower.data.to_cosim" and "linefollower.system_health.to_cosim" given the values in the above example. Data to be sent
+to the FMU-RabbitMQ should be published to these topics.
 
 ## Dockerized RabbitMq
 To launch a Rabbitmq server the following can be used:
@@ -101,12 +101,12 @@ To launch a Rabbitmq server the following can be used:
 ```bash
 cd server
 docker-compose up -d
-```bash
+```
 This will launch it at localhost `5672` for TCP communication and http://localhost:15672 will serve the management interface. The default login is username: `guest` and password: `guest`
 
 
 # Building the project
-The project uses CMake and is intended to be build for multiple platforms; Mac, Linux and Windows.
+The project uses CMake and is intended to be built for multiple platforms; Mac, Linux and Windows.
 
 # Environment
 
@@ -178,7 +178,7 @@ Should the consume-systemHealthData.py crash and stop sending data to the rabbit
 # Local development
 
 1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory. Example: `./scripts/darwin64_build.sh`
-2. Second run the following command matching the platform to the one just build:
+2. Second run the following command matching the platform to the one just built:
 
 ```bash
 cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build/external/darwin-x86_64`
