@@ -15,6 +15,10 @@
 #define timegm _mkgmtime
 #endif
 
+#include <filesystem>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "modeldescription/ModelDescriptionParser.h"
 
 #include "fmi2Functions.h"
@@ -120,6 +124,26 @@ int main(int argc, char *argv[]) {
 
         cout << "Working directory is " << path << endl;
 
+        std::filesystem::create_directory("log");
+        int fileIndex = 0;
+        std::string fileNameBase = "log/log";
+        std::string fileNameExt = ".csv";
+        std::string fileName = fileNameBase + std::to_string(fileIndex) + fileNameExt;
+        struct stat statBuffer;
+
+        while (stat(fileName.c_str(), &statBuffer) != -1)
+        {
+            fileIndex++;
+            fileName = fileNameBase + std::to_string(fileIndex) + fileNameExt;
+        }
+
+        ofstream file(fileName.c_str());
+        if (!file.is_open())
+        {
+            cout << "Failed to open log file" << endl;
+            return 1;
+        }
+
         fmi2String instanceName = "rabbitmq";
         fmi2Type fmuType = fmi2CoSimulation;
         fmi2String fmuGUID = "63ba49fe-07d3-402c-b9db-2df495167424";
@@ -206,14 +230,27 @@ int main(int argc, char *argv[]) {
             fmi2Integer ints[] = {5};
             fmi2Boolean bools[] = {true};
             fmi2String strs[] = {"hejsan"};
+
+            file << "simtime,stepdur,ref1,ref2,ref3\n";
+
             for(int i = 0; i <= simDuration; i++){
+                auto t1 = std::chrono::high_resolution_clock::now();
                 showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
                                                     noSetFMUStatePriorToCurrentPoint));
+                auto t2 = std::chrono::high_resolution_clock::now();
+                auto dur = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
+                file << currentCommunicationPoint << ", " << dur << ", "; 
                 showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
                 for (int i = 0; i < nvr; i++) {
+                    file << value[i];
+                    if (i < nvr - 1)
+                        file << ", ";
+                    else
+                        file << "\n";
                     cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl;
                 }
+
                 currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
 
                 if(changeInput){
@@ -258,6 +295,8 @@ int main(int argc, char *argv[]) {
 
         // Output {"project":"rapidjson","stars":11}
         std::cout << buffer.GetString() << std::endl;
+
+        file.close();
     }
 
     std::ifstream t("data.json");
@@ -281,6 +320,7 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Time is: " << buffer2 << std::endl;
     }
+
 
     return 0;
 }
