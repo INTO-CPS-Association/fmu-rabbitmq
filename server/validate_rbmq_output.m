@@ -1,5 +1,5 @@
 clear;
-format long
+format longG
 
 maxage = 2
 outputs = 'outputs_ctoff_maxage2000ms.csv';
