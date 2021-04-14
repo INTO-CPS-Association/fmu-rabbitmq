@@ -13,7 +13,7 @@ result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 channel.queue_bind(exchange='fmi_digital_twin_cd', queue=queue_name,
                    routing_key='linefollower.data.from_cosim')
-time_sleep = 0.001
+time_sleep = 0.1
 print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sleep*1000)
 def publish():
     dt=datetime.datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
@@ -22,7 +22,7 @@ def publish():
     msg['time']= dt.isoformat()
     msg['xpos']=0.0
     msg['ypos']=0.0
-
+    i = 1
     with open('gazebo_playback_data-noround.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -34,7 +34,8 @@ def publish():
             msg['obs_xpos']=1000
             msg['obs_ypos']=1000
             msg['obstacles']="youza"
-            msg['test_int']=1.6
+            msg['seqno']=i
+            i = i +1
 			#dt = dt+ datetime.timedelta(seconds=float(row['step-size']))
 			#msg['time']= dt.isoformat()
             timet = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f%z")

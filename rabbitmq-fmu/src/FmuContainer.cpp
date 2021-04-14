@@ -119,9 +119,9 @@ void FmuContainer::consumerThreadFunc(void) {
             if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
                 std::stringstream startTimeStamp;
                 startTimeStamp << result.time;
-
-                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(),
-                    json.c_str());
+                FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time));
+                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(),
+                    json.c_str(), std::chrono::high_resolution_clock::now());
 
                 std::unique_lock<std::mutex> lock(this->core->m);
                 for (auto &pair: result.integerValues) {
@@ -367,8 +367,10 @@ bool FmuContainer::initialize() {
         }
     }
     //Create container core
-    this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
-    //this->core->setVerbose(true);
+    //with core logging
+    this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound), this->m_functions, this->m_name.c_str());
+    //without core logging
+    //this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
     if (!initializeCoreState()) {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");
@@ -470,21 +472,29 @@ std::chrono::high_resolution_clock::time_point log_time_last;
     log_time[x] = std::chrono::high_resolution_clock::now()
 #define LOG_TIME_ELAPSED(x, y) \
     std::chrono::duration_cast<std::chrono::microseconds>(log_time[y] - log_time[x]).count()
+#define LOG_TIME_TOTAL \
+    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - log_time[0]).count() 
 #define LOG_TIME_PRINT \
-    fprintf(stderr, "GI: 0:%ld, 1:+%ld, 2:+%ld, 3:+%ld, 4:+%ld, 5:+%ld\n", \
+    FmuContainer_LOG(fmi2OK, "logAll",  "GI: 0:%lld, 1:+%lld, 2:+%lld, 3:+%lld, 4:+%lld, 5:+%lld\n", \
          std::chrono::duration_cast<std::chrono::microseconds>(log_time[0] - log_time_last).count(), \
          LOG_TIME_ELAPSED(0,1), \
          LOG_TIME_ELAPSED(1,2), \
          LOG_TIME_ELAPSED(2,3), \
          LOG_TIME_ELAPSED(3,4), \
-         LOG_TIME_ELAPSED(4,5)); 
+         LOG_TIME_ELAPSED(4,5))
 #else
 #define LOG_TIME(x)
 #define LOG_TIME_ELAPSED(x,y) 
+#define LOG_TIME_TOTAL
 #define LOG_TIME_PRINT
 #endif //USE_RBMQ_FMU_PROF
 
 bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicationStepSize) {
+    #ifdef USE_RBMQ_FMU_PROF
+    log_time_last = log_time[0];
+    #endif //USE_RBMQ_FMU_PROF
+    LOG_TIME(0);
+
     auto simulationTime = secondsToMs(currentCommunicationPoint + communicationStepSize);
 
     FmuContainer_LOG(fmi2OK, "logAll", "************ Enter FmuContainer::step ***************%s", "");
@@ -497,10 +507,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
     FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", cosim_time.c_str());
 
-#ifdef USE_RBMQ_FMU_PROF
-    log_time_last = log_time[0];
-#endif //USE_RBMQ_FMU_PROF
-    LOG_TIME(0);
+
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
     this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKeySH, cosim_time, 
                                         this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange.second);
@@ -519,7 +526,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
         FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 1 FmuContainer::step ***************%s", "");
         LOG_TIME(1); LOG_TIME(2); LOG_TIME(3); LOG_TIME(4); LOG_TIME(5); 
+        //get time now here, and get difference between time now - log_time(0)
         LOG_TIME_PRINT;
+        FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
+
         return true;
     }
 #endif //!USE_RBMQ_FMU_THREAD
@@ -556,12 +566,15 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                     FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(),
                                      json.c_str());
+                    
                     //update core with the new data
                     this->addToCore(result);
 #else
+            FmuContainer_LOG(fmi2OK, "logOk", "Before lock'%d'", this->core->hasUnprocessed());
             std::unique_lock<std::mutex> lock(this->core->m);
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
+            FmuContainer_LOG(fmi2OK, "logOk", "After lock'%s'", "");
 #endif //!USE_RBMQ_FMU_THREAD
                     LOG_TIME(2);
 
@@ -641,10 +654,11 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                             this->core->setTimeDiscrepancyOutput(validData, abs(simulationTime-simTime_d), this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
                         } 
                         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
+                        FmuContainer_LOG(fmi2OK, "logAll", "Current data point seqno %d, %ld", this->core->getSeqNO(103), std::chrono::high_resolution_clock::now());
 
                         LOG_TIME(5);
                         LOG_TIME_PRINT;
-
+                        FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
                         FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 2 FmuContainer::step ***************%s", "");
                         return true;
                     }

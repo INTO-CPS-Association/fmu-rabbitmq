@@ -16,6 +16,8 @@
 #include <iostream>
 #include <mutex>
 
+#include "../../thirdparty/fmi/include/fmi2Functions.h"
+
 using namespace std;
 
 const int TU_STRING = 0;
@@ -124,11 +126,19 @@ class FmuContainerCore {
 
 
 public:
+    const fmi2CallbackFunctions *m_functions;
+    const string m_name;
+
     typedef pair<date::sys_time<std::chrono::milliseconds>, ScalarVariableBaseValue> TimedScalarBasicValue;
     typedef unsigned int ScalarVariableId;
 
+
     FmuContainerCore(std::chrono::milliseconds maxAge,
                      std::map<ScalarVariableId, int> lookAhead);
+    FmuContainerCore(std::chrono::milliseconds maxAge,
+                     std::map<ScalarVariableId, int> lookAhead,
+                     const fmi2CallbackFunctions *mFunctions,
+                     const char *mName);
 
     void add(ScalarVariableId id, TimedScalarBasicValue value);
 
@@ -155,6 +165,8 @@ public:
     //void setTimeDiscrepancyOutput(double time, int vref);
     void setTimeDiscrepancyOutput(bool valid, double timeDiffNew, double timeDiffOld, int vref);
     double getTimeDiscrepancyOutput(int vref);
+    int getSeqNO(int vref);
+    std::chrono::milliseconds messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime);
 
 #ifdef USE_RBMQ_FMU_THREAD
     bool hasUnprocessed(void);
@@ -187,7 +199,6 @@ private:
 
     bool verbose;
 
-    std::chrono::milliseconds messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime);
 
     bool check(double time);
 

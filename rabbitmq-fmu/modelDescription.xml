@@ -36,8 +36,10 @@
         <ScalarVariable name="time_discrepancy" valueReference="26" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
-
-        <ScalarVariable name="command_stop" valueReference="27" variability="discrete" causality="input">
+        <ScalarVariable name = "seqno"  valueReference = "103" variability = "discrete"  causality = "output">
+            <Integer />
+        </ScalarVariable>
+        <ScalarVariable name="command_stop" valueReference="28" variability="discrete" causality="input">
             <Boolean start="false" />
         </ScalarVariable>
 
@@ -83,6 +85,7 @@
             <Unknown index="5"/>
             <Unknown index="6"/>
             <Unknown index="7"/>
+            <Unknown index="8"/>
         </Outputs>
     </ModelStructure>
 
