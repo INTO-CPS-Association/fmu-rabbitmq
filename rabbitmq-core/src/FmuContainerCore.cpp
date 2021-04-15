@@ -23,8 +23,8 @@
 
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead,const fmi2CallbackFunctions *mFunctions,
                      const char *mName)
-        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(true), m_functions(m_functions),
-        m_name(m_name){
+        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(true), m_functions(mFunctions),
+        m_name(mName){
 
 }
 
@@ -264,7 +264,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                         if(id == 103){
                             cout << "Updated state with id=" << id << " time value=" << timeValue->second.i.i << " at iteration " << iteration << endl;
 
-                            FmuContainerCore_LOG(fmi2OK, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%f",id, timeValue->second.d.d);
+                            FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%f",id, timeValue->second.d.d);
                     
                         }
                     }
