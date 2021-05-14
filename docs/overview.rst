@@ -6,6 +6,8 @@ The internal workings are described in detail in :doc:`data-handling` and a user
 The purpose of RMQFMU is to provide a tool (and approach) for briging external data from a RabbitMQ Server into an FMI-based co-simulation.
 It has certain properties related to timeliness of messages, timeout and precision of data.
 
+In a nutshell, the RMQFMU steps in time if it has valid data for that time-step. If no data is available, the RMQFMU will wait until a cofigurable timeout parameter is reached, after which it will stop. A maxage parameter can be set to determine the validity of data with respect to its age. If the data complies with the maxage constraints, the RMQFMU will step and produce its output with that data. 
+
 The overall approach is depicted in the diagram below.
 
 .. uml::
