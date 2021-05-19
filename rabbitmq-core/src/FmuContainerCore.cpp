@@ -23,7 +23,7 @@
 
 FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<ScalarVariableId, int> lookAhead,const fmi2CallbackFunctions *mFunctions,
                      const char *mName)
-        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(true), m_functions(mFunctions),
+        : maxAge(maxAge), lookahead(lookAhead), startOffsetTime(std::chrono::milliseconds(0)), verbose(false), m_functions(mFunctions),
         m_name(mName){
 
 }
@@ -344,10 +344,10 @@ bool FmuContainerCore:: process(double time ) {
 
 //check messages for acceptable aged values
 
-    if (this->check(time)) {
-        //all ok do nothing
-        return true;
-    }
+    /* if (this->check(time)) { */
+    /*     //all ok do nothing */
+    /*     return true; */
+    /* } */
 
 //read all incoming and sort
     processIncoming();
@@ -552,6 +552,9 @@ bool FmuContainerCore::hasUnprocessed(void){
     return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
 }
 #endif
+int FmuContainerCore::incomingSize(void){
+    return this->incomingUnprocessed[10].size();
+}
 
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
 bool FmuContainerCore::hasUnprocessedHealth(void){

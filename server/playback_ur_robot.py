@@ -7,6 +7,7 @@ import csv
 import pandas as pd
 
 csvFilePath = r'ur_robot.csv'
+# csvFilePath = r'ur_robot_clean.csv'
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
@@ -18,7 +19,7 @@ queue_name = result.method.queue
 channel.queue_bind(exchange='fmi_digital_twin_cd', queue=queue_name,
                    routing_key='linefollower.data.from_cosim')
 
-time_sleep = 0.1
+time_sleep = 0.002
 
 print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sleep*1000)
 
@@ -34,7 +35,8 @@ def publish():
         if (i == 0):
             continue
         msg = data_dict[i]
-        print(" [x] Sent %s" % json.dumps(msg).encode('utf-8'))
+        # print(" [x] Sent %s" % json.dumps(msg).encode('utf-8'))
+        print(" [x] Sent seqno ", msg['seqno'])
         channel.basic_publish(exchange='fmi_digital_twin_cd',
                                             routing_key='linefollower.data.to_cosim',
                                             body=json.dumps(msg).encode('utf-8'))

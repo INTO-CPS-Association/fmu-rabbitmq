@@ -119,13 +119,16 @@ void FmuContainer::consumerThreadFunc(void) {
             if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
                 std::stringstream startTimeStamp;
                 startTimeStamp << result.time;
-                FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time));
-                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(),
-                    json.c_str(), std::chrono::high_resolution_clock::now());
+                /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
+                /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
+                /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
 
                 std::unique_lock<std::mutex> lock(this->core->m);
                 for (auto &pair: result.integerValues) {
                     this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                    /* if (pair.first == 10) { */
+                    /*     cout << "HE: Got seqno=" << pair.second << endl; */
+                    /* } */
                 }
                 for (auto &pair: result.stringValues) {
                     this->core->add(pair.first, std::make_pair(result.time, pair.second));
@@ -422,8 +425,8 @@ bool FmuContainer::initializeCoreState() {
                     std::stringstream startTimeStamp;
                     startTimeStamp << result.time;
 
-                    FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(),
-                                     json.c_str());
+                    /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), */
+                    /*                  json.c_str()); */
 
                     //propagate new data to core
                     this->addToCore(result);
@@ -564,17 +567,17 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     std::stringstream startTimeStamp;
                     startTimeStamp << result.time;
 
-                    FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(),
-                                     json.c_str());
-                    
+                    /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), */
+                                     /* json.c_str()); */
+
                     //update core with the new data
                     this->addToCore(result);
 #else
-            FmuContainer_LOG(fmi2OK, "logOk", "Before lock'%d'", this->core->hasUnprocessed());
+            /* FmuContainer_LOG(fmi2OK, "logOk", "Before lock'%d'", this->core->hasUnprocessed()); */
             std::unique_lock<std::mutex> lock(this->core->m);
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
-            FmuContainer_LOG(fmi2OK, "logOk", "After lock'%s'", "");
+            /* FmuContainer_LOG(fmi2OK, "logOk", "After lock'%s'", ""); */
 #endif //!USE_RBMQ_FMU_THREAD
                     LOG_TIME(2);
 
@@ -888,5 +891,7 @@ bool FmuContainer::setString(const fmi2ValueReference *vr, size_t nvr, const fmi
     }
 }
 
-
+int FmuContainer::coreIncomingSize(void){
+    return this->core->incomingSize();
+}
 

@@ -36,6 +36,9 @@
 #define GetCurrentDir getcwd
 #endif
 
+// XXX: REMOVE
+#include "FmuContainer.h"
+
 using namespace std;
 using SvType = ModelDescriptionParser::ScalarVariable::SvType;
 using namespace rapidjson;
@@ -124,7 +127,7 @@ int main(int argc, char *argv[]) {
 
         cout << "Working directory is " << path << endl;
 
-        //std::filesystem::create_directory("log");
+        std::filesystem::create_directory("log");
         int fileIndex = 0;
         std::string fileNameBase = "log/log";
         std::string fileNameExt = ".csv";
@@ -218,9 +221,12 @@ int main(int argc, char *argv[]) {
 
             fmi2Real currentCommunicationPoint = 0;
             fmi2Real communicationStepSize = 0.1;
+            /* fmi2Real communicationStepSize = 0.002; */
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
-            fmi2Real simDuration = 10;
+            fmi2Real simDuration = 10*20;
+            /* fmi2Real simDuration = 10*4; */
+            /* fmi2Real simDuration = 10*20*50; */
             bool changeInput = false;
             fmi2ValueReference vrefsReals[] = {RABBITMQ_FMU_COMMAND_STOP};
             fmi2ValueReference vrefsInt[] = {RABBITMQ_FMU_COMMAND_INT};
@@ -231,27 +237,31 @@ int main(int argc, char *argv[]) {
             fmi2Boolean bools[] = {true};
             fmi2String strs[] = {"hejsan"};
 
-            file << "simtime,stepdur,ref1,ref2,ref3\n";
+            file << "simtime,stepdur,seqno,sz1,sz2\n";
 
             for(int i = 0; i <= simDuration; i++){
+                auto s1 = ((FmuContainer*) c)->coreIncomingSize();
                 auto t1 = std::chrono::high_resolution_clock::now();
                 showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
                                                     noSetFMUStatePriorToCurrentPoint));
                 auto t2 = std::chrono::high_resolution_clock::now();
                 auto dur = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+                auto s2 = ((FmuContainer*) c)->coreIncomingSize();
 
-                file << currentCommunicationPoint << ", " << dur << ", "; 
+                const fmi2ValueReference *vr_seqno = new fmi2ValueReference[1]{10};
+                fmi2Integer *value_seqno = new fmi2Integer[1];
+                fmi2GetInteger(c, vr_seqno, 1, value_seqno);
+                currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
+                file << currentCommunicationPoint << ", " << dur << ", " << value_seqno[0] <<
+                    ", " << s1 << ", " << s2 << "\n"; 
+                cout << "HE: " << currentCommunicationPoint << ", " << dur << ", "  << value_seqno[0] <<
+                    ", " << s1 << ", " << s2 << endl; 
+
                 showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
                 for (int i = 0; i < nvr; i++) {
-                    file << value[i];
-                    if (i < nvr - 1)
-                        file << ", ";
-                    else
-                        file << "\n";
                     cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl;
                 }
 
-                currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
 
                 if(changeInput){
                     showStatus("fmi2SetReal", fmi2SetReal(c, vrefsReals, 1, reals));
@@ -266,6 +276,7 @@ int main(int argc, char *argv[]) {
 
                 changeInput=!changeInput;
 
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
 
 //        fmi2Terminate(fmi2Component c)

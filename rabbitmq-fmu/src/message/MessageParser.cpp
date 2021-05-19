@@ -49,6 +49,7 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
                 auto sv = (*nameToValueReference)[memberName];
 
                 //cout << "Input data contains KNOWN member " << memberName << endl;
+
                 switch (sv.type) {
                     case SvType::Integer:
                         if (d[memberName].IsInt()){
