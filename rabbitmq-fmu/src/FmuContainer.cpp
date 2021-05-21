@@ -137,6 +137,7 @@ void FmuContainer::consumerThreadFunc(void) {
                     this->core->add(pair.first, std::make_pair(result.time, pair.second));
                 }
                 lock.unlock();
+                FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
                 cv.notify_one();
             } else {
                 FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
@@ -572,6 +573,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 #else
             FmuContainer_LOG(fmi2OK, "logOk", "Before lock'%d'", this->core->hasUnprocessed());
             std::unique_lock<std::mutex> lock(this->core->m);
+            FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
             FmuContainer_LOG(fmi2OK, "logOk", "After lock'%s'", "");
