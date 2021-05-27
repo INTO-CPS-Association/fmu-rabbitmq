@@ -187,10 +187,11 @@ void FmuContainerCore::processIncoming() {
                 ++itr;
             }
         }
+
+    }
 #ifdef USE_RBMQ_FMU_THREAD
     m.unlock();
 #endif
-    }
 }
 
 bool FmuContainerCore::hasValueFor(map<ScalarVariableId, TimedScalarBasicValue> &currentData,
@@ -233,12 +234,14 @@ template<typename Predicate>
 void FmuContainerCore::processLookahead(Predicate predicate) {
 
     if (verbose) {
-        cout << "Lookaheads:" << endl;
+        cout << "Lookaheads:" << endl;                            
+        FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Lookaheads=%s","");
+
         //FmuContainerCore_LOG(fmi2OK, "logAll", "Lookaheads:%s","");
         for (auto &p : this->lookahead) {
             if(p.first == 103){
             cout << "\t" << p.first << " = " << p.second << endl;
-            //FmuContainerCore_LOG(fmi2OK, "logAll", "\t %d %d",p.first, p.second);
+            FmuContainerCore_LOG(fmi2OK, "logAll", "\t %d %d",p.first, p.second);
             }
         }
     }
@@ -273,6 +276,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                 itr = pair.second.erase(itr);
             } else {
                 //stop if value is newer than time
+                cout << "VALUE newer than time" << endl;
                 break;
             }
         }
@@ -344,10 +348,10 @@ bool FmuContainerCore:: process(double time ) {
 
 //check messages for acceptable aged values
 
-    /* if (this->check(time)) { */
-    /*     //all ok do nothing */
-    /*     return true; */
-    /* } */
+    /*if (this->check(time)) {
+        //all ok do nothing
+        return true;
+    }*/
 
 //read all incoming and sort
     processIncoming();
@@ -549,6 +553,7 @@ int FmuContainerCore::getSeqNO(int vref){
 
 #ifdef USE_RBMQ_FMU_THREAD
 bool FmuContainerCore::hasUnprocessed(void){
+    cout << "HERE: " << this->incomingUnprocessed.empty() << " " << this->incomingLookahead.empty() << endl;
     return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
 }
 #endif
