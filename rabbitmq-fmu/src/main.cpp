@@ -220,13 +220,13 @@ int main(int argc, char *argv[]) {
 
 
             fmi2Real currentCommunicationPoint = 0;
-            fmi2Real communicationStepSize = 0.1;
-            /* fmi2Real communicationStepSize = 0.002; */
+            /* fmi2Real communicationStepSize = 0.1; */
+            fmi2Real communicationStepSize = 0.002;
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
-            fmi2Real simDuration = 10*20;
+            /* fmi2Real simDuration = 10*20; */
             /* fmi2Real simDuration = 10*4; */
-            /* fmi2Real simDuration = 10*20*50; */
+            fmi2Real simDuration = 10*20*50;
             bool changeInput = false;
             fmi2ValueReference vrefsReals[] = {RABBITMQ_FMU_COMMAND_STOP};
             fmi2ValueReference vrefsInt[] = {RABBITMQ_FMU_COMMAND_INT};
@@ -257,10 +257,10 @@ int main(int argc, char *argv[]) {
                 cout << "HE: " << currentCommunicationPoint << ", " << dur << ", "  << value_seqno[0] <<
                     ", " << s1 << ", " << s2 << endl; 
 
-                showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
-                for (int i = 0; i < nvr; i++) {
-                    cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl;
-                }
+                /* showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value)); */
+                /* for (int i = 0; i < nvr; i++) { */
+                /*     cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl; */
+                /* } */
 
 
                 if(changeInput){
@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
 
                 changeInput=!changeInput;
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
             }
 
 //        fmi2Terminate(fmi2Component c)

@@ -15,6 +15,8 @@
 #include <ctime>
 #include <iostream>
 #include <mutex>
+#include <queue>
+#include <vector>
 
 #include "../../thirdparty/fmi/include/fmi2Functions.h"
 
@@ -91,7 +93,21 @@ union ScalarVariableBaseValue {
 
     ScalarVariableBaseValue &operator=(const ScalarVariableBaseValue &other) // copy assignment
     {
-        printf("Assign\n");
+        switch (other.i.type) {
+            case TU_INT:
+                this->i.i = other.i.i;
+		break;
+            case TU_BOOL:
+                this->b.b = other.b.b;
+		break;
+            case TU_DOUBLE:
+                this->d.d = other.d.d;
+		break;
+            case TU_STRING:
+                this->s.s = std::move(other.s.s);
+		break;
+        }
+        this->i.type = other.i.type;
         return *this;
     }
 
@@ -184,7 +200,16 @@ public:
 protected:
 
 //TODO: these should be qualified by type because the svid is not globally unique
-    std::map<ScalarVariableId, list<TimedScalarBasicValue>> incomingUnprocessed;
+    class TimedScalarBasicValueCompare{
+        public:
+          bool operator()(const TimedScalarBasicValue &a, const TimedScalarBasicValue &b)
+            {
+                return a.first > b.first; 
+            }
+    };
+
+    std::map<ScalarVariableId, priority_queue<TimedScalarBasicValue, vector<TimedScalarBasicValue>,
+             TimedScalarBasicValueCompare>> incomingUnprocessed;
     std::map<ScalarVariableId, list<TimedScalarBasicValue>> incomingLookahead;
 
     std::map<ScalarVariableId, TimedScalarBasicValue> currentData;
@@ -203,13 +228,11 @@ private:
 
     bool check(double time);
 
-    void processIncoming();
+    template<typename Predicate>
+    void processIncoming(Predicate predicate);
 
     bool hasValueFor(std::map<ScalarVariableId, TimedScalarBasicValue> &currentData, list<ScalarVariableId> &knownIds);
 
     pair<bool, date::sys_time<std::chrono::milliseconds>> calculateStartTime();
-
-    template<typename Predicate>
-    void processLookahead(Predicate predicate);
 };
 #endif //RABBITMQFMUPROJECT_FMUCONTAINERCORE_H

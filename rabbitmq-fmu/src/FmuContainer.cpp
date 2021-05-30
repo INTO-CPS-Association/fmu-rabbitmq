@@ -140,7 +140,7 @@ void FmuContainer::consumerThreadFunc(void) {
                     this->core->add(pair.first, std::make_pair(result.time, pair.second));
                 }
                 lock.unlock();
-                FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
+                  /* FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", ""); */
                 cv.notify_one();
             } else {
                 FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
@@ -376,6 +376,8 @@ bool FmuContainer::initialize() {
     //without core logging
     //this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
+    /* this->core->setVerbose(true); */
+
     if (!initializeCoreState()) {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");
         return false;
@@ -532,7 +534,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         LOG_TIME(1); LOG_TIME(2); LOG_TIME(3); LOG_TIME(4); LOG_TIME(5); 
         //get time now here, and get difference between time now - log_time(0)
         LOG_TIME_PRINT;
-        FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
+        /* FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL); */
 
         return true;
     }
@@ -576,7 +578,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 #else
             /* FmuContainer_LOG(fmi2OK, "logOk", "Before lock'%d'", this->core->hasUnprocessed()); */
             std::unique_lock<std::mutex> lock(this->core->m);
-            FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
+            /* FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", ""); */
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
             /* FmuContainer_LOG(fmi2OK, "logOk", "After lock'%s'", ""); */
