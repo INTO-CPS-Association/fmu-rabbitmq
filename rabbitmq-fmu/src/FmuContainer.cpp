@@ -376,6 +376,8 @@ bool FmuContainer::initialize() {
     //without core logging
     //this->core = new FmuContainerCore(maxAge, calculateLookahead(lookaheadBound));
 
+    //this->core->setVerbose(true);
+
     if (!initializeCoreState()) {
         FmuContainer_LOG(fmi2Fatal, "logError", "Initialization failed%s", "");
         return false;

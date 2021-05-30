@@ -9,6 +9,8 @@
 #include <chrono>
 #include <cmath>
 
+#define SEQNOID 10
+
 #define FmuContainerCore_LOG(status, category, message, args...)       \
   if (m_functions != NULL) {                                             \
     if (m_functions->logger != NULL) {                                   \
@@ -90,7 +92,7 @@ void FmuContainerCore::processIncoming() {
 #endif
         auto id = pair.first;
         if (verbose) {
-            if(id == 103){
+            if(id == SEQNOID){
             cout << "\t --1  Incoming unprocessed: id=" << id << " - size=" << pair.second.size()
                  << ": ";
             //FmuContainerCore_LOG(fmi2OK, "logAll", "\t --  Incoming unprocessed: id=%d size %d",id, pair.second.size());
@@ -112,7 +114,7 @@ void FmuContainerCore::processIncoming() {
             c++;
         }
         if (verbose) {
-            if(id == 103){
+            if(id == SEQNOID){
             std::cout << "\t --3  Incoming lookahead  slice  id=: " << id << " - count=" << c << endl;
             //FmuContainerCore_LOG(fmi2OK, "logAll", "\t --  Incoming lookahead  slice: id=%d count %d",id, c);
             }
@@ -129,7 +131,7 @@ void FmuContainerCore::processIncoming() {
                 [](const TimedScalarBasicValue &a, const TimedScalarBasicValue &b) { return a.first < b.first; });
 
         if (verbose) {
-            if(id == 103){
+            if(id == SEQNOID){
                 std::cout << "\t -->4 Incoming unprocessed: id=" << id << " - size=" << this->incomingUnprocessed[id].size()
                         << ": ";
                 //FmuContainerCore_LOG(fmi2OK, "logAll", "\t --  Incoming unprocessed: id=%d size %d",id, this->incomingUnprocessed[id].size());
@@ -166,7 +168,7 @@ void FmuContainerCore::processIncoming() {
         for (auto itr = this->incomingUnprocessed.begin(); itr != this->incomingUnprocessed.end();) {
             auto id = itr->first;
             if (verbose) {
-                if(id == 103){
+                if(id == SEQNOID){
                 std::cout << "\t --7  Incoming unprocessed  : id=" << id << " - size="
                           << this->incomingUnprocessed[id].size()
                           << ": ";
@@ -239,7 +241,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
 
         //FmuContainerCore_LOG(fmi2OK, "logAll", "Lookaheads:%s","");
         for (auto &p : this->lookahead) {
-            if(p.first == 103){
+            if(p.first == SEQNOID){
             cout << "\t" << p.first << " = " << p.second << endl;
             FmuContainerCore_LOG(fmi2OK, "logAll", "\t %d %d",p.first, p.second);
             }
@@ -264,7 +266,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                     this->currentData.insert(this->currentData.begin(),
                                              std::make_pair(id, std::make_pair(timeValue->first, timeValue->second)));
                     if (verbose) {
-                        if(id == 103){
+                        if(id == SEQNOID){
                             cout << "Updated state with id=" << id << " time value=" << timeValue->second.i.i << " at iteration " << iteration << endl;
 
                             FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%f",id, timeValue->second.d.d);
@@ -276,7 +278,9 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                 itr = pair.second.erase(itr);
             } else {
                 //stop if value is newer than time
-                cout << "VALUE newer than time" << endl;
+                if (id == SEQNOID) {
+                    cout << "VALUE newer than time" << endl;
+                }
                 break;
             }
         }
@@ -291,7 +295,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
         for (auto itr = this->incomingLookahead.begin(); itr != this->incomingLookahead.end();) {
             auto id = itr->first;
             if (verbose) {
-                if(id == 103){
+                if(id == SEQNOID){
                 std::cout << "\t --  Incoming lookahead  : Id=" << id << " - Size="
                           << this->incomingLookahead[id].size()
                           << ": ";
@@ -303,7 +307,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
             }
             if (itr->second.empty()) {
                 if (verbose) {
-                    if(id == 103){
+                    if(id == SEQNOID){
                     printf("deleting list id=%d\n", itr->first);
                     //FmuContainerCore_LOG(fmi2OK, "logAll", "deleting list  Id=%d ",itr->first);
                     }
@@ -441,7 +445,7 @@ bool FmuContainerCore::check(double time) {
         std::stringstream temp;
         temp << valueTime.time_since_epoch().count();
         if(verbose){
-            if(id == 103){
+            if(id == SEQNOID){
             cout << "The time value of datapoint " << temp.str().c_str() << endl;
             cout << "The time value of datapoint " << messageTimeToSim(valueTime).count() << endl;
             }
@@ -449,7 +453,7 @@ bool FmuContainerCore::check(double time) {
 
         if (time < messageTimeToSim(valueTime).count()) {
             if (verbose) {
-                if(id == 103){
+                if(id == SEQNOID){
                 printf("Future value discovered. Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %f\n", id,
                        this->maxAge.count(), messageTimeToSim(valueTime).count(),
                        (messageTimeToSim(valueTime) + this->maxAge).count(), time);
@@ -459,7 +463,7 @@ bool FmuContainerCore::check(double time) {
         }
         if ((messageTimeToSim(valueTime) + this->maxAge).count() < time) {
             if (verbose) {
-                if(id == 103){
+                if(id == SEQNOID){
                 printf("Failing check on %d. maxage %lld, t1 %lld, t1+age %lld, t %9.f\n", id, this->maxAge.count(),
                        messageTimeToSim(valueTime).count(), (messageTimeToSim(valueTime) + this->maxAge).count(), time);
                 }
@@ -553,7 +557,7 @@ int FmuContainerCore::getSeqNO(int vref){
 
 #ifdef USE_RBMQ_FMU_THREAD
 bool FmuContainerCore::hasUnprocessed(void){
-    cout << "HERE: " << this->incomingUnprocessed.empty() << " " << this->incomingLookahead.empty() << endl;
+    /* cout << "HERE: " << this->incomingUnprocessed.empty() << " " << this->incomingLookahead.empty() << endl; */
     return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
 }
 #endif
