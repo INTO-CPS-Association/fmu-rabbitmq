@@ -13,7 +13,8 @@ result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 channel.queue_bind(exchange='fmi_digital_twin_cd', queue=queue_name,
                    routing_key='linefollower.data.to_cosim')
-print(' [*] Waiting for logs. To exit press CTRL+C')
+time_sleep = 0.001
+print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sleep*1000)
 def publish():
     dt=datetime.datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
     print(dt)
@@ -43,7 +44,7 @@ def publish():
 						routing_key='linefollower.data.to_cosim',
 						body=json.dumps(msg))
             #input("Press Enter to Continue")
-            time.sleep(.1)
+            time.sleep(time_sleep)
    
 def callback(ch, method, properties, body):
     print(" [x] %r" % body)

@@ -41,7 +41,7 @@ def publish():
                                             routing_key='linefollower.data.to_cosim',
                                             body=json.dumps(msg).encode('utf-8'))
         #input("Press Enter to Continue")
-        time.sleep(.1)
+        time.sleep(time_sleep)
         # time.sleep(.01)
         # time.sleep(.001)
 
