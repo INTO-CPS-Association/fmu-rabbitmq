@@ -534,7 +534,9 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         LOG_TIME(1); LOG_TIME(2); LOG_TIME(3); LOG_TIME(4); LOG_TIME(5); 
         //get time now here, and get difference between time now - log_time(0)
         LOG_TIME_PRINT;
+#ifdef USE_RBMQ_FMU_PROF
         FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
+#endif
 
         return true;
     }
@@ -558,134 +560,119 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         string json;
         while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
                this->communicationTimeout) {
-            //Note that consume, consumes from all channels.
 #ifndef USE_RBMQ_FMU_THREAD
+            // Consume a message directly from socket and add to core
+            bool msgAddSuccess = false;
             if (this->rabbitMqHandler->consume(json)) {
                 //data received
-
                 LOG_TIME(2);
                 DataPoint result;
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
-
-                    std::stringstream startTimeStamp;
-                    startTimeStamp << result.time;
-
-                    /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), */
-                                     /* json.c_str()); */
+                    //std::stringstream startTimeStamp;
+                    //startTimeStamp << result.time;
+                    //FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str());
 
                     //update core with the new data
                     this->addToCore(result);
+                    msgAddSuccess = true;
+                } else {
+                    FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
+                }
+            } 
+            // If failing consuming or parsing a message, then continue the while loop and try again
+            if (!msgAddSuccess) {
+                continue;
+            }
 #else
-            /* FmuContainer_LOG(fmi2OK, "logOk", "Before lock'%d'", this->core->hasUnprocessed()); */
+            // Wait for signal from consumer thread that core has messages
             std::unique_lock<std::mutex> lock(this->core->m);
             FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
-            /* FmuContainer_LOG(fmi2OK, "logOk", "After lock'%s'", ""); */
 #endif //!USE_RBMQ_FMU_THREAD
-                    LOG_TIME(2);
+            LOG_TIME(2);
 
-                    //Check which of the inputs of the fmu has changed since the last step
-                    string message;
-                    this->checkInputs(message);
-                              
-                    //if anything to send, publish to rabbitmq
-                    if(!message.empty()){
-                        // XXX: changed startTimeStamp.str() to cosim_time ???
-                        message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
-                        this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKeyCD, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first);
-                        FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
-                    }
-                    
-                    LOG_TIME(3);
-                    //Check if there is info on the system real time
-                   
-                    string systemHealthData;
-                    bool tryAgain = true;
-                    bool validData = false;
-                    double simTime_d, rTime_d;
+            //Check which of the inputs of the fmu has changed since the last step
+            string message;
+            this->checkInputs(message);
+
+            //if anything to send, publish to rabbitmq
+            if(!message.empty()){
+                message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
+                this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKeyCD, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first);
+                FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
+            }
+
+            LOG_TIME(3);
+
+            string systemHealthData;
+            bool tryAgain = true;
+            bool validHealthData = false;
+            double simTime_d, rTime_d;
 
 #ifndef USE_RBMQ_FMU_HEALTH_THREAD
-                    //if (this->rabbitMqHandlerSystemHealth->getFromChannel(systemHealthData, this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->queuenameSH.c_str())){
-                    if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
-
-                        FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
-
-                        //Extract rtime value from message
-                        date::sys_time<std::chrono::milliseconds> simTime, rTime;
-                        if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
-                            validData = true;
-                            rTime_d = this->core->message2SimTime(rTime).count();
-                            simTime_d = this->core->message2SimTime(simTime).count();
-
-#else
-                    FmuContainerCore::HealthData healthData;
-                    std::unique_lock<std::mutex> hlock(this->core->mHealth);
-                    validData = this->core->hasUnprocessedHealth();
-                    if (validData) {
-                       healthData = this->core->incomingUnprocessedHealth.front();
-                       this->core->incomingUnprocessedHealth.pop_front();
-                    }
-                    hlock.unlock();
-
-                    if (validData) {
-                       rTime_d = this->core->message2SimTime(healthData.first).count();
-                       simTime_d = this->core->message2SimTime(healthData.second).count();
-#endif //!USE_RBMQ_FMU_HEALTH_THREAD
-                                
-                            FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
-
-                            //If output time_discrepancy present, set its value
-
-                            if(rTime_d < simTime_d){
-                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
-                            }
-                            else  if (rTime_d > simTime_d){
-                                FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
-                            }
-
-                        }
-                        else{
-                                FmuContainer_LOG(fmi2OK, "logAll", "Ignoring (either bad json or own message): %s", systemHealthData.c_str());
-                            }
-#ifndef USE_RBMQ_FMU_HEALTH_THREAD
-                    }
-#endif //!USE_RBMQ_FMU_HEALTH_THREAD
-                    
-                    LOG_TIME(4);
-                    if (this->core->process(simulationTime)) {    
-                        if(this->timeOutputPresent){     
-                            this->core->setTimeDiscrepancyOutput(validData, simTime_d-rTime_d, this->previousTimeOutputVal, this->timeOutputVRef);
-                        } 
-                        if(this->simtimeOutputPresent){     
-                            this->core->setTimeDiscrepancyOutput(validData, abs(simulationTime-simTime_d), this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
-                        } 
-                        FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
-                        FmuContainer_LOG(fmi2OK, "logAll", "Current data point seqno %d, %ld", this->core->getSeqNO(103), std::chrono::high_resolution_clock::now());
-
-                        LOG_TIME(5);
-                        LOG_TIME_PRINT;
-                        FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
-                        FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 2 FmuContainer::step ***************%s", "");
-                        return true;
-                    }
-
-#ifndef USE_RBMQ_FMU_THREAD
-                } else {
-                    FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
+            if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+                FmuContainer_LOG(fmi2OK, "logAll", "At sim-time: %f [ms], received system health data: %s. \nIf output exists, it will be set.", simulationTime, systemHealthData.c_str());
+                //Extract rtime value from message
+                date::sys_time<std::chrono::milliseconds> simTime, rTime;
+                if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
+                    validHealthData = true;
+                    rTime_d = this->core->message2SimTime(rTime).count();
+                    simTime_d = this->core->message2SimTime(simTime).count();
                 }
             }
-#endif //!USE_RBMQ_FMU_THREAD
-        }
+#else
+            FmuContainerCore::HealthData healthData;
+            std::unique_lock<std::mutex> hlock(this->core->mHealth);
+            if (this->core->hasUnprocessedHealth()) {
+                validHealthData = true;
+                healthData = this->core->incomingUnprocessedHealth.front();
+                rTime_d = this->core->message2SimTime(healthData.first).count();
+                simTime_d = this->core->message2SimTime(healthData.second).count();
+                this->core->incomingUnprocessedHealth.pop_front();
+            }
+            hlock.unlock();
+#endif //!USE_RBMQ_FMU_HEALTH_THREAD
 
+            if (validHealthData) {
+                FmuContainer_LOG(fmi2OK, "logAll", "NOTE: Difference in time between current simulation step, and received simulation step %.2f [ms]", abs(simulationTime-simTime_d));
+                //If output time_discrepancy present, set its value
+                if(rTime_d < simTime_d){
+                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim ahead in time by %f [ms]", simTime_d-rTime_d);
+                }
+                else if (rTime_d > simTime_d){
+                    FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
+                }
+            } else {
+                FmuContainer_LOG(fmi2OK, "logAll", "Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+            }
+
+            LOG_TIME(4);
+            if (this->core->process(simulationTime)) {    
+                if(this->timeOutputPresent){     
+                    this->core->setTimeDiscrepancyOutput(validHealthData, simTime_d-rTime_d, this->previousTimeOutputVal, this->timeOutputVRef);
+                } 
+                if(this->simtimeOutputPresent){     
+                    this->core->setTimeDiscrepancyOutput(validHealthData, abs(simulationTime-simTime_d), this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
+                } 
+                FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
+                FmuContainer_LOG(fmi2OK, "logAll", "Current data point seqno %d, %ld", this->core->getSeqNO(103), std::chrono::high_resolution_clock::now());
+
+                LOG_TIME(5);
+                LOG_TIME_PRINT;
+#ifdef USE_RBMQ_FMU_PROF
+                FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
+#endif
+                FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 2 FmuContainer::step ***************%s", "");
+                return true;
+            }
+        }
     } catch (exception &e) {
         FmuContainer_LOG(fmi2Fatal, "logFatal", "Read message exception '%s'", e.what());
         return false;
     }
     FmuContainer_LOG(fmi2Fatal, "logError", "Did not get data to proceed to time '%f'", simulationTime);
-
     return false;
-
 }
 
 //Check if there is a a change of the inputs between two consequent timesteps
