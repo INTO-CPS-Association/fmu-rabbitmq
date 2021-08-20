@@ -351,10 +351,10 @@ bool FmuContainerCore:: process(double time ) {
 
 //check messages for acceptable aged values
 
-    if (this->check(time)) {
-        //all ok do nothing
-        return true;
-    }
+   // if (this->check(time)) {
+   //     //all ok do nothing
+   //     return true;
+   // }
 
 //read all incoming and sort
     processIncoming();
