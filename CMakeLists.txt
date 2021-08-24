@@ -61,6 +61,15 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # set(USE_RBMQ_FMU_THREAD OFF CACHE BOOL "" FORCE)
 # set(USE_RBMQ_FMU_PROF OFF CACHE BOOL "" FORCE)
 
+set(ENABLE_RBMQ_FMU_TESTS ON CACHE BOOL "" FORCE)
+
+option(USE_RBMQ_FMU_PRIORITY_QUEUE "Use RBMQ priority queue (incoming)" OFF)
+message("USE_RBMQ_FMU_PRIORITY_QUEUE: ${USE_RBMQ_FMU_PRIORITY_QUEUE}")
+if (USE_RBMQ_FMU_PRIORITY_QUEUE)
+    add_definitions(-DUSE_RBMQ_FMU_PRIORITY_QUEUE)
+    set(ENABLE_RBMQ_FMU_TESTS OFF CACHE BOOL "" FORCE)
+endif ()
+
 option(USE_RBMQ_FMU_THREAD "Use RBMQ consumer thread" ON)
 message("USE_RBMQ_FMU_THREAD: ${USE_RBMQ_FMU_THREAD}")
 if (USE_RBMQ_FMU_THREAD)
@@ -78,6 +87,8 @@ message("USE_RBMQ_FMU_PROF: ${USE_RBMQ_FMU_PROF}")
 if (USE_RBMQ_FMU_PROF)
     add_definitions(-DUSE_RBMQ_FMU_PROF)
 endif ()
+
+message("ENABLE_RBMQ_FMU_TESTS: ${ENABLE_RBMQ_FMU_TESTS}")
 
 set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
@@ -97,7 +108,7 @@ add_subdirectory(thirdparty/googletest)
 add_subdirectory(thirdparty/rabbitmq-c)
 add_subdirectory(thirdparty/date)
 add_subdirectory(rabbitmq-core)
-if (UNIX)
+if (UNIX AND ENABLE_RBMQ_FMU_TESTS)
 add_subdirectory(rabbitmq-tla-tester)
 endif()
 add_subdirectory(rabbitmq-fmu)

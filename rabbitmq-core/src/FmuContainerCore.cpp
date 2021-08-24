@@ -36,7 +36,15 @@ FmuContainerCore::FmuContainerCore(std::chrono::milliseconds maxAge, std::map<Sc
 }
 
 void FmuContainerCore::add(ScalarVariableId id, TimedScalarBasicValue value) {
+#ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
+    if (verbose && id == SEQNOID)
+    {
+       cout << "adding value=" << value.first.time_since_epoch().count() << ", " << value.second << endl;
+    }
+    this->incomingUnprocessed[id].push(value);
+#else
     this->incomingUnprocessed[id].push_back(value);
+#endif
 }
 
 std::chrono::milliseconds FmuContainerCore::messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime) {
@@ -81,6 +89,74 @@ void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
         
 }
 
+#ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
+template<typename Predicate>
+void FmuContainerCore::processIncoming(Predicate predicate) {
+
+    for (auto &pair: this->incomingUnprocessed) {
+
+#ifdef USE_RBMQ_FMU_THREAD
+        m.lock();
+#endif
+        auto id = pair.first;
+        auto existingValue = this->currentData.find(id);
+        auto cnt = 0;
+        date::sys_time<std::chrono::milliseconds> t;
+	TimedScalarBasicValue value = std::make_pair(t, ScalarVariableBaseValue(0));
+        bool valid = false;
+
+        // read until end, time (predicate) or lookahead size
+        while (!this->incomingUnprocessed[id].empty() &&
+               cnt++ < this->lookahead[id] &&
+               predicate(this->incomingUnprocessed[id].top())) {
+
+            value = this->incomingUnprocessed[id].top();
+            this->incomingUnprocessed[id].pop();
+            valid = true;
+        }
+
+        if (valid &&
+            (existingValue == this->currentData.end() ||
+             existingValue->second.first < value.first)) {
+            this->currentData.erase(id);
+            this->currentData.insert(this->currentData.begin(),
+                std::make_pair(id, std::make_pair(value.first, value.second)));
+            if (verbose) {
+                if(id == SEQNOID){
+                  cout << "Updated state with id=" << id << " time value=" << value.second.i.i << endl;
+                  FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%d",id, value.second.i.i);
+                }
+            }
+        }
+
+#ifdef USE_RBMQ_FMU_THREAD
+        m.unlock();
+#endif
+    }
+
+#ifdef USE_RBMQ_FMU_THREAD
+    m.lock();
+#endif
+    if (!this->incomingUnprocessed.empty()) {
+        if (verbose) {
+            cout << "Cleaning incomingUnprocessed" << endl;
+        }
+
+        for (auto itr = this->incomingUnprocessed.begin(); itr != this->incomingUnprocessed.end();) {
+            auto id = itr->first;
+            if (itr->second.empty()) {
+                this->incomingUnprocessed.erase(itr++);
+            } else {
+                ++itr;
+            }
+        }
+
+    }
+#ifdef USE_RBMQ_FMU_THREAD
+    m.unlock();
+#endif
+}
+#else
 void FmuContainerCore::processIncoming() {
     //sort
 
@@ -194,6 +270,7 @@ void FmuContainerCore::processIncoming() {
     m.unlock();
 #endif
 }
+#endif // !USE_RBMQ_FMU_PRIORITY_QUEUE
 
 bool FmuContainerCore::hasValueFor(map<ScalarVariableId, TimedScalarBasicValue> &currentData,
                                    list<ScalarVariableId> &knownIds) {
@@ -230,7 +307,7 @@ pair<bool, date::sys_time<std::chrono::milliseconds>> FmuContainerCore::calculat
     return std::make_pair(!initial, time);
 }
 
-
+#ifndef USE_RBMQ_FMU_PRIORITY_QUEUE
 template<typename Predicate>
 void FmuContainerCore::processLookahead(Predicate predicate) {
 
@@ -318,9 +395,12 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
         }
     }
 }
+#endif //!USE_RBMQ_FMU_PRIORITY_QUEUE
 
 bool FmuContainerCore::initialize() {
+#ifndef USE_RBMQ_FMU_PRIORITY_QUEUE
     processIncoming();
+#endif
 
     if (verbose) {
         cout << "Initial initialize! Max age: " << this->maxAge.count() << " - Lookahead: ";
@@ -331,10 +411,17 @@ bool FmuContainerCore::initialize() {
     }
 
     //process all lookahead messages
+#ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
+    auto predicate = [](const FmuContainerCore::TimedScalarBasicValue &value) {
+        return true;
+    };
+    processIncoming(predicate);
+#else
     auto predicate = [](FmuContainerCore::TimedScalarBasicValue &value) {
         return true;
     };
     processLookahead(predicate);
+#endif
 
     auto initialTimePair = calculateStartTime();
 
@@ -356,6 +443,14 @@ bool FmuContainerCore:: process(double time ) {
    //     return true;
    // }
 
+#ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
+//read until time
+    auto predicate = [time, this](const FmuContainerCore::TimedScalarBasicValue &value) {
+        return messageTimeToSim(value.first).count() <= time;
+    };
+    processIncoming(predicate);
+
+#else
 //read all incoming and sort
     processIncoming();
 
@@ -364,6 +459,7 @@ bool FmuContainerCore:: process(double time ) {
         return messageTimeToSim(value.first).count() <= time;
     };
     processLookahead(predicate);
+#endif
 
     // now all available lookahead values are read until time
 
@@ -557,7 +653,11 @@ int FmuContainerCore::getSeqNO(int vref){
 #ifdef USE_RBMQ_FMU_THREAD
 bool FmuContainerCore::hasUnprocessed(void){
     /* cout << "HERE: " << this->incomingUnprocessed.empty() << " " << this->incomingLookahead.empty() << endl; */
+#ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
+    return !this->incomingUnprocessed.empty();
+#else
     return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
+#endif
 }
 #endif
 int FmuContainerCore::incomingSize(void){
@@ -579,6 +679,7 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c) {
         cout << id.first << "->" << id.second << " ";
     }
     os << "]" << "\n";
+#ifndef USE_RBMQ_FMU_PRIORITY_QUEUE
     os << "Incoming" << "\n";
     for (auto &pair: c.incomingUnprocessed) {
         cout << "\tId: " << pair.first << "\n";
@@ -596,6 +697,7 @@ ostream &operator<<(ostream &os, const FmuContainerCore &c) {
 
         }
     }
+#endif
 
     os << "Data" << "\n";
     for (auto &pair: c.currentData) {
