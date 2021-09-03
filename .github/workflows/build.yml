@@ -33,9 +33,9 @@ jobs:
       - name: Prepare variables for ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: | 
-          echo "linux-x64" > /workspace/target
-          echo "linux-x86_64" > /workspace/install_name
-          echo "dockcross/${target}:latest" > /workspace/target
+          echo "linux-x64" > /home/runner/work/target
+          echo "linux-x86_64" > /home/runner/work/install_name
+          echo "dockcross/${target}:latest" > /home/runner/work/target
           
       - name: Prepare variables for windows
         if: matrix.os == 'windows-latest'
@@ -53,9 +53,9 @@ jobs:
           
       - name: Build
         run: |
-          export target=$(cat /workspace/target)
-          export install_name=$(cat /workspace/install_name)
-          export dockcross_url=$(cat /workspace/dockcross_url)
+          export target=$(cat /home/runner/work/target)
+          export install_name=$(cat /home/runner/work/install_name)
+          export dockcross_url=$(cat /home/runner/work/dockcross_url)
           echo $target
           echo $install_name
           echo $dockcross_url
