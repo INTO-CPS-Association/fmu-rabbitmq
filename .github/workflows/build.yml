@@ -32,27 +32,30 @@ jobs:
           
       - name: Prepare variables for ubuntu
         if: matrix.os == 'ubuntu-latest'
-        env: 
-          target: linux-x64
-          install_name: linux-x86_64
-          dockcross_url: dockcross/${target}:latest
+        run: | 
+          echo "linux-x64" > /workspace/target
+          echo "linux-x86_64" > /workspace/install_name
+          echo "dockcross/${target}:latest" > /workspace/target
           
       - name: Prepare variables for windows
         if: matrix.os == 'windows-latest'
-        env: 
-          target: win-x64
-          install_name: win-x86_64
-          dockcross_url: dockcross/windows-static-x64:latest
+        run: | 
+          target=win-x64
+          install_name=win-x86_64
+          dockcross_url=dockcross/windows-static-x64:latest
           
       - name: Prepare variables for macos
         if: matrix.os == 'macos-latest'
-        env:
-          target: darwin-x64
-          install_name: darwin-x86_64
-          dockcross_url: docker.sweng.au.dk/dockcross-darwin-x64-clang:latest
+        run: | 
+          target=darwin-x64
+          install_name=darwin-x86_64
+          dockcross_url=docker.sweng.au.dk/dockcross-darwin-x64-clang:latest
           
       - name: Build
         run: |
+          export target=$(cat /workspace/target)
+          export install_name=$(cat /workspace/install_name)
+          export dockcross_url=$(cat /workspace/dockcross_url)
           echo $target
           echo $install_name
           echo $dockcross_url
