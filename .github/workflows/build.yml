@@ -78,6 +78,7 @@ jobs:
           if [ ! -d build/external/$install_name ]
           then
 
+          echo build_xercersc $cmakeFlag $working_dir/xerces-c build/external/$install_name 
           build_xercersc $cmakeFlag $working_dir/xerces-c build/external/$install_name 
           else
           echo "Dependency already generated"
