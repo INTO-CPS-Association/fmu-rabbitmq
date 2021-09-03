@@ -33,6 +33,7 @@ jobs:
       - name: Prepare build environment
         if: matrix.os == 'ubuntu-latest'
         run: |
+          set -e
           target=linux-x64
           install_name=linux-x86_64
           dockcross_url=dockcross/${target}:latest
@@ -54,9 +55,9 @@ jobs:
 
           build_xercersc()
           {
-           $target cmake -B$install_name -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$dockcross_url -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
-           $target make -C$install_name -j8
-           $target make -C$install_name install
+            $1 cmake -B$2 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$3 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
+            $1 make -C$2 -j8
+            $1 make -C$2 install
           }
           if [ ! -d build/external/$install_name ]
           then
