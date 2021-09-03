@@ -56,6 +56,9 @@ jobs:
           
       - name: Build
         run: |
+          echo $target
+          echo $install_name
+          echo $dockcross_url
           set -e
           repo=$(git rev-parse --show-toplevel)
           current_dir=$(pwd)
