@@ -40,16 +40,17 @@ jobs:
       - name: Prepare variables for windows
         if: matrix.os == 'windows-latest'
         run: | 
-          target=win-x64
-          install_name=win-x86_64
-          dockcross_url=dockcross/windows-static-x64:latest
+          echo "win-x64" > /home/runner/work/target
+          echo "win-x86_64" > /home/runner/work/install_name
+          echo "dockcross/windows-static-x64:latest" > /home/runner/work/dockcross_url
           
       - name: Prepare variables for macos
         if: matrix.os == 'macos-latest'
         run: | 
-          target=darwin-x64
-          install_name=darwin-x86_64
-          dockcross_url=docker.sweng.au.dk/dockcross-darwin-x64-clang:latest
+          echo "darwin-x64" > /home/runner/work/target
+          echo "darwin-x86_64" > /home/runner/work/install_name
+          echo "docker.sweng.au.dk/dockcross-darwin-x64-clang:latest" > /home/runner/work/dockcross_url
+          brew cask install docker
           
       - name: Build
         run: |
