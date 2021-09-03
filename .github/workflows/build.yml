@@ -35,7 +35,7 @@ jobs:
         run: | 
           echo "linux-x64" > /home/runner/work/target
           echo "linux-x86_64" > /home/runner/work/install_name
-          echo "dockcross/${target}:latest" > /home/runner/work/target
+          echo "dockcross/linux-x64:latest" > /home/runner/work/dockcross_url
           
       - name: Prepare variables for windows
         if: matrix.os == 'windows-latest'
