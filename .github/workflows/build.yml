@@ -50,7 +50,7 @@ jobs:
           echo "darwin-x64" > target
           echo "darwin-x86_64" > install_name
           echo "docker.sweng.au.dk/dockcross-darwin-x64-clang:latest" > dockcross_url
-          brew cask install docker
+          brew install docker
           
       - name: Build
         run: |
@@ -77,8 +77,7 @@ jobs:
 
           echo Build dependencies
 
-          build_xercersc()
-          {
+          build_xercersc(){
             $1 cmake -B$2 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$3 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
             $1 make -C$2 -j8
             $1 make -C$2 install
