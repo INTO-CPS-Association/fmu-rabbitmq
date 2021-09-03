@@ -42,17 +42,17 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           set -e
-          target=linux-x64
-          install_name=linux-x86_64
-          dockcross_url=dockcross/${target}:latest
+          target=win-x64
+          install_name=win-x86_64
+          dockcross_url=dockcross/windows-static-x64:latest
           
       - name: Prepare variables for macos
         if: matrix.os == 'macos-latest'
         run: |
           set -e
-          target=win-x64
-          install_name=win-x86_64
-          dockcross_url=dockcross/windows-static-x64:latest
+          target=darwin-x64
+          install_name=darwin-x86_64
+          dockcross_url=docker.sweng.au.dk/dockcross-darwin-x64-clang:latest
           
       - name: Build
         run: |
