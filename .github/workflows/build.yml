@@ -23,58 +23,84 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest , macos-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
         
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
           
-      - name: Prepare build environment
+      - uses: lukka/get-cmake@latest
+          
+      - name: Prepare variables for ubuntu
         if: matrix.os == 'ubuntu-latest'
+        run: | 
+          echo "linux-x64" > target
+          echo "linux-x86_64" > install_name
+          echo " " > cmakeFlag
+          
+      - name: Set up CLANG
+        if: matrix.os == 'ubuntu-latest'
+        uses: egor-tensin/setup-clang@v1
+        with:
+          version: latest
+          platform: x64
+          
+      - name: Prepare variables for windows
+        if: matrix.os == 'windows-latest'
+        run: | 
+          echo "win-x64" > target
+          echo "win-x86_64" > install_name
+          echo "-G \"MSYS Makefiles\"" > cmakeFlag
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
+      - name: Prepare variables for macos
+        if: matrix.os == 'macos-latest'
+        run: | 
+          echo "darwin-x64" > target
+          echo "darwin-x86_64" > install_name
+          echo " " > cmakeFlag
+          
+      - name: Build
         run: |
-          set -e
-          target=linux-x64
-          install_name=linux-x86_64
-          dockcross_url=dockcross/${target}:latest
+          export target=$(cat target)
+          export install_name=$(cat install_name)
+          export cmakeFlag=$(cat cmakeFlag)
+          echo $target
+          echo $install_name
           repo=$(git rev-parse --show-toplevel)
           current_dir=$(pwd)
           cd $repo
+
           working_dir=build/$target
 
           mkdir -p $working_dir
-
-          script=$working_dir/${target}-dockcross
-
-          echo Creating env
-
-          docker run --rm $dockcross_url > $script
-          chmod +x $script
-
           echo Build dependencies
 
           build_xercersc()
           {
-            $1 cmake -B$2 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$3 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
-            $1 make -C$2 -j8
-            $1 make -C$2 install
+            cmake $3 -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
+            make -C$1 -j8
+            make -C$1 install
           }
           if [ ! -d build/external/$install_name ]
           then
 
-          build_xercersc $script $working_dir/xerces-c build/external/$install_name
+          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag 
+          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag 
           else
           echo "Dependency already generated"
           fi
 
           echo Running CMake
           rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
-          ./$script cmake -B$working_dir -H.
+          cmake $cmakeFlag -B$working_dir -H.
 
           echo Compiling
 
-          ./$script make -C$working_dir -j8
-          ./$script make -C$working_dir/rabbitmq-fmu install
+          make -C$working_dir -j8
+          make -C$working_dir/rabbitmq-fmu install
           cd $current_dir
 
           echo Done
