@@ -51,9 +51,10 @@ jobs:
           echo "darwin-x86_64" > install_name
           echo "docker.sweng.au.dk/dockcross-darwin-x64-clang:latest" > dockcross_url
           brew install docker
-          docker-machine start
-          docker-machine env
-          eval "$(docker-machine env default)"
+          brew install docker-machine.
+          docker-machine create 
+          docker-machine restart.
+          eval "$(docker-machine env default)" 
           
       - name: Build
         run: |
