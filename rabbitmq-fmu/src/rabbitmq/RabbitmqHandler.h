@@ -6,7 +6,7 @@
 #define RABBITMQFMUPROJECT_RABBITMQHANDLER_H
 
 #include <string>
-
+#include <cassert>
 #ifdef _WIN32
 #include <time.h>
 #include <sys/time.h>
