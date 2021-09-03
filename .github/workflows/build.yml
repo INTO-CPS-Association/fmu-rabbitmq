@@ -33,30 +33,30 @@ jobs:
       - name: Prepare variables for ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: | 
-          echo "linux-x64" > /home/runner/work/target
-          echo "linux-x86_64" > /home/runner/work/install_name
-          echo "dockcross/linux-x64:latest" > /home/runner/work/dockcross_url
+          echo "linux-x64" > runner/work/target
+          echo "linux-x86_64" > runner/work/install_name
+          echo "dockcross/linux-x64:latest" > runner/work/dockcross_url
           
       - name: Prepare variables for windows
         if: matrix.os == 'windows-latest'
         run: | 
-          echo "win-x64" > /home/runner/work/target
-          echo "win-x86_64" > /home/runner/work/install_name
-          echo "dockcross/windows-static-x64:latest" > /home/runner/work/dockcross_url
+          echo "win-x64" > runner/work/target
+          echo "win-x86_64" > runner/work/install_name
+          echo "dockcross/windows-static-x64:latest" > runner/work/dockcross_url
           
       - name: Prepare variables for macos
         if: matrix.os == 'macos-latest'
         run: | 
-          echo "darwin-x64" > /home/runner/work/target
-          echo "darwin-x86_64" > /home/runner/work/install_name
-          echo "docker.sweng.au.dk/dockcross-darwin-x64-clang:latest" > /home/runner/work/dockcross_url
+          echo "darwin-x64" > runner/work/target
+          echo "darwin-x86_64" > runner/work/install_name
+          echo "docker.sweng.au.dk/dockcross-darwin-x64-clang:latest" > runner/work/dockcross_url
           brew cask install docker
           
       - name: Build
         run: |
-          export target=$(cat /home/runner/work/target)
-          export install_name=$(cat /home/runner/work/install_name)
-          export dockcross_url=$(cat /home/runner/work/dockcross_url)
+          export target=$(cat runner/work/target)
+          export install_name=$(cat runner/work/install_name)
+          export dockcross_url=$(cat runner/work/dockcross_url)
           echo $target
           echo $install_name
           echo $dockcross_url
