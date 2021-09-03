@@ -31,11 +31,11 @@ jobs:
           submodules: true
           
       - name: Prepare build environment
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          target=darwin-x64
-          install_name=darwin-x86_64
-          dockcross_url=docker.sweng.au.dk/dockcross-darwin-x64-clang:latest
+          target=linux-x64
+          install_name=linux-x86_64
+          dockcross_url=dockcross/${target}:latest
           repo=$(git rev-parse --show-toplevel)
           current_dir=$(pwd)
           cd $repo
