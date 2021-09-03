@@ -57,7 +57,7 @@ jobs:
         run: |
           export target=$(cat target)
           export install_name=$(cat install_name)
-          export cmakeFlag=$(cmakeFlag)
+          export cmakeFlag=$(cat cmakeFlag)
           echo $target
           echo $install_name
           repo=$(git rev-parse --show-toplevel)
