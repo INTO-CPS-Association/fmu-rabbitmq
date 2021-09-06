@@ -35,7 +35,6 @@ pipeline {
                 stage('Xcompile linux64') {
                     steps {
                         sh "./scripts/linux64_build.sh"
-                        sh "make test"
                         dir("build/linux-x64") {
                            script {
                                sh label: '', script: './linux-x64-dockcross ./rabbitmq-core/unit-test-rabbitmq-core'
