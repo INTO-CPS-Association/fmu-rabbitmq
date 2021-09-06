@@ -38,6 +38,8 @@ jobs:
           echo "linux-x64" > target
           echo "linux-x86_64" > install_name
           echo " " > cmakeFlag
+          sudo apt-get update
+          sudo apt-get install libicu-dev
           
       - name: Set up CLANG
         if: matrix.os == 'ubuntu-latest'
