@@ -13,6 +13,7 @@ namespace {
         TestRabbitMq(list<string> messages) : RabbitmqHandler("", 0, "",
                                                               "",
                                                               "",
+                                                              "direct",
                                                               ""), messages(messages) {}
 
 

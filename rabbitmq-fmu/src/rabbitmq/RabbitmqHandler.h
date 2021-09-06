@@ -31,7 +31,7 @@ using namespace std;
 class RabbitmqHandler {
 
 public :
-    RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
+    RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &exchangetype,const string &queueBindingKey);
 
     ~RabbitmqHandler();
 

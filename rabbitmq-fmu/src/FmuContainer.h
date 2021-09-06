@@ -30,6 +30,8 @@
 #define RABBITMQ_FMU_PRECISION 6
 #define RABBITMQ_FMU_MAX_AGE 7
 #define RABBITMQ_FMU_LOOKAHEAD 8
+#define RABBITMQ_FMU_EXCHANGE_NAME 9
+#define RABBITMQ_FMU_EXCHANGE_TYPE 10
 
 using namespace std;
 
@@ -105,7 +107,7 @@ private:
 
     void addToCore(DataPoint result);
 
-    virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
+    virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &exchangetype,const string &queueBindingKey);
 
     const bool loggingOn;
 

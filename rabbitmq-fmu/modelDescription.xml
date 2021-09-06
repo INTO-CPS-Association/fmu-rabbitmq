@@ -18,6 +18,10 @@
         <ScalarVariable name="var1" valueReference="20" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>
+        
+        <ScalarVariable name = "seqno"  valueReference = "103" variability = "discrete"  causality = "output">
+            <Integer />
+        </ScalarVariable>
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>
@@ -49,11 +53,18 @@
         <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
             <Integer start="1"/>
         </ScalarVariable>
+        <ScalarVariable name="config.exchangename" valueReference="9" variability="fixed" causality="parameter" initial="exact">
+            <String start="fmi_digital_twin"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
+            <String start="direct"/>
+        </ScalarVariable>
 
     </ModelVariables>
     <ModelStructure>
         <Outputs>
             <Unknown index="1"/>
+            <Unknown index="2"/>
         </Outputs>
     </ModelStructure>
 

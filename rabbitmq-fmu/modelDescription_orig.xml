@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<fmiModelDescription fmiVersion="2.0" modelName="RabbitMq" guid="{cfc65592-ffff-4563-9705-1581b6e7071c}"
+                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="INTO-CPS"
+                     license="INTO-CPS">
+    <CoSimulation modelIdentifier="rabbitmq" needsExecutionTool="true"
+                  canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false"
+                  maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="true"
+                  canNotUseMemoryManagementFunctions="true" canGetAndSetFMUstate="false" canSerializeFMUstate="false"
+                  providesDirectionalDerivative="false"/>
+
+    <LogCategories>
+        <Category name="logAll"/>
+    </LogCategories>
+
+    <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
+    <ModelVariables>
+
+        <ScalarVariable name="xpos" valueReference="20" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="obs_xpos" valueReference="22" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="obs_ypos" valueReference="23" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="obstacles" valueReference="24" variability="discrete" causality="output">
+            <String />
+        </ScalarVariable>
+        <ScalarVariable name="simtime_discrepancy" valueReference="25" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name="time_discrepancy" valueReference="26" variability="continuous" causality="output">
+            <Real />
+        </ScalarVariable>
+        <ScalarVariable name = "seqno"  valueReference = "103" variability = "discrete"  causality = "output">
+            <Integer />
+        </ScalarVariable>
+        <ScalarVariable name="command_stop" valueReference="28" variability="discrete" causality="input">
+            <Boolean start="false" />
+        </ScalarVariable>
+
+
+        <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
+            <String start="localhost"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.port" valueReference="1" variability="fixed" causality="parameter" initial="exact">
+            <Integer start="5672"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.username" valueReference="2" variability="fixed" causality="parameter" initial="exact">
+            <String start="guest"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.password" valueReference="3" variability="fixed" causality="parameter" initial="exact">
+            <String start="guest"/>
+        </ScalarVariable>
+
+
+        <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower"/>
+        </ScalarVariable>
+
+        <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
+            <Integer start="60"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.precision" valueReference="6" variability="fixed" causality="parameter" description="Communication step comparison precision. Number of decimals to consider" initial="exact">
+            <Integer start="10"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.maxage" valueReference="7" variability="fixed" causality="parameter" description="The max age of a value specified in ms," initial="exact">
+            <Integer start="1000"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
+            <Integer start="1"/>
+        </ScalarVariable>
+
+    </ModelVariables>
+    <ModelStructure>
+        <Outputs>
+            <Unknown index="1"/>
+            <Unknown index="2"/>
+            <Unknown index="3"/>
+            <Unknown index="4"/>
+            <Unknown index="5"/>
+            <Unknown index="6"/>
+            <Unknown index="7"/>
+            <Unknown index="8"/>
+        </Outputs>
+    </ModelStructure>
+
+
+</fmiModelDescription>

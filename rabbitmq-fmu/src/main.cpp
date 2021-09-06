@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
 
         cout << "Working directory is " << path << endl;
 
-        std::filesystem::create_directory("log");
+        //std::filesystem::create_directory("log");
         int fileIndex = 0;
         std::string fileNameBase = "log/log";
         std::string fileNameExt = ".csv";

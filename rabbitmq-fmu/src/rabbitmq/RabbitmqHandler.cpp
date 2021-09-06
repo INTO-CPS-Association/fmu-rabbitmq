@@ -35,6 +35,7 @@ void RabbitmqHandler::throw_on_error(int x, char const *context) {
 
 RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string &username, const string &password,
                                  const string &exchange,
+                                 const string &exchangetype,
                                  const string &queueBindingKey) {
     this->hostname = hostname;
     this->port = port;
@@ -54,11 +55,11 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
 
     this->rbmqExchange.first = exchange;
     this->rbmqExchange.first.append("_cd");
-    this->rbmqExchangetype.first = "direct";
+    this->rbmqExchangetype.first = exchangetype;
 
     this->rbmqExchange.second = exchange;
     this->rbmqExchange.second.append("_sh");
-    this->rbmqExchangetype.second = "direct";
+    this->rbmqExchangetype.second = exchangetype;
 
     //for publishing
     this->routingKeyCD = queueBindingKey;

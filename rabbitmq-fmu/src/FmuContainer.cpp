@@ -185,7 +185,9 @@ bool FmuContainer::initialize() {
     auto stringConfigs = {std::make_pair(RABBITMQ_FMU_HOSTNAME_ID, "hostname"),
                           std::make_pair(RABBITMQ_FMU_USER, "username"),
                           std::make_pair(RABBITMQ_FMU_PWD, "password"),
-                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key")};
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key"),
+                          std::make_pair(RABBITMQ_FMU_EXCHANGE_NAME, "exchangename"),
+                          std::make_pair(RABBITMQ_FMU_EXCHANGE_TYPE, "exchangetype")};
 
 
     auto allParametersPresent = true;
@@ -247,6 +249,8 @@ bool FmuContainer::initialize() {
     auto username = stringMap[RABBITMQ_FMU_USER];
     auto password = stringMap[RABBITMQ_FMU_PWD];
     auto routingKey = stringMap[RABBITMQ_FMU_ROUTING_KEY];
+    auto exchangeName = stringMap[RABBITMQ_FMU_EXCHANGE_NAME];
+    auto exchangeType = stringMap[RABBITMQ_FMU_EXCHANGE_TYPE];
 
     auto port = this->currentData.integerValues[RABBITMQ_FMU_PORT];
     this->communicationTimeout = this->currentData.integerValues[RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT];
@@ -268,7 +272,7 @@ bool FmuContainer::initialize() {
                      this->communicationTimeout, this->precision, precisionDecimalPlaces);
     /////////////////////////////////////////////////////////////////////////////////////
     //create a separate connection that deals with publishing to the rabbitmq server/////
-    this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+    this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
                                                        routingKey);//this routing key does not affect what is defined below.
     FmuContainer_LOG(fmi2OK, "logAll",
                      "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
@@ -307,7 +311,7 @@ bool FmuContainer::initialize() {
 
     /////////////////////////////////////////////////////////////////////////////////////
     //create a separate connection that deals with publishing and consuming system health data, using a channel for eavh/////
-    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, "fmi_digital_twin",
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password,  exchangeName,  exchangeType,
                                                        routingKey);
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Another rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
@@ -404,9 +408,9 @@ bool FmuContainer::initialize() {
 }
 
 RabbitmqHandler *FmuContainer::createCommunicationHandler(const string &hostname, int port, const string &username,
-                                                          const string &password, const string &exchange,
+                                                          const string &password, const string &exchange,const string &exchangetype,
                                                           const string &queueBindingKey) {
-    return new RabbitmqHandler(hostname, port, username, password, exchange, queueBindingKey);
+    return new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey);
 }
 
 
