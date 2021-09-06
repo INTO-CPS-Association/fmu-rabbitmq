@@ -35,20 +35,22 @@ public :
 
     ~RabbitmqHandler();
 
+    //Obsolete********************
     virtual bool open();
-
+    virtual void bind();
+    void publish(const string & routingkey, const string &message);
+    
+    //End Obsolete****************
     virtual void close();
 
-    virtual void bind();
 
     virtual bool consume(string & json);
-    void publish(const string & routingkey, const string &message);
 
 
     virtual bool createConnection();
     virtual bool createChannel(amqp_channel_t channelID, string exchange, string exchangetype);
     virtual void bind(amqp_channel_t channelID, const string &routingkey, amqp_bytes_t &queue, string exchange);
-    virtual void bind(amqp_channel_t channelID, const string &routingkey, const char* qname, string exchange);
+    virtual void bind(amqp_channel_t channelID, const string &routingkey, string exchange);
     void publish(const string &routingkey, const string &message, amqp_channel_t channelID, string exchange);
 
     virtual bool createChannel(amqp_channel_t channelID);
@@ -57,13 +59,12 @@ public :
     void declareExchange(amqp_channel_t channelID, string exchange, string exchangetype);
     void bindExchange(amqp_channel_t channelID, string exchange, string exchangetype); 
 
+    string routingKeyCD, routingKeySH;
+    string bindingKeyCD, bindingKeySH;
 
-    string exchangeCD, exchangetypeCD;
-    string exchangeSH, exchangetypeSH;
-    string queuenameCD, queuenameSH;
-    string routingKeySH;
-
-    int channelPub, channelSub;
+    amqp_channel_t channelPub, channelSub;
+    pair<string,string> rbmqExchange; // connection cd on first, sh on second
+    pair<string,string> rbmqExchangetype; // connection cd on first, sh on second
 
 private:
 
@@ -71,9 +72,12 @@ private:
     int port;
     string username;
     string password;
+
+    //Obsolete********************
     string queueBindinngKey;
-    string exchange;
-    string exchangetype;
+    string exchange, exchangetype;
+    void declareExchange();
+    //End Obsolete****************
 
     bool connected;
     bool bound;
@@ -84,7 +88,6 @@ private:
     struct timeval timeout;
 
     void throw_on_amqp_error(amqp_rpc_reply_t x, char const *context);
-    void declareExchange();
     void throw_on_error(int x, char const *context);
 
 };

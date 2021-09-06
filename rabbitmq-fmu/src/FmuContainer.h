@@ -10,6 +10,7 @@
 #include <iostream>
 #include <map>
 #include <cmath>
+#include <thread>
 #include "fmi2Functions.h"
 #include "DataPoint.h"
 #include "modeldescription/ModelDescriptionParser.h"
@@ -18,6 +19,7 @@
 #include "rabbitmq/RabbitmqHandler.h"
 #include "Iso8601TimeParser.h"
 #include "FmuContainerCore.h"
+#include <condition_variable>
 
 #define RABBITMQ_FMU_HOSTNAME_ID 0
 #define RABBITMQ_FMU_PORT 1
@@ -74,6 +76,8 @@ public:
 
     bool isLoggingOn();
 
+    int coreIncomingSize();
+
 private:
 
     FmuContainerCore *core;
@@ -87,7 +91,7 @@ private:
     DataPoint currentData;
     DataPoint previousInputs;
     enum SvType{Real,Integer,Boolean,String};
-    
+
     //this connection is for exchanging data regarding actual state content, e.g., robot data
     RabbitmqHandler *rabbitMqHandler;
     //this connection is for exchanging data regarding system health
@@ -97,17 +101,15 @@ private:
 
     std::chrono::milliseconds messageTimeToSim( date::sys_time<std::chrono::milliseconds> messageTime);
 
+    void checkInputs(string &message);
+
+    void addToCore(DataPoint result);
+
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &queueBindingKey);
 
     const bool loggingOn;
 
     unsigned long precision;
-
-    pair<string,string> routingKey, routingKeySystemHealth;//first string for publishing, second for consuming
-    pair<amqp_bytes_t,amqp_bytes_t> queuenameContentData, queuenameSystemHealth;//first queuename for publishing, second for consuming
-    amqp_channel_t channelPub, channelSub;
-    pair<string,string> exchange; // connection cd on first, sh on second
-    pair<string,string> exchangetype; // connection cd on first, sh on second
 
     bool timeOutputPresent;
     int timeOutputVRef;
@@ -120,6 +122,19 @@ private:
     bool initializeCoreState();
 
     map<FmuContainerCore::ScalarVariableId, int> calculateLookahead(int lookaheadBound);
+
+#ifdef USE_RBMQ_FMU_THREAD
+    void consumerThreadFunc();
+    thread consumerThread;
+    bool consumerThreadStop;
+    std::condition_variable cv;
+#endif
+
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+    void healthThreadFunc();
+    thread healthThread;
+    bool healthThreadStop;
+#endif
 };
 
 

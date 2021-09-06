@@ -23,8 +23,8 @@ print("Creating queue")
 result = channelConsume.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 
-qnamepub = "get_system_health_data"
-result2 = channelPublish.queue_declare(queue=qnamepub, exclusive=False, auto_delete=True)
+result2 = channelPublish.queue_declare(queue='', exclusive=True)
+qnamepub = result2.method.queue
 
 channelConsume.queue_bind(exchange='fmi_digital_twin_sh', queue=queue_name,
                    routing_key='linefollower.system_health.from_cosim')
