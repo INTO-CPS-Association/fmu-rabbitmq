@@ -63,6 +63,9 @@ jobs:
           echo " " > cmakeFlag
           
       - name: Build
+        env:
+          CC: gcc
+          CXX: g++
         run: |
           export target=$(cat target)
           export install_name=$(cat install_name)
