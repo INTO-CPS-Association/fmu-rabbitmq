@@ -44,9 +44,9 @@ pipeline {
                             script {
                                 sh label: '', script: './../linux-x64-dockcross ./unit-test-rabbitmq'
                             }
-                        }
+                        }*/
                     }
-                }*/
+                }
 
                 stage('Xcompile win32') {
                     steps {
