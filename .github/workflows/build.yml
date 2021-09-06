@@ -52,7 +52,7 @@ jobs:
         run: | 
           echo "win-x64" > target
           echo "win-x86_64" > install_name
-          echo "-G \"MSYS Makefiles\"" > cmakeFlag
+          echo "-G ^"MSYS Makefiles"" > cmakeFlag
           cat cmakeFlag
           
       - name: Other win prep
@@ -87,7 +87,7 @@ jobs:
 
           build_xercersc()
           {
-            cmake $3 $4 $5 -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
+            cmake $3 $4 -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
             make -C$1 -j8
             make -C$1 install
           }
