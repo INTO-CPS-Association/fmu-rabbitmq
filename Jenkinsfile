@@ -40,13 +40,13 @@ pipeline {
                                sh label: '', script: './linux-x64-dockcross ./rabbitmq-core/unit-test-rabbitmq-core'
                            }
                         }*/
-                        dir("build/linux-x64") {
+/*                        dir("build/linux-x64/rabbitmq-fmu") {
                             script {
-                                sh label: '', script: './linux-x64-dockcross ./rabbitmq-fmu/unit-test-rabbitmq'
+                                sh label: '', script: './../linux-x64-dockcross ./unit-test-rabbitmq'
                             }
                         }
                     }
-                }
+                }*/
 
                 stage('Xcompile win32') {
                     steps {
