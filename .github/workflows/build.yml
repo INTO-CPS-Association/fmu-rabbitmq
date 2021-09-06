@@ -63,6 +63,7 @@ jobs:
           echo " " > cmakeFlag
           
       - name: Build
+        shell: bash
         run: |
           export target=$(cat target)
           export install_name=$(cat install_name)
