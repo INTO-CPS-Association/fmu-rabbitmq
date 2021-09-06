@@ -53,6 +53,7 @@ jobs:
           echo "win-x64" > target
           echo "win-x86_64" > install_name
           echo "-G ^"MSYS Makefiles^"" > cmakeFlag
+          cat cmakeFlag
           echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           
