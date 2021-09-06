@@ -53,8 +53,10 @@ jobs:
         run: | 
           echo "win-x64" > target
           echo "win-x86_64" > install_name
-          echo "-G ^"MSYS Makefiles"" > cmakeFlag
+          echo "-G" > cmakeFlag
+          echo \"MSYS Makefiles\" > cmakeFlagValue
           cat cmakeFlag
+          cat cmakeFlagValue
           
       - name: Other win prep
         if: matrix.os == 'windows-latest'
@@ -68,6 +70,7 @@ jobs:
           echo "darwin-x64" > target
           echo "darwin-x86_64" > install_name
           echo " " > cmakeFlag
+          echo " " > cmakeFlagValue
           
       - name: Build
         shell: bash
@@ -75,6 +78,7 @@ jobs:
           export target=$(cat target)
           export install_name=$(cat install_name)
           export cmakeFlag=$(cat cmakeFlag)
+          export cmakeFlagValue=$(cat cmakeFlagValue)
           echo $target
           echo $install_name
           repo=$(git rev-parse --show-toplevel)
@@ -95,8 +99,8 @@ jobs:
           if [ ! -d build/external/$install_name ]
           then
 
-          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag 
-          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag 
+          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag $cmakeFlagValue
+          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag $cmakeFlagValue
           else
           echo "Dependency already generated"
           fi
