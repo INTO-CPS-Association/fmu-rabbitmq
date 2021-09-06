@@ -30,7 +30,7 @@ jobs:
         with:
           submodules: true
           
-      - uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@3.19.0
           
       - name: Prepare variables for ubuntu
         if: matrix.os == 'ubuntu-latest'
