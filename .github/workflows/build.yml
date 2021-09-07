@@ -116,5 +116,65 @@ jobs:
 
           echo Done
 
+      - name: Upload artifact macos
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: rabbitmq.dylib
+          path: rabbitmq-fmu/rabbitmq.dylib
 
+      - name: Upload artifact linux 
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: rabbitmq.so
+          path: rabbitmq-fmu/rabbitmq.so
+
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: rabbitmq.dll
+          path: rabbitmq-fmu/rabbitmq.dll
+
+      - name: Upload modelDescription.xml
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: modelDescription.xml
+          path: rabbitmq-fmu/modelDescription.xml
+
+  pack-fmu:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download dll
+        uses: actions/download-artifact@v2
+        with:
+          name: rabbitmq.dll
+          path: rabbitmq/binaries/win64/
+
+      - name: Download shared library
+        uses: actions/download-artifact@v2
+        with:
+          name: rabbitmq.so
+          path: rabbitmq/binaries/linux64/
+
+      - name: Download dylib
+        uses: actions/download-artifact@v2
+        with:
+          name: rabbitmq.dylib
+          path: rabbitmq/binaries/darwin64/
+
+      - name: Download model description file
+        uses: actions/download-artifact@v2
+        with:
+          name: modelDescription.xml
+          path: rabbitmq/
+
+      - name: Upload FMU 
+        uses: actions/upload-artifact@v2
+        with:
+          name: rabbitmq
+          path: rabbitmq
  
