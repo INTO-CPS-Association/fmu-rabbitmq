@@ -122,28 +122,28 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.dylib
-          path: rabbitmq/rabbitmq.dylib
+          path: ~/build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Upload artifact linux 
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.so
-          path: rabbitmq/rabbitmq.so
+          path: ~/build/linux-x64/rabbitmq-fmu/rabbitmq.so
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.dll
-          path: rabbitmq/rabbitmq.dll
+          path: ~/build/win-x64/rabbitmq-fmu/rabbitmq.dll
 
       - name: Upload modelDescription.xml
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: modelDescription.xml
-          path: rabbitmq/modelDescription.xml
+          path: rabbitmq-fmu/modelDescription.xml
 
   pack-fmu:
     runs-on: ubuntu-latest
