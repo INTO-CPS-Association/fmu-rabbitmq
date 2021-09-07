@@ -271,7 +271,7 @@ namespace{
     }
 
     TEST(Rbmq, exampleConsumer){
-
+        GTEST_SKIP();
         int count = 0;
         while(count < 10){
             publish_and_basic_get_message("TEST");

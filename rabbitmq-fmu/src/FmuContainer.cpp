@@ -517,6 +517,16 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
     FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", cosim_time.c_str());
 
+    //Check which of the inputs of the fmu has changed since the last step
+    string message;
+    this->checkInputs(message);
+
+    //if anything to send, publish to rabbitmq
+    if(!message.empty()){
+        message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
+        this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKeyCD, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first);
+        FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
+    }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
     this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKeySH, cosim_time, 
@@ -595,17 +605,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
             lock.unlock();
 #endif //!USE_RBMQ_FMU_THREAD
             LOG_TIME(2);
-
-            //Check which of the inputs of the fmu has changed since the last step
-            string message;
-            this->checkInputs(message);
-
-            //if anything to send, publish to rabbitmq
-            if(!message.empty()){
-                message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
-                this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKeyCD, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first);
-                FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
-            }
 
             LOG_TIME(3);
 
