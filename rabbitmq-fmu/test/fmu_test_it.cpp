@@ -88,7 +88,7 @@ namespace {
 
 
             fmi2Real currentCommunicationPoint = 0;
-            fmi2Real communicationStepSize = 10;
+            fmi2Real communicationStepSize = 0.1;
             fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
 
 
