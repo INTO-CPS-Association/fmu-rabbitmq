@@ -180,6 +180,12 @@ jobs:
         with:
           name: modelDescription.xml
           path: rabbitmq/
+          
+      - name: Download model description file to resources folder
+        uses: actions/download-artifact@v2
+        with:
+          name: modelDescription.xml
+          path: rabbitmq/resources
 
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
