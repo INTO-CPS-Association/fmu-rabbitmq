@@ -184,6 +184,6 @@ jobs:
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
         with:
-          name: rabbitmq
+          name: rabbitmq.fmu
           path: rabbitmq
  
