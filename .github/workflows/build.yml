@@ -115,34 +115,35 @@ jobs:
           cd $current_dir
 
           echo Done
+          echo $(pwd)
 
       - name: Upload artifact macos
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.dylib
-          path: rabbitmq-fmu/rabbitmq.dylib
+          path: rabbitmq/rabbitmq.dylib
 
       - name: Upload artifact linux 
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.so
-          path: rabbitmq-fmu/rabbitmq.so
+          path: rabbitmq/rabbitmq.so
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.dll
-          path: rabbitmq-fmu/rabbitmq.dll
+          path: rabbitmq/rabbitmq.dll
 
       - name: Upload modelDescription.xml
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: modelDescription.xml
-          path: rabbitmq-fmu/modelDescription.xml
+          path: rabbitmq/modelDescription.xml
 
   pack-fmu:
     runs-on: ubuntu-latest
