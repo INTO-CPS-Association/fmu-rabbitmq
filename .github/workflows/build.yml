@@ -30,7 +30,7 @@ jobs:
         with:
           submodules: true
           
-      - uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@v3.20.1
           
       - name: Prepare variables for ubuntu
         if: matrix.os == 'ubuntu-latest'
@@ -38,8 +38,7 @@ jobs:
           echo "linux-x64" > target
           echo "linux-x86_64" > install_name
           echo " " > cmakeFlag
-          sudo apt-get update -y
-          sudo apt-get install -y icu-devtools
+          echo " " > cmakeFlagValue
           
       - name: Set up CLANG
         if: matrix.os == 'ubuntu-latest'
@@ -49,11 +48,17 @@ jobs:
           platform: x64
           
       - name: Prepare variables for windows
+        shell: bash
         if: matrix.os == 'windows-latest'
         run: | 
           echo "win-x64" > target
           echo "win-x86_64" > install_name
-          echo "-G \"MSYS Makefiles\"" > cmakeFlag
+          echo "-G" > cmakeFlag
+          echo MSYS Makefiles > cmakeFlagValue
+          
+      - name: Other win prep
+        if: matrix.os == 'windows-latest'
+        run: | 
           echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           
@@ -63,12 +68,15 @@ jobs:
           echo "darwin-x64" > target
           echo "darwin-x86_64" > install_name
           echo " " > cmakeFlag
+          echo " " > cmakeFlagValue
           
       - name: Build
+        shell: bash
         run: |
           export target=$(cat target)
           export install_name=$(cat install_name)
           export cmakeFlag=$(cat cmakeFlag)
+          export cmakeFlagValue=$(cat cmakeFlagValue)
           echo $target
           echo $install_name
           repo=$(git rev-parse --show-toplevel)
@@ -82,22 +90,23 @@ jobs:
 
           build_xercersc()
           {
-            cmake $3 -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
+            echo cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
+            cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF -Hthirdparty/xerces-c
             make -C$1 -j8
             make -C$1 install
           }
           if [ ! -d build/external/$install_name ]
           then
 
-          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag 
-          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag 
+          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag "$cmakeFlagValue"
+          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag "$cmakeFlagValue"
           else
           echo "Dependency already generated"
           fi
 
           echo Running CMake
           rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
-          cmake $cmakeFlag -B$working_dir -H.
+          cmake $cmakeFlag "$cmakeFlagValue" -B$working_dir -H.
 
           echo Compiling
 

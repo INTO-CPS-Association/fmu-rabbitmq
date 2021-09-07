@@ -58,7 +58,9 @@ file(GLOB C_FILES src/*.c)
 add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
-
+if (UNIX AND NOT APPLE)
+    find_package(ICU REQUIRED data uc)
+endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 set_target_properties(rabbitmq
