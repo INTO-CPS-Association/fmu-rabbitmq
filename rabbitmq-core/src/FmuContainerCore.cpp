@@ -124,7 +124,7 @@ void FmuContainerCore::processIncoming(Predicate predicate) {
             if (verbose) {
                 if(id == SEQNOID){
                   cout << "Updated state with id=" << id << " time value=" << value.second.i.i << endl;
-                  FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%d",id, value.second.i.i);
+                  //FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%d",id, value.second.i.i);
                 }
             }
         }
@@ -313,13 +313,13 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
 
     if (verbose) {
         cout << "Lookaheads:" << endl;                            
-        FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Lookaheads=%s","");
+        //FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Lookaheads=%s","");
 
         //FmuContainerCore_LOG(fmi2OK, "logAll", "Lookaheads:%s","");
         for (auto &p : this->lookahead) {
             if(p.first == SEQNOID){
             cout << "\t" << p.first << " = " << p.second << endl;
-            FmuContainerCore_LOG(fmi2OK, "logAll", "\t %d %d",p.first, p.second);
+            //FmuContainerCore_LOG(fmi2OK, "logAll", "\t %d %d",p.first, p.second);
             }
         }
     }
@@ -345,7 +345,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                         if(id == SEQNOID){
                             cout << "Updated state with id=" << id << " time value=" << timeValue->second.i.i << " at iteration " << iteration << endl;
 
-                            FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%f",id, timeValue->second.d.d);
+                            //FmuContainerCore_LOG(fmi2Fatal, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%f",id, timeValue->second.d.d);
                     
                         }
                     }
@@ -366,7 +366,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
     if (!this->incomingLookahead.empty()) {
         if (verbose) {
             cout << "Cleaning incoming lookahead" << endl;
-            FmuContainerCore_LOG(fmi2OK, "logAll", "Cleaning incoming lookahead%s","");
+            //FmuContainerCore_LOG(fmi2OK, "logAll", "Cleaning incoming lookahead%s","");
         }
         for (auto itr = this->incomingLookahead.begin(); itr != this->incomingLookahead.end();) {
             auto id = itr->first;

@@ -7,6 +7,8 @@
 #include "xercesc/util/TransService.hpp"
 #include "xercesc/parsers/XercesDOMParser.hpp"
 
+#include <xercesc/sax/HandlerBase.hpp>
+
 using namespace xercesc;
 using namespace std;
 
@@ -17,30 +19,47 @@ namespace {
 
         // create the DOM parser
         XercesDOMParser *parser = new XercesDOMParser;
-        parser->
-                setValidationScheme(XercesDOMParser::Val_Never);
-        parser->parse("sample.xml");
-        // get the DOM representation
-        DOMDocument *doc = parser->getDocument();
-        // get the root element
-        DOMElement *root = doc->getDocumentElement();
+        parser->setValidationScheme(XercesDOMParser::Val_Never);
+        ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
+        parser->setErrorHandler(errHandler);
+        try {
+            parser->parse("sample.xml");
+            // get the DOM representation
+            DOMDocument *doc = parser->getDocument();
+            // get the root element
+            DOMElement *root = doc->getDocumentElement();
+            // evaluate the xpath
+            DOMXPathResult *result = doc->evaluate(
+            XMLString::transcode("/root/ApplicationSettings"),
+            root,
+            NULL,
+            DOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+            NULL);
 
-        // evaluate the xpath
-        DOMXPathResult *result = doc->evaluate(
-                XMLString::transcode("/root/ApplicationSettings"),
-                root,
-                NULL,
-                DOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                NULL);
-
-        if (result->getNodeValue() == NULL) {
+            if (result->getNodeValue() == NULL) {
             cout << "There is no result for the provided XPath " <<
-                 endl;
-        } else {
+            endl;
+            } else {
             cout << TranscodeToStr(result->getNodeValue()->getFirstChild()->getNodeValue(), "ascii").str() << endl;
+
+            }
+
+            XMLPlatformUtils::Terminate();
+
+        }
+        catch (const XMLException& toCatch) {
+            char* message = XMLString::transcode(toCatch.getMessage());
+            cout << "Exception message is: \n"
+                    << message << "\n";
+            XMLString::release(&message);
+        }
+        catch (const DOMException& toCatch) {
+            char* message = XMLString::transcode(toCatch.msg);
+            cout << "Exception message is: \n"
+                    << message << "\n";
+            XMLString::release(&message);
         }
 
-        XMLPlatformUtils::Terminate();
     }
 
     void test2() {
