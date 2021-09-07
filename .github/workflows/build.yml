@@ -116,6 +116,7 @@ jobs:
 
           echo Done
           echo $(pwd)
+          ls
 
       - name: Upload artifact macos
         if: matrix.os == 'macos-latest'
