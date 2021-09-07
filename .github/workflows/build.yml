@@ -123,7 +123,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.dylib
-          path: ~/build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
+          path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
           
       - name: check 
         shell: bash
@@ -137,14 +137,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.so
-          path: ~/build/linux-x64/rabbitmq-fmu/rabbitmq.so
+          path: build/linux-x64/rabbitmq-fmu/rabbitmq.so
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.dll
-          path: ~/build/win-x64/rabbitmq-fmu/rabbitmq.dll
+          path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
 
       - name: Upload modelDescription.xml
         if: matrix.os == 'ubuntu-latest'
