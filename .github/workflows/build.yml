@@ -117,7 +117,24 @@ jobs:
           echo Done
           echo $(pwd)
           ls
-
+          
+      - name: Run unit tests
+        run: |
+          ctest -R unit-test-rabbitmq
+          ctest -R unit-test-rabbitmq-core
+          
+      - name : Prep for integration tests # these need additional scripts that produce data to the rabbitmq
+        run: |
+          python3 server/playback_gazebo_data-test.py
+          
+      - name: Run integration tests # there are no integration tests yet for the core.
+        run: |
+          export target=$(cat target)
+          cd build/$target/rabbitmq-core
+          ./it-test-rabbitmq-core
+          cd ../rabbitmq-fmu
+          ./it-test-rabbitmq
+          
       - name: Upload artifact macos
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v2
