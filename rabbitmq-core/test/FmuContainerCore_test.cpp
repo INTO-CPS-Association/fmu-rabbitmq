@@ -11,6 +11,8 @@ using namespace std;
 
 using namespace date;
 
+//IMPORTANT: setVerbose(true) should not be used, as the fmucontainercore_log would not be properly initialised
+//from the core constructor.
 class FmuContainerCoreTestProxy : public FmuContainerCore {
 public:
 
@@ -147,7 +149,7 @@ namespace {
     checkInitialize(FmuContainerCoreTestProxy::State pre, FmuContainerCoreTestProxy::State post, bool expectInitOk) {
 
         FmuContainerCoreTestProxy c(pre);
-        c.setVerbose(true);
+        //c.setVerbose(true);
         cout << "\n######################## PRE  ########################" << endl;
         c.show();
 
@@ -179,7 +181,7 @@ namespace {
               bool expectStepOk) {
 
         FmuContainerCoreTestProxy c(pre);
-        c.setVerbose(true);
+        //c.setVerbose(true);
         cout << "\n######################## PRE  ########################" << endl;
         c.show();
 
