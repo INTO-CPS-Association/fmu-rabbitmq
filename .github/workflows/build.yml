@@ -145,7 +145,7 @@ jobs:
           open -a /Applications/Docker.app
           echo docker daemon started
 
-          docker compose up -d
+          docker-compose up -d
           python3 -m pip install pika --upgrade
           python3 ./playback_gazebo_data-test.py
           
