@@ -119,6 +119,7 @@ jobs:
           ls
           
       - name: Run unit tests
+        shell: bash
         run: |
           export target=$(cat target)
           echo $(pwd) 
@@ -130,7 +131,7 @@ jobs:
         run: |
           brew install --cask docker
           cd server
-          docker compose up -d
+          docker-compose up -d
           python3 -m pip install pika --upgrade
           python3 ./playback_gazebo_data-test.py
           
