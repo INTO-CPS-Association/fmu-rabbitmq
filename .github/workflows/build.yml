@@ -133,25 +133,18 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          ctest --test-dir build/ -R unit-test-rabbitmq
-          ctest --test-dir build/ -R unit-test-rabbitmq-core
+          ctest -R unit-test-rabbitmq
+          ctest -R unit-test-rabbitmq-core
           
       - name : Prep for integration tests # these need additional scripts that produce data to the rabbitmq
         if: matrix.os == 'macos-latest'
         run: |
           brew install --cask docker
           cd server
-          open -g -a /Applications/Docker.app || exit
+          echo starting docker daemon
+          open -a /Applications/Docker.app
+          echo docker daemon started
 
-          # Wait for the server to start up, if applicable.  
-          i=0
-          while ! docker system info &>/dev/null; do
-          (( i++ == 0 )) && printf %s '-- Waiting for Docker to finish starting up...' || printf '.'
-          sleep 1
-          done
-          (( i )) && printf '\n'
-
-          echo "-- Docker is ready."
           docker compose up -d
           python3 -m pip install pika --upgrade
           python3 ./playback_gazebo_data-test.py
