@@ -29,7 +29,13 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-          
+      - uses: getong/rabbitmq-action@v1.2
+        with:
+          rabbitmq version: '3.8.2-management'
+          host port: 5672
+          rabbitmq user: 'guest'
+          rabbitmq password: 'guest'
+
       - uses: lukka/get-cmake@v3.20.1
           
       - name: Prepare variables for ubuntu
@@ -148,7 +154,7 @@ jobs:
           python3 ./playback_gazebo_data-test.py
           
       - name: Run integration tests # there are no integration tests yet for the core.
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           export target=$(cat target)
           cd build/$target/rabbitmq-core
