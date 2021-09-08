@@ -120,14 +120,15 @@ jobs:
           
       - name: Run unit tests
         run: |
+          export target=$(cat target)
           echo $(pwd) 
-          ctest -R unit-test-rabbitmq
-          ctest -R unit-test-rabbitmq-core
+          ctest --test-dir build/$target -R unit-test-rabbitmq
+          ctest --test-dir build/$target -R unit-test-rabbitmq-core
           
       - name : Prep for integration tests # these need additional scripts that produce data to the rabbitmq
         if: matrix.os == 'macos-latest'
         run: |
-          brew cask install docker
+          brew install --cask docker
           cd server
           docker compose up -d
           python3 -m pip install pika --upgrade
