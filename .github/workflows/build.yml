@@ -133,8 +133,8 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          ctest --test-dir build/$target -R unit-test-rabbitmq.exe
-          ctest --test-dir build/$target -R unit-test-rabbitmq-core.exe
+          ctest --test-dir build/ -R unit-test-rabbitmq
+          ctest --test-dir build/ -R unit-test-rabbitmq-core
           
       - name : Prep for integration tests # these need additional scripts that produce data to the rabbitmq
         if: matrix.os == 'macos-latest'
