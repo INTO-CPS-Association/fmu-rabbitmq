@@ -6,9 +6,9 @@ name: rabbitmq
 on:
   # Triggers the workflow on push or pull request events but only for the development branch
   push:
-    branches: [ development ]
+    branches: [ master, development ]
   pull_request:
-    branches: [ development ]
+    branches: [ master, development ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -159,6 +159,7 @@ jobs:
           export target=$(cat target)
           cp modelDescription.xml build/$target/rabbitmq-fmu/
           ./build/$target/rabbitmq-core/it-test-rabbitmq-core
+          sudo timedatectl set-timezone Denmark/Copenhagen
           ./build/$target/rabbitmq-fmu/it-test-rabbitmq
           
       - name: Upload artifact macos
