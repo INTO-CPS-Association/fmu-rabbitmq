@@ -158,7 +158,7 @@ jobs:
         run: |
           export target=$(cat target)
           cp modelDescription.xml build/$target/rabbitmq-fmu/
-          ./build/$target/rabbitmq-fmu/it-test-rabbitmq-core
+          ./build/$target/rabbitmq-core/it-test-rabbitmq-core
           ./build/$target/rabbitmq-fmu/it-test-rabbitmq
           
       - name: Upload artifact macos
