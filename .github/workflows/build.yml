@@ -118,7 +118,8 @@ jobs:
           echo $(pwd)
           ls
           
-      - name: Run unit tests
+      - name: Run unit tests on UNIX
+        if: matrix.os != 'win-latest'
         shell: bash
         run: |
           export target=$(cat target)
@@ -126,13 +127,22 @@ jobs:
           ctest --test-dir build/$target -R unit-test-rabbitmq
           ctest --test-dir build/$target -R unit-test-rabbitmq-core
           
+      - name: Run unit tests on WIN
+        if: matrix.os == 'win-latest'
+        shell: bash
+        run: |
+          export target=$(cat target)
+          echo $(pwd) 
+          ctest --test-dir build/$target -R unit-test-rabbitmq.exe
+          ctest --test-dir build/$target -R unit-test-rabbitmq-core.exe
+          
       - name : Prep for integration tests # these need additional scripts that produce data to the rabbitmq
         if: matrix.os == 'macos-latest'
         run: |
           brew install --cask docker
           cd server
           open -a Docker
-          docker-compose up -d
+          docker compose up -d
           python3 -m pip install pika --upgrade
           python3 ./playback_gazebo_data-test.py
           
