@@ -121,17 +121,20 @@ jobs:
       - name: Run unit tests
         run: |
           echo $(pwd) 
-          ctest --test-dir build/darwin-x64 -R unit-test-rabbitmq
-          ctest --test-dir build/darwin-x64 -R unit-test-rabbitmq-core
+          ctest -R unit-test-rabbitmq
+          ctest -R unit-test-rabbitmq-core
           
       - name : Prep for integration tests # these need additional scripts that produce data to the rabbitmq
+        if: matrix.os == 'macos-latest'
         run: |
+          brew cask install docker
           cd server
           docker compose up -d
           python3 -m pip install pika --upgrade
           python3 ./playback_gazebo_data-test.py
           
       - name: Run integration tests # there are no integration tests yet for the core.
+        if: matrix.os == 'macos-latest'
         run: |
           export target=$(cat target)
           cd build/$target/rabbitmq-core
