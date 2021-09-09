@@ -56,7 +56,7 @@ if (ENABLE_RBMQ_FMU_TESTS)
     list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
 
     add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-    target_link_libraries(unit-test-${PROJECT_NAME} gtest_main tz)
+    target_link_libraries(unit-test-${PROJECT_NAME} gtest_main tz rabbitmq-core)
 
     if (WIN32)
         add_test(unit-test-${PROJECT_NAME} ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
