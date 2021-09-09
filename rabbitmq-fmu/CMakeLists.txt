@@ -120,7 +120,7 @@ if (ENABLE_RBMQ_FMU_TESTS)
     target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
     if (WIN32)
-        add_test(NAME unit-test-${PROJECT_NAME} COMMAND wine unit-test-${PROJECT_NAME}   --gtest_output=xml:gtestresults.xml)
+        add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}   --gtest_output=xml:gtestresults.xml)
     else ()
         add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}  --gtest_output=xml:gtestresults.xml)
     endif ()
