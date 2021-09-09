@@ -142,21 +142,11 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          ctest -R unit-test-rabbitmq
-          ctest -R unit-test-rabbitmq-core
-          
-          
-          ctest --test-dir build/ -R unit-test-rabbitmq
-          ctest --test-dir build/ -R unit-test-rabbitmq-core
-          
-          
+          cmake --install build/$target
           ctest --test-dir build/$target -R unit-test-rabbitmq
           ctest --test-dir build/$target -R unit-test-rabbitmq-core
-          
-          start %1./build/$target/rabbitmq-fmu/unit-test-rabbitmq.exe
-          start %1./build/$target/rabbitmq-fmu-core/unit-test-rabbitmq-core.exe
+
         
-          
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
         if: matrix.os == 'ubuntu-latest'
         run: |
