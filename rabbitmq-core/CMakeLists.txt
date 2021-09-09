@@ -34,8 +34,8 @@ file(GLOB C_FILES src/*.c)
 #add_executable(${PROJECT_NAME}-tla ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/tla/TlaTester.cpp)
 #target_link_libraries(${PROJECT_NAME}-tla XercesC::XercesC rabbitmq-static tz)
 
+add_library(rabbitmq-core STATIC ${C_FILES} ${CPP_FILES})       
 
-add_library(rabbitmq-core STATIC ${C_FILES} ${CPP_FILES})
 target_link_libraries(rabbitmq-core tz)
 set_target_properties(rabbitmq-core
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -56,7 +56,7 @@ if (ENABLE_RBMQ_FMU_TESTS)
     list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
 
     add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-    target_link_libraries(unit-test-${PROJECT_NAME} gtest_main tz rabbitmq-core)
+    target_link_libraries(unit-test-${PROJECT_NAME} gtest_main tz)
 
     if (WIN32)
         add_test(unit-test-${PROJECT_NAME} ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
