@@ -142,7 +142,7 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          cmake --install
+          cmake --install build/$target
           ctest --test-dir build/$target -R unit-test-rabbitmq
           ctest --test-dir build/$target -R unit-test-rabbitmq-core
 
