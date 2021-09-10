@@ -50,7 +50,6 @@ if (NOT BUILD_SHARED_LIBS)
     add_definitions(-DAMQP_STATIC)
 endif ()
 
-
 file(GLOB_RECURSE CPP_FILES src/*.cpp)
 list(FILTER CPP_FILES EXCLUDE REGEX "main.cpp")
 file(GLOB C_FILES src/*.c)
@@ -59,7 +58,9 @@ file(GLOB C_FILES src/*.c)
 add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
-
+if (UNIX AND NOT APPLE)
+    find_package(ICU REQUIRED data uc)
+endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 set_target_properties(rabbitmq
@@ -110,33 +111,38 @@ if (NOT ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}"))
 endif ()
 
 
-# ------------------------------- UNIT TESTS ----------------------------------
-file(GLOB CPP_TEST_FILES test/*.cpp)
-list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
+if (ENABLE_RBMQ_FMU_TESTS)
+    # ------------------------------- UNIT TESTS ----------------------------------
+    file(GLOB CPP_TEST_FILES test/*.cpp)
+    list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
 
-add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
+    add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
+    target_link_libraries(unit-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
-if (WIN32)
-    add_test(NAME unit-test-${PROJECT_NAME} COMMAND wine unit-test-${PROJECT_NAME}   --gtest_output=xml:gtestresults.xml)
-else ()
-    add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}  --gtest_output=xml:gtestresults.xml)
-endif ()
+    if (WIN32)
+        add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}   --gtest_output=xml:gtestresults.xml)
+    else ()
+        add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}  --gtest_output=xml:gtestresults.xml)
+    endif ()
 
-# ---------------------------- Integration TESTS ------------------------------
+    # ---------------------------- Integration TESTS ------------------------------
 
-file(GLOB CPP_TEST_FILES test/*.cpp)
-list(FILTER CPP_TEST_FILES INCLUDE REGEX ".*_it.cpp")
+    file(GLOB CPP_TEST_FILES test/*.cpp)
+    list(FILTER CPP_TEST_FILES INCLUDE REGEX ".*_it.cpp")
 
-add_executable(it-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
+    add_executable(it-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
+    target_link_libraries(it-test-${PROJECT_NAME} gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
-#if (WIN32)
-#    add_test(it-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
-#else ()
-#    add_test(it-test-${PROJECT_NAME} ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
-#endif ()
+    #if (WIN32)
+    #    add_test(it-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
+    #else ()
+    #    add_test(it-test-${PROJECT_NAME} ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
+    #endif ()
 
+    # ---------------------------- Small TESTS ------------------------------
+    add_executable (BasicConsumer test/basic_consumer.cpp)
+    target_link_libraries(BasicConsumer gtest_main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
+endif()
 
 #################################### INSTALL targets ####################################
 target_architecture(arch)

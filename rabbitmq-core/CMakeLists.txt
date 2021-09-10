@@ -34,8 +34,8 @@ file(GLOB C_FILES src/*.c)
 #add_executable(${PROJECT_NAME}-tla ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/tla/TlaTester.cpp)
 #target_link_libraries(${PROJECT_NAME}-tla XercesC::XercesC rabbitmq-static tz)
 
+add_library(rabbitmq-core STATIC ${C_FILES} ${CPP_FILES})       
 
-add_library(rabbitmq-core STATIC ${C_FILES} ${CPP_FILES})
 target_link_libraries(rabbitmq-core tz)
 set_target_properties(rabbitmq-core
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -43,32 +43,29 @@ set_target_properties(rabbitmq-core
 
 target_include_directories(rabbitmq-core INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-#################################### TESTS ####################################
+if (ENABLE_RBMQ_FMU_TESTS)
+    #################################### TESTS ####################################
 
-list(FILTER CPP_FILES EXCLUDE REGEX ".*src\\/main\\.cpp")
+    list(FILTER CPP_FILES EXCLUDE REGEX ".*src\\/main\\.cpp")
 
 
 
 
-# ------------------------------- UNIT TESTS ----------------------------------
-file(GLOB CPP_TEST_FILES test/*.cpp)
-list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
+    # ------------------------------- UNIT TESTS ----------------------------------
+    file(GLOB CPP_TEST_FILES test/*.cpp)
+    list(FILTER CPP_TEST_FILES EXCLUDE REGEX ".*_it.cpp")
 
-add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(unit-test-${PROJECT_NAME} gtest_main tz)
+    add_executable(unit-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
+    target_link_libraries(unit-test-${PROJECT_NAME} gtest_main tz)
 
-if (WIN32)
-    add_test(unit-test-${PROJECT_NAME} wine ${PROJECT_NAME} --gtest_output=xml:gtestresults.xml)
-else ()
     add_test(NAME unit-test-${PROJECT_NAME} COMMAND unit-test-${PROJECT_NAME}  --gtest_output=xml:gtestresults.xml)
+    # ---------------------------- Integration TESTS ------------------------------
+
+    file(GLOB CPP_TEST_FILES test/*.cpp)
+    list(FILTER CPP_TEST_FILES INCLUDE REGEX ".*_it.cpp")
+
+    add_executable(it-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
+    target_link_libraries(it-test-${PROJECT_NAME} gtest_main tz)
 endif ()
-
-# ---------------------------- Integration TESTS ------------------------------
-
-file(GLOB CPP_TEST_FILES test/*.cpp)
-list(FILTER CPP_TEST_FILES INCLUDE REGEX ".*_it.cpp")
-
-add_executable(it-test-${PROJECT_NAME} ${C_FILES} ${CPP_FILES} ${CPP_TEST_FILES})
-target_link_libraries(it-test-${PROJECT_NAME} gtest_main tz)
 
 

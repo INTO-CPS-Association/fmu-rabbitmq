@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="10" failures="0" disabled="0" errors="0" time="0.045" timestamp="2021-09-10T10:09:18" name="AllTests">
+  <testsuite name="FmuContainerCoreTest" tests="1" failures="0" disabled="0" errors="0" time="0" timestamp="2021-09-10T10:09:18">
+    <testcase name="checksConvertTimeToString" status="run" result="completed" time="0" timestamp="2021-09-10T10:09:18" classname="FmuContainerCoreTest" />
+  </testsuite>
+  <testsuite name="FmuContainerTest" tests="1" failures="0" disabled="0" errors="0" time="0" timestamp="2021-09-10T10:09:18">
+    <testcase name="InitAndSim" status="run" result="completed" time="0" timestamp="2021-09-10T10:09:18" classname="FmuContainerTest" />
+  </testsuite>
+  <testsuite name="Rbmq" tests="2" failures="0" disabled="0" errors="0" time="0" timestamp="2021-09-10T10:09:18">
+    <testcase name="basicConsumer" status="run" result="skipped" time="0" timestamp="2021-09-10T10:09:18" classname="Rbmq" />
+    <testcase name="exampleConsumer" status="run" result="skipped" time="0" timestamp="2021-09-10T10:09:18" classname="Rbmq" />
+  </testsuite>
+  <testsuite name="JsonTest" tests="1" failures="0" disabled="0" errors="0" time="0" timestamp="2021-09-10T10:09:18">
+    <testcase name="Basic" status="run" result="completed" time="0" timestamp="2021-09-10T10:09:18" classname="JsonTest" />
+  </testsuite>
+  <testsuite name="MessageParser" tests="1" failures="0" disabled="0" errors="0" time="0.024" timestamp="2021-09-10T10:09:18">
+    <testcase name="ParseTest" status="run" result="completed" time="0.024" timestamp="2021-09-10T10:09:18" classname="MessageParser" />
+  </testsuite>
+  <testsuite name="ModelDescriptionParser" tests="1" failures="0" disabled="0" errors="0" time="0.008" timestamp="2021-09-10T10:09:18">
+    <testcase name="Basic" status="run" result="completed" time="0.008" timestamp="2021-09-10T10:09:18" classname="ModelDescriptionParser" />
+  </testsuite>
+  <testsuite name="Timestamp" tests="1" failures="0" disabled="0" errors="0" time="0" timestamp="2021-09-10T10:09:18">
+    <testcase name="External" status="run" result="completed" time="0" timestamp="2021-09-10T10:09:18" classname="Timestamp" />
+  </testsuite>
+  <testsuite name="XmlTest" tests="2" failures="0" disabled="0" errors="0" time="0.013" timestamp="2021-09-10T10:09:18">
+    <testcase name="Negative" status="run" result="completed" time="0.006" timestamp="2021-09-10T10:09:18" classname="XmlTest" />
+    <testcase name="modeldescription" status="run" result="completed" time="0.007" timestamp="2021-09-10T10:09:18" classname="XmlTest" />
+  </testsuite>
+</testsuites>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <fmiModelDescription fmiVersion="2.0" modelName="RabbitMq" guid="{cfc65592-ffff-4563-9705-1581b6e7071c}"
-                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="INTO-CPS"
-                     license="INTO-CPS">
+                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="AU"
+                     license="-">
     <CoSimulation modelIdentifier="rabbitmq" needsExecutionTool="true"
                   canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false"
                   maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="true"
@@ -13,30 +13,18 @@
     </LogCategories>
 
     <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
-    <ModelVariables> 
+    <ModelVariables>
+
         <ScalarVariable name="xpos" valueReference="20" variability="continuous" causality="output">
             <Real />
         </ScalarVariable>        
         <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
-        </ScalarVariable>
-          <ScalarVariable name="time_discrepancy" valueReference="22" variability="discrete" causality="output">
-            <Real start="0.0" />
-        </ScalarVariable>
-
-        <ScalarVariable name="command2" valueReference="23" variability="discrete" causality="input">
-            <Real start="3.2" />
-        </ScalarVariable>
-        <ScalarVariable name="command3" valueReference="24" variability="discrete" causality="input">
-            <Integer start="2" />
-        </ScalarVariable>
-        <ScalarVariable name="command4" valueReference="25" variability="discrete" causality="input">
-            <String start="hello rabbitmq" />
+        </ScalarVariable>        
+        <ScalarVariable name="seqno" valueReference="103" variability="discrete" causality="output">
+            <Integer/>
         </ScalarVariable>
 
-        <ScalarVariable name="command_stop" valueReference="26" variability="discrete" causality="input">
-            <Boolean start="false" />
-        </ScalarVariable>
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>
@@ -57,18 +45,23 @@
         </ScalarVariable>
 
         <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
-            <Integer start="60"/>
+            <Integer start="600"/>
         </ScalarVariable>
         <ScalarVariable name="config.precision" valueReference="6" variability="fixed" causality="parameter" description="Communication step comparison precision. Number of decimals to consider" initial="exact">
             <Integer start="10"/>
         </ScalarVariable>
         <ScalarVariable name="config.maxage" valueReference="7" variability="fixed" causality="parameter" description="The max age of a value specified in ms," initial="exact">
-            <Integer start="100"/>
+            <Integer start="0"/>
         </ScalarVariable>
         <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
             <Integer start="1"/>
         </ScalarVariable>
-        
+        <ScalarVariable name="config.exchangename" valueReference="9" variability="fixed" causality="parameter" initial="exact">
+            <String start="fmi_digital_twin"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
+            <String start="direct"/>
+        </ScalarVariable>
 
 
     </ModelVariables>
@@ -76,7 +69,6 @@
         <Outputs>
             <Unknown index="1"/>
             <Unknown index="2"/>
-            <Unknown index="3"/>
         </Outputs>
     </ModelStructure>
 

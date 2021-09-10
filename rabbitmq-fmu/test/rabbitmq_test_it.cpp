@@ -8,6 +8,7 @@ extern "C"
 #include <string.h>
 
 #include <amqp.h>
+#include <amqp_time.h>
 #include <amqp_tcp_socket.h>
 }
 
