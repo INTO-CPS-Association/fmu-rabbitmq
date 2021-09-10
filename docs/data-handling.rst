@@ -73,8 +73,7 @@ Flow of thread consuming from the RabbitMQ server
     title EnterInitializationMode
     hide footbox
 
-    boundary "Co-simulation Master" as Master
-    participant RabbitMQFMUInterface as FMUI
+    boundary RabbitMQFMUInterface as FMUI
     participant RabbitMQFMUCore as FMUC
     database "RabbitMQ Server" as server
 
