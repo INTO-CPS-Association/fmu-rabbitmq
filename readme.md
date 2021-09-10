@@ -37,9 +37,9 @@ The FMU is configured using a script TBD for the output variables that are model
   </Outputs>
 </ModelStructure>
 ```
-remember to add the outputs before the configuration variables.
+Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
-Note that the value reference `103`is reserved for output `seqno`, and has to be present, that refers to the sequence number of the message.  
+Note that the value reference `103`is reserved for output `seqno`, that refers to the sequence number of the message, and has to be present.  
 
 * adding all model inputs as:
 ```xml
