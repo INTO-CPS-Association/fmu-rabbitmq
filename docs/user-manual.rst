@@ -72,7 +72,7 @@ ValueReference 2 - username
 ValueReference 3 - Password
     Defines the password for the RabbitMQ Server
 
-ValueReference 4 - Routing Key - content data
+ValueReference 4 - Routing Key PREFIX
     Defines the Routing Key for the content data messages
 
 ValueReference 5 - Communication Timeout
@@ -91,7 +91,7 @@ ValueReference 8 - Look Ahead
     The maximum number of queue messages that should be considered on each processing.
     Does not cause blocking behaviour if less messages are available.
     
-ValueReference 9 - Exchange name
+ValueReference 9 - Exchange name PREFIX
     Defines the exchange name.
     
 ValueReference 10 - Exchange type
