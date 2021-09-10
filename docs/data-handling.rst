@@ -136,16 +136,16 @@ Flow of DoStep Operation
     FMUI -> FMUC: Publish system health data | (CSHD)
     FMUI -> FMUC: process(simulationTime)
     FMUI -> FMUI: StartTime = Time Now
-        loop TimeNow - StartTime < communicationTimeOut
-            alt There is a message
-                server --> FMUI: msg = message; return True
-                alt There is system health data
-                   FMUI -> FMUI: Calculate time discrepancy
-                end
-                FMUI -> FMUC: processResult = Process() // Described above
-                alt processResult == True
-                    FMUI -> Master: True
-                end
+    loop TimeNow - StartTime < communicationTimeOut
+        alt There is a message
+            server --> FMUI: msg = message; return True
+            alt There is system health data
+               FMUI -> FMUI: Calculate time discrepancy
+            end
+            FMUI -> FMUC: processResult = Process() // Described above
+            alt processResult == True
+                FMUI -> Master: True
             end
         end
+    end
     FMUI -> Master: False
