@@ -90,6 +90,16 @@ ValueReference 7 - Max Age
 ValueReference 8 - Look Ahead
     The maximum number of queue messages that should be considered on each processing.
     Does not cause blocking behaviour if less messages are available.
+    
+ValueReference 9 - Exchange name
+    Defines the exchange name.
+    
+ValueReference 10 - Exchange type
+    Defines the exchange type.
+    
+The parameter with value reference 9 is used as aa base to configure two different exchange names, for the content data connection, and health data connection.
+As such, the name of the exchange for the content data connection is: :code:`${exchange base}+"_cd"`. Whereas, for the health data connection, the exchange name 
+is: :code:`${exchange base}+"_sh"`.
 
 The parameter with value reference 4 is used as a base to configure two different connections to the rabbitMQ server, with two channels each. 
 Based on the ``routingKey`` the fmu configures the name of the channels as follows:
@@ -101,6 +111,10 @@ to the rabbitMQ should be published to these topics.
 **NOTE: If no system health data is published to RMQFMU then the operation of the fmu will continue normally, however no information regarding system health will be outputted from RMQFMU.**
 
 A mapping of message data to FMU output is carried out via the name property of a :code:`ScalarVariable`. For example: :code:`<ScalarVariable name="level" valueReference="20" variability="continuous" causality="output"><Real /></ScalarVariable>` maps the value of the key :code:`level` within a message to the output with :code:`valueReference 20`.
+
+Note that, an output with name `seqno`, with a specific value reference of 103, is required in the model description file, and can be added as follows:
+:code:`<ScalarVariable name="seqno" valueReference="103" variability="discrete" causality="output"><Integer /></ScalarVariable>`.
+This represented the sequence number of a message, and is used to differentiate between two or more messages in the RMQFMU. The field `seqno` has to be included in the message sent to the RMQFMU.
 
 Remember, when adding an additional output this also has to be added to outputs in modelstructure. Note, that it uses index and not valuereference! Index is related to the order of the respective scalarvariable. I.e. the topmost scalar variable within ``ModelVariables`` has index 1. Example of adding two indices to ``ModelStructure/Outputs``:
 
