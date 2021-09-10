@@ -144,9 +144,9 @@ jobs:
           echo $(pwd) 
           cmake --install build/$target
           echo About to run unit-test-rabbitmq
-          ctest --output-on-failure --test-dir build/$target -R unit-test-rabbitmq
+          start %1./build/$target/rabbitmq-fmu/unit-test-rabbitmq.exe
           echo About to run unit-test-rabbitmq-core
-          ctest --output-on-failure --test-dir build/$target -R unit-test-rabbitmq-core
+          start %1./build/$target/rabbitmq-fmu-core/unit-test-rabbitmq-core.exe
 
         
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
