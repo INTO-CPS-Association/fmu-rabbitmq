@@ -173,7 +173,7 @@ python3 consume.py
 ```
 playback_gazebo_data.py --> feeds robot data (content data) to the rabbitMQ
 ```bash
-python3 playback_gazebo_data.py
+python3 playback_gazebo_data-test.py
 ```
 consume-systemHealthData.py --> gets the system health data from the rabbitMQ FMU. Everytime it gets new data, it replies with the current time on the external system.
 ```bash
@@ -181,8 +181,9 @@ python3 consume-systemHealthData.py
 ```
 Finally, on a fourth terminal run:
 ```bash
-./build/darwin-x64/rabbitmq-fmu/rabbitmq-main
+./build/darwin-x64/rabbitmq-fmu/it-test-rabbitmq
 ```
+The ```modelDescription.xml```used by this test is located under ```rabbitmq-fmu/xmls-for-tests```.
 
 Should the consume-systemHealthData.py crash and stop sending data to the rabbitmq fmu, simply restart the script.
 # Local development
