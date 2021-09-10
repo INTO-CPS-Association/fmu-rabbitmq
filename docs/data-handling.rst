@@ -51,14 +51,9 @@ Flow of EnterInitializationMode
     FMUI -> FMUI: initializeCoreState()
     FMUI -> FMUI: set StartTime = Time Now
         loop TimeNow - StartTime < communicationTimeOut
-            FMUI -> server: ConsumeSingleMessage(&msg) | (CCD)
             alt There is a message
-                server --> FMUI: msg = message; return True
-                FMUI -> FMUC: AddToIncomingUnprocessed(msg)
                 FMUI -> FMUC: initializeResult = Initialize()
                 group initialize function
-                    FMUC -> FMUC: processIncoming()
-                    FMUC -> FMUC: processLookahead()
                     FMUC -> FMUC: startOffsetTime = calculateStartTime()
                     FMUC -> FMUC: initializeResult = check(0)
                     FMUC --> FMUI: initializeResult
@@ -71,7 +66,33 @@ Flow of EnterInitializationMode
             end
         end
 
-DoStep
+Flow of thread consuming from the RabbitMQ server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. uml::
+
+    title EnterInitializationMode
+    hide footbox
+
+    boundary "Co-simulation Master" as Master
+    participant RabbitMQFMUInterface as FMUI
+    participant RabbitMQFMUCore as FMUC
+    database "RabbitMQ Server" as server
+
+    loop Until Simulation End
+        FMUI -> server: ConsumeSingleMessage(&msg) | (CCD)
+        alt There is a message
+            server --> FMUI: msg = message; return True
+            FMUI -> FMUC: AddToIncomingUnprocessed(msg)
+            group initialize function
+                FMUC -> FMUC: processIncoming()
+                FMUC -> FMUC: processLookahead()
+            end
+        else There are no messages
+            server --> FMUI: False
+        end
+    end
+
+Flow of the DoStep
 -------
 This section describes the doStep operation of RabbitMQ FMU.
 
@@ -109,36 +130,23 @@ Flow of DoStep Operation
 
     Master -> FMUI: doStep(currentCommunicationTime, communicationStepSize)
     FMUI -> FMUI: simulationTime = applyPrecision(\ncurrentCommunicationTime+communicationStepSize)
+    alt There is change of inputs
+        FMUI -> FMUC: Package json message
+        FMUI -> server: Send message with changed inputs
+    end
     FMUI -> FMUC: Publish system health data | (CSHD)
     FMUI -> FMUC: process(simulationTime)
-    group process function
-        FMUC -> FMUC: check()
-        FMUC -> FMUC: ProcessIncoming()
-        FMUC -> FMUC: ProcessLookahead()
-        FMUC -> FMUC: processResult = check()
-        FMUC --> FMUI: processResult
-    end
     FMUI -> FMUI: StartTime = Time Now
         loop TimeNow - StartTime < communicationTimeOut
-            FMUI -> server: ConsumeSingleMessage(&msg)
             alt There is a message
                 server --> FMUI: msg = message; return True
-                FMUI -> FMUC: AddToIncomingUnprocessed(msg)
-                alt There is change of inputs
-                    FMUI -> FMUC: Package json message
-                    FMUI -> server: Send message with changed inputs
-                end
-                FMUI -> server: consumeSingleMessage(&msgSH)
                 alt There is system health data
-                   server --> FMUI: msgSH = messageSH; return True
                    FMUI -> FMUI: Calculate time discrepancy
                 end
                 FMUI -> FMUC: processResult = Process() // Described above
                 alt processResult == True
                     FMUI -> Master: True
                 end
-            else There are no messages
-                server --> FMUI: False
             end
         end
     FMUI -> Master: False
