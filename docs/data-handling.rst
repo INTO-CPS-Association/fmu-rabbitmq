@@ -149,10 +149,10 @@ Flow of DoStep Operation
             end
             alt processResult == True
                 FMUI -> Master: True
-            else
+            else processResult != True
                 FMUI -> Master: False
             end
-        else
+        else No message
             FMUI -> Master: False
         end
     end
