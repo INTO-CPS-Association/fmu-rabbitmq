@@ -139,10 +139,13 @@ Flow of DoStep Operation
             alt There is system health data
                FMUI -> FMUI: Calculate time discrepancy
             end
+            
+            FMUI -> FMUC: processResult = process()
             group process function
                  FMUC -> FMUC: processIncoming()
                  FMUC -> FMUC: processLookahead()
-                 FMUC -> FMUI: processResult = check()
+                 FMUC -> FMUC: check()
+                 FMUC -> FMUI: processResult
             end
             alt processResult == True
                 FMUI -> Master: True
