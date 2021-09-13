@@ -77,14 +77,12 @@ Flow of thread consuming from the RabbitMQ server
     participant RabbitMQFMUCore as FMUC
     database "RabbitMQ Server" as server
 
-    loop Until Simulation End
+    loop Until Consumer Thread is Stopped
         FMUI -> server: ConsumeSingleMessage(&msg) | (CCD)
         alt There is a message
-            server --> FMUI: msg = message; return True
-            FMUI -> FMUC: AddToIncomingUnprocessed(msg)
-            group initialize function
-                FMUC -> FMUC: processIncoming()
-                FMUC -> FMUC: processLookahead()
+            server --> FMUI: msg = parse(message)
+            alt Parse success
+                FMUI -> FMUC: AddToIncomingUnprocessed(msg)
             end
         else There are no messages
             server --> FMUI: False
@@ -100,7 +98,7 @@ This section describes the doStep operation of RabbitMQ FMU.
 Functions
 ^^^^^^^^^^
 
-Some functions are are described in this section that  are used in the diagram in the subsequent section.
+Some functions are described in this section that are used in the diagram in the subsequent section.
 
 
 RabbitMQFMUCore.check
@@ -138,11 +136,14 @@ Flow of DoStep Operation
     FMUI -> FMUI: StartTime = Time Now
     loop TimeNow - StartTime < communicationTimeOut
         alt There is a message
-            server --> FMUI: msg = message; return True
             alt There is system health data
                FMUI -> FMUI: Calculate time discrepancy
             end
-            FMUI -> FMUC: processResult = Process() // Described above
+            group process function
+                 FMUC -> FMUC: processIncoming()
+                 FMUC -> FMUC: processLookahead()
+                 FMUC -> FMUI: processResult = check()
+            end
             alt processResult == True
                 FMUI -> Master: True
             end
