@@ -152,6 +152,7 @@ Flow of DoStep Operation
             else
                 FMUI -> Master: False
             end
+        else
+            FMUI -> Master: False
         end
     end
-    FMUI -> Master: False
