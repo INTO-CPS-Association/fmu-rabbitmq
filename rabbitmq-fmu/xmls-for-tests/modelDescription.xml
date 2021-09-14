@@ -22,7 +22,7 @@
             <Real />
         </ScalarVariable>   
             
-        <ScalarVariable name="seqno" valueReference="12" variability="discrete" causality="output">
+        <ScalarVariable name="seqno" valueReference="14" variability="discrete" causality="output">
             <Integer/>
         </ScalarVariable>
 
@@ -42,7 +42,7 @@
 
 
         <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter" initial="exact">
-            <String start="linefollower"/>
+            <String start="linefollower.data.to_cosim"/>
         </ScalarVariable>
 
         <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
@@ -58,10 +58,19 @@
             <Integer start="1"/>
         </ScalarVariable>
         <ScalarVariable name="config.exchangename" valueReference="9" variability="fixed" causality="parameter" initial="exact">
-            <String start="fmi_digital_twin"/>
+            <String start="fmi_digital_twin_cd"/>
         </ScalarVariable>
         <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
             <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangename" valueReference="11" variability="fixed" causality="parameter" initial="exact">
+            <String start="fmi_digital_twin_sh"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangetype" valueReference="12" variability="fixed" causality="parameter" initial="exact">
+            <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower.data.from_cosim"/>
         </ScalarVariable>
 
 

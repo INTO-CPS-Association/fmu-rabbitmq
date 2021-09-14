@@ -10,7 +10,7 @@ The FMU is configured using a script TBD for the output variables that are model
 * adding all model outputs as:
 ```xml
 <ModelVariables>
-  <ScalarVariable name="seqno" valueReference="12" variability="continuous" causality="output">
+  <ScalarVariable name="seqno" valueReference="14" variability="continuous" causality="output">
     <Integer />
   </ScalarVariable> 
   <ScalarVariable name="level" valueReference="20" variability="continuous" causality="output">
@@ -39,7 +39,7 @@ The FMU is configured using a script TBD for the output variables that are model
 ```
 Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
-Note that the value reference `12`is reserved for output `seqno`, that refers to the sequence number of the message, and has to be present.  This output can be removed if not needed.
+Note that the value reference `14`is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
 
 * adding all model inputs as:
 ```xml
@@ -76,7 +76,7 @@ It can be configured by setting the following parameters:
     <String start="guest"/>
 </ScalarVariable>
 <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter">
-    <String start="linefollower"/>
+    <String start="linefollower.data.from_cosim"/>
 </ScalarVariable>
 <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
     <Integer start="60"/>
@@ -91,24 +91,26 @@ It can be configured by setting the following parameters:
     <Integer start="1"/>
 </ScalarVariable> 
 <ScalarVariable name="config.exchangename" valueReference="9" variability="fixed" causality="parameter" initial="exact">
-    <String start="fmi_digital_twin"/>
+    <String start="fmi_digital_twin_cd"/>
 </ScalarVariable>
 <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
     <String start="direct"/>
 </ScalarVariable>
+<ScalarVariable name="config.healthdata.exchangename" valueReference="11" variability="fixed" causality="parameter" initial="exact">
+    <String start="fmi_digital_twin_sh"/>
+</ScalarVariable>
+<ScalarVariable name="config.healthdata.exchangetype" valueReference="12" variability="fixed" causality="parameter" initial="exact">
+    <String start="direct"/>
+</ScalarVariable>
+<ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
+    <String start="linefollower.data.from_cosim"/>
+</ScalarVariable>
 ```
 
-In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variable with value reference=4 serves as a base for the configuration of the connections for both content and system health data. 
+In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
 
-The fmu configures the name of the exchanges as follows:
-For content data, the name of the exchange results in: config.exchangename+"\_cd", whereas for
-health data, the name of the exchange results in: config.exchangename+"\_sh"
-
-The fmu configures the name of the channels as follows: 
-config.routingkey+".{data|system_health}."+"from_cosim" for publishing, which would result in "linefollower.data.from_cosim" and "linefollower.system_health.from_cosim" given the values in the above example. Data sent from the
-rabbitMQ can be consumed from these topics.
-config.routingkey+".{data|system_health}."+"to_cosim" for consuming, which would result in "linefollower.data.to_cosim" and "linefollower.system_health.to_cosim" given the values in the above example. Data to be sent
-to the rabbitMQ should be published to these topics.
+The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `linefollower.data.from_cosim`.
+The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `linefollower.data.from_cosim`.
 
 ## Dockerized RabbitMq
 To launch a Rabbitmq server the following can be used:

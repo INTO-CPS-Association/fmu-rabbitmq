@@ -182,7 +182,7 @@ void FmuContainer::healthThreadFunc(void) {
                 lock.unlock();
             }
             else{
-                FmuContainer_LOG(fmi2OK, "logAll", "Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+                FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
             }
         }
     }
@@ -199,7 +199,10 @@ bool FmuContainer::initialize() {
                           std::make_pair(RABBITMQ_FMU_PWD, "password"),
                           std::make_pair(RABBITMQ_FMU_ROUTING_KEY, "routing key"),
                           std::make_pair(RABBITMQ_FMU_EXCHANGE_NAME, "exchangename"),
-                          std::make_pair(RABBITMQ_FMU_EXCHANGE_TYPE, "exchangetype")};
+                          std::make_pair(RABBITMQ_FMU_EXCHANGE_TYPE, "exchangetype"),
+                          std::make_pair(RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM, "routing key from cosim"),
+                          std::make_pair(RABBITMQ_FMU_SH_EXCHANGE_NAME, "exchangename_system_health"),
+                          std::make_pair(RABBITMQ_FMU_SH_EXCHANGE_TYPE, "exchangetype_system_health")};
 
 
     auto allParametersPresent = true;
@@ -261,8 +264,11 @@ bool FmuContainer::initialize() {
     auto username = stringMap[RABBITMQ_FMU_USER];
     auto password = stringMap[RABBITMQ_FMU_PWD];
     auto routingKey = stringMap[RABBITMQ_FMU_ROUTING_KEY];
+    auto routingKeyFromCosim = stringMap[RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM];
     auto exchangeName = stringMap[RABBITMQ_FMU_EXCHANGE_NAME];
     auto exchangeType = stringMap[RABBITMQ_FMU_EXCHANGE_TYPE];
+    auto exchangeNameSH = stringMap[RABBITMQ_FMU_SH_EXCHANGE_NAME];
+    auto exchangeTypeSH = stringMap[RABBITMQ_FMU_SH_EXCHANGE_TYPE];
 
     auto port = this->currentData.integerValues[RABBITMQ_FMU_PORT];
     this->communicationTimeout = this->currentData.integerValues[RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT];
@@ -285,7 +291,7 @@ bool FmuContainer::initialize() {
     /////////////////////////////////////////////////////////////////////////////////////
     //create a separate connection that deals with publishing to the rabbitmq server/////
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey);//this routing key does not affect what is defined below.
+                                                       routingKey, routingKeyFromCosim);//this routing key does not affect what is defined below.
     FmuContainer_LOG(fmi2OK, "logAll",
                      "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
@@ -295,15 +301,15 @@ bool FmuContainer::initialize() {
                              hostname.c_str(), port);
             return false;
         }
-        this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first, this->rabbitMqHandler->rbmqExchangetype.first); //Channel where to publish data
+        this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange, this->rabbitMqHandler->rbmqExchangetype); //Channel where to publish data
 
-        this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->rbmqExchange.first, this->rabbitMqHandler->rbmqExchangetype.first); //Channel where to consume data
+        this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->rbmqExchange, this->rabbitMqHandler->rbmqExchangetype); //Channel where to consume data
 
         FmuContainer_LOG(fmi2OK, "logAll",
                              "Routing key data: %s for pub and %s for sub",
-                             this->rabbitMqHandler->routingKeyCD.c_str(), this->rabbitMqHandler->bindingKeyCD.c_str());
+                             this->rabbitMqHandler->routingKey.c_str(), this->rabbitMqHandler->bindingKey.c_str());
         //We bind only the queue from which we want to get the data.
-        this->rabbitMqHandler->bind(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->bindingKeyCD, this->rabbitMqHandler->rbmqExchange.first);
+        this->rabbitMqHandler->bind(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->bindingKey, this->rabbitMqHandler->rbmqExchange);
 
 
     } catch (RabbitMqHandlerException &ex) {
@@ -315,16 +321,16 @@ bool FmuContainer::initialize() {
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Sending RabbitMQ ready message%s", "");
 
-    this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKeyCD,
-                                   R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first);
+    this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey,
+                                   R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
     ////////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////////////////
     //create a separate connection that deals with publishing and consuming system health data, using a channel for eavh/////
-    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password,  exchangeName,  exchangeType,
-                                                       routingKey);
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password,  exchangeNameSH,  exchangeTypeSH,
+                                                       routingKey, routingKeyFromCosim);
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Another rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
@@ -336,16 +342,16 @@ bool FmuContainer::initialize() {
         }
         FmuContainer_LOG(fmi2OK, "logAll",
                              "Routing key data: %s for pub and %s for sub",
-                             this->rabbitMqHandlerSystemHealth->routingKeySH.c_str(), this->rabbitMqHandlerSystemHealth->bindingKeySH.c_str());
+                             this->rabbitMqHandlerSystemHealth->routingKey.c_str(), this->rabbitMqHandlerSystemHealth->bindingKey.c_str());
         //Create channel for handling the publishing
         this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelPub); //Channel where to publish system health data
         //Declare exchange
-        this->rabbitMqHandlerSystemHealth->declareExchange(this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange.second, this->rabbitMqHandlerSystemHealth->rbmqExchangetype.second);
+        this->rabbitMqHandlerSystemHealth->declareExchange(this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange, this->rabbitMqHandlerSystemHealth->rbmqExchangetype);
 
         //Create channel for handling the consuming
         this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelSub); //Channel where to consume system health data 
         //we bind only the consume queue
-        this->rabbitMqHandlerSystemHealth->bind(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->bindingKeySH, this->rabbitMqHandlerSystemHealth->rbmqExchange.second);
+        this->rabbitMqHandlerSystemHealth->bind(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->bindingKey, this->rabbitMqHandlerSystemHealth->rbmqExchange);
 
 
     } catch (RabbitMqHandlerException &ex) {
@@ -421,8 +427,9 @@ bool FmuContainer::initialize() {
 
 RabbitmqHandler *FmuContainer::createCommunicationHandler(const string &hostname, int port, const string &username,
                                                           const string &password, const string &exchange,const string &exchangetype,
-                                                          const string &queueBindingKey) {
-    return new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey);
+                                                          const string &queueBindingKey,
+                                                          const string &queueBindingKey_from_cosim) {
+    return new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey, queueBindingKey_from_cosim);
 }
 
 
@@ -536,13 +543,13 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     //if anything to send, publish to rabbitmq
     if(!message.empty()){
         message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
-        this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKeyCD, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange.first);
+        this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
         FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
     }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
-    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKeySH, cosim_time, 
-                                        this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange.second);
+    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, cosim_time, 
+                                        this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
 
@@ -659,7 +666,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
                 }
             } else {
-                FmuContainer_LOG(fmi2OK, "logAll", "Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+                FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
             }
 
             LOG_TIME(4);

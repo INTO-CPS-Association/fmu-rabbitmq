@@ -36,7 +36,8 @@ void RabbitmqHandler::throw_on_error(int x, char const *context) {
 RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string &username, const string &password,
                                  const string &exchange,
                                  const string &exchangetype,
-                                 const string &queueBindingKey) {
+                                 const string &queueBindingKey, 
+                                 const string &queueBindingKey_from_cosim) {
     this->hostname = hostname;
     this->port = port;
     this->username = username;
@@ -53,27 +54,13 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
     this->channelPub = 1;
     this->channelSub = 2;
 
-    this->rbmqExchange.first = exchange;
-    this->rbmqExchange.first.append("_cd");
-    this->rbmqExchangetype.first = exchangetype;
-
-    this->rbmqExchange.second = exchange;
-    this->rbmqExchange.second.append("_sh");
-    this->rbmqExchangetype.second = exchangetype;
+    this->rbmqExchange = exchange;
+    this->rbmqExchangetype = exchangetype;
 
     //for publishing
-    this->routingKeyCD = queueBindingKey;
-    this->routingKeyCD.append(".data.from_cosim");
+    this->routingKey = queueBindingKey_from_cosim;
     //for consuming
-    this->bindingKeyCD = queueBindingKey;
-    this->bindingKeyCD.append(".data.to_cosim");
-
-    //for publishing
-    this->routingKeySH = queueBindingKey;
-    this->routingKeySH.append(".system_health.from_cosim");
-    //for consuming
-    this->bindingKeySH = queueBindingKey;
-    this->bindingKeySH.append(".system_health.to_cosim");
+    this->bindingKey = queueBindingKey;
 
     this->timeout.tv_sec = 1;
     this->timeout.tv_usec = 0;

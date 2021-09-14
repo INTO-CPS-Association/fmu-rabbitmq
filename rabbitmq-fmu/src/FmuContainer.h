@@ -32,7 +32,10 @@
 #define RABBITMQ_FMU_LOOKAHEAD 8
 #define RABBITMQ_FMU_EXCHANGE_NAME 9
 #define RABBITMQ_FMU_EXCHANGE_TYPE 10
-#define RABBITMQ_FMU_SEQNO_OUTPUT 12
+#define RABBITMQ_FMU_SH_EXCHANGE_NAME 11
+#define RABBITMQ_FMU_SH_EXCHANGE_TYPE 12
+#define RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM 13
+#define RABBITMQ_FMU_SEQNO_OUTPUT 14
 
 
 using namespace std;
@@ -111,7 +114,8 @@ private:
 
     void addToCore(DataPoint result);
 
-    virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &exchangetype,const string &queueBindingKey);
+    virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,
+    const string &exchange,const string &exchangetype,const string &queueBindingKey, const string &queueBindingKey_from_cosim);
 
     const bool loggingOn;
 

@@ -9,7 +9,8 @@ namespace {
     TEST(RabbitMq, basicSendRecieve
     ) {
         auto key = "basicSendReceive";
-        RabbitmqHandler handler("localhost", 5672, "guest", "guest", "testing_exchange", "direct", key);
+        auto key_from_cosim = "basic";
+        RabbitmqHandler handler("localhost", 5672, "guest", "guest", "testing_exchange", "direct", key, key_from_cosim);
 
         ASSERT_TRUE(handler.open());
         cout << "connected" <<endl;

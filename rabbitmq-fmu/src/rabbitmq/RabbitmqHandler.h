@@ -31,7 +31,8 @@ using namespace std;
 class RabbitmqHandler {
 
 public :
-    RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &exchangetype,const string &queueBindingKey);
+    RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &exchangetype,
+    const string &queueBindingKey, const string &queueBindingKey_from_cosim);
 
     ~RabbitmqHandler();
 
@@ -59,12 +60,12 @@ public :
     void declareExchange(amqp_channel_t channelID, string exchange, string exchangetype);
     void bindExchange(amqp_channel_t channelID, string exchange, string exchangetype); 
 
-    string routingKeyCD, routingKeySH;
-    string bindingKeyCD, bindingKeySH;
+    string routingKey;
+    string bindingKey;
 
     amqp_channel_t channelPub, channelSub;
-    pair<string,string> rbmqExchange; // connection cd on first, sh on second
-    pair<string,string> rbmqExchangetype; // connection cd on first, sh on second
+    string rbmqExchange; 
+    string rbmqExchangetype; 
 
 private:
 
