@@ -10,6 +10,9 @@ The FMU is configured using a script TBD for the output variables that are model
 * adding all model outputs as:
 ```xml
 <ModelVariables>
+  <ScalarVariable name="seqno" valueReference="103" variability="continuous" causality="output">
+    <Integer />
+  </ScalarVariable> 
   <ScalarVariable name="level" valueReference="20" variability="continuous" causality="output">
     <Real />
   </ScalarVariable>  
@@ -30,11 +33,13 @@ The FMU is configured using a script TBD for the output variables that are model
     <Unknown index="2"/>
     <Unknown index="3"/>
     <Unknown index="4"/>
+    <Unknown index="5"/>
   </Outputs>
 </ModelStructure>
 ```
-remember to add the outputs before the configuration variables.
+Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
+Note that the value reference `103`is reserved for output `seqno`, that refers to the sequence number of the message, and has to be present.  
 
 * adding all model inputs as:
 ```xml
@@ -85,14 +90,24 @@ It can be configured by setting the following parameters:
 <ScalarVariable name="config.lookahead" valueReference="8" variability="fixed" causality="parameter" description="The number of queue messages that should be considered on each processing. Value must be greater than 0" initial="exact">
     <Integer start="1"/>
 </ScalarVariable> 
+<ScalarVariable name="config.exchangename" valueReference="9" variability="fixed" causality="parameter" initial="exact">
+    <String start="fmi_digital_twin"/>
+</ScalarVariable>
+<ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
+    <String start="direct"/>
+</ScalarVariable>
 ```
 
 In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variable with value reference=4 serves as a base for the configuration of the connections for both content and system health data. 
 
-The fmu configures the name of the channels as follows:
-${routing key base}+".{data|system_health}."+"from_cosim" for publishing, which would result in "linefollower.data.from_cosim" and "linefollower.system_health.from_cosim" given the values in the above example. Data sent from the
+The fmu configures the name of the exchanges as follows:
+For content data, the name of the exchange results in: config.exchangename+"\_cd", whereas for
+health data, the name of the exchange results in: config.exchangename+"\_sh"
+
+The fmu configures the name of the channels as follows: 
+config.routingkey+".{data|system_health}."+"from_cosim" for publishing, which would result in "linefollower.data.from_cosim" and "linefollower.system_health.from_cosim" given the values in the above example. Data sent from the
 rabbitMQ can be consumed from these topics.
-${routing key base}+".{data|system_health}."+"to_cosim" for consuming, which would result in "linefollower.data.to_cosim" and "linefollower.system_health.to_cosim" given the values in the above example. Data to be sent
+config.routingkey+".{data|system_health}."+"to_cosim" for consuming, which would result in "linefollower.data.to_cosim" and "linefollower.system_health.to_cosim" given the values in the above example. Data to be sent
 to the rabbitMQ should be published to these topics.
 
 ## Dockerized RabbitMq
@@ -116,7 +131,7 @@ A number of tools are required.
 
 Make sure that docker is installed and that the current user has sufficient permissions.
 
-Prepare dockcross helper scripts
+Prepare dockcross helper scripts, for building across the three platforms locally
 ```bash
 # darwin
 docker run --rm docker.sweng.au.dk/dockcross-darwin-x64-clang:latest > ./darwin-x64-dockcross
@@ -163,7 +178,7 @@ python3 consume.py
 ```
 playback_gazebo_data.py --> feeds robot data (content data) to the rabbitMQ
 ```bash
-python3 playback_gazebo_data.py
+python3 playback_gazebo_data-test.py
 ```
 consume-systemHealthData.py --> gets the system health data from the rabbitMQ FMU. Everytime it gets new data, it replies with the current time on the external system.
 ```bash
@@ -171,13 +186,17 @@ python3 consume-systemHealthData.py
 ```
 Finally, on a fourth terminal run:
 ```bash
-./build/darwin-x64/rabbitmq-fmu/rabbitmq-main
+./build/darwin-x64/rabbitmq-fmu/it-test-rabbitmq
 ```
+The ```modelDescription.xml```used by this test is located under ```rabbitmq-fmu/xmls-for-tests```.
 
 Should the consume-systemHealthData.py crash and stop sending data to the rabbitmq fmu, simply restart the script.
 # Local development
 
-1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory. Example: `./scripts/darwin64_build.sh`
+1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory. Example: `./scripts/darwin64_build.sh`, this will use docker. Alternatively, if on mac, simply run: 
+ ```bash
+  ./build_locally_darwin.sh 
+ ```
 2. Second run the following command matching the platform to the one just build:
 
 ```bash
@@ -191,4 +210,4 @@ cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build/external/darwin-x86_64`
 3. When it is decided that a release is due, do final fixes (if any) in development, and create a TAG.
 4. Finally to release it, switch to the master branch and merge with the TAG.
 
-Note that: the master branch always contains the latest release, whereas the development branch is always stable.  
+Note that: the master branch always contains the latest release, whereas the development branch is always stable. Github actions are triggered on push to master, and development.
