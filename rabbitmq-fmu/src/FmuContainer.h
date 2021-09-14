@@ -32,6 +32,8 @@
 #define RABBITMQ_FMU_LOOKAHEAD 8
 #define RABBITMQ_FMU_EXCHANGE_NAME 9
 #define RABBITMQ_FMU_EXCHANGE_TYPE 10
+#define RABBITMQ_FMU_SEQNO_OUTPUT 12
+
 
 using namespace std;
 
@@ -82,6 +84,8 @@ public:
 
 private:
 
+    bool seqnoPresent;
+    
     FmuContainerCore *core;
 
     date::sys_time<std::chrono::milliseconds> startOffsetTime;

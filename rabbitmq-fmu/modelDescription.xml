@@ -19,7 +19,7 @@
             <Real />
         </ScalarVariable>
         
-        <ScalarVariable name = "seqno"  valueReference = "103" variability = "discrete"  causality = "output">
+        <ScalarVariable name = "seqno"  valueReference = "12" variability = "discrete"  causality = "output">
             <Integer />
         </ScalarVariable>
 

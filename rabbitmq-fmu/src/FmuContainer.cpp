@@ -42,7 +42,7 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
           communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), 
           timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42), 
-          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43){
+          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43), seqnoPresent(false){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead")};
@@ -50,6 +50,18 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
 
     int maxAgeMs = 0;
     int lookaheadBound = 1;
+
+    //check if seqno output is present
+    if (this->currentData.integerValues.find(RABBITMQ_FMU_SEQNO_OUTPUT) != this->currentData.integerValues.end())
+    {
+        this->seqnoPresent = true;
+        FmuContainer_LOG(fmi2Warning, "logWarn",
+                             "The seqno output is present with vref '%d'.", RABBITMQ_FMU_SEQNO_OUTPUT);
+    }
+    else{
+        FmuContainer_LOG(fmi2Warning, "logWarn",
+                             "The seqno output is NOT present with. %s", "");
+    }
 
 #ifdef USE_RBMQ_FMU_THREAD
     consumerThreadStop = false;
@@ -659,7 +671,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     this->core->setTimeDiscrepancyOutput(validHealthData, abs(simulationTime-simTime_d), this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
                 } 
                 FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
-                FmuContainer_LOG(fmi2OK, "logAll", "Current data point seqno %d, %ld", this->core->getSeqNO(103), std::chrono::high_resolution_clock::now());
+                if(this->seqnoPresent)
+                {                
+                    FmuContainer_LOG(fmi2OK, "logAll", "Current data point seqno %d, time %ld", this->core->getSeqNO(RABBITMQ_FMU_SEQNO_OUTPUT), std::chrono::high_resolution_clock::now());
+                }
 
                 LOG_TIME(5);
                 LOG_TIME_PRINT;

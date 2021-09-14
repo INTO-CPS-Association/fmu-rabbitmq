@@ -20,8 +20,9 @@
         </ScalarVariable>        
         <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
-        </ScalarVariable>        
-        <ScalarVariable name="seqno" valueReference="103" variability="discrete" causality="output">
+        </ScalarVariable>   
+            
+        <ScalarVariable name="seqno" valueReference="12" variability="discrete" causality="output">
             <Integer/>
         </ScalarVariable>
 
@@ -69,6 +70,7 @@
         <Outputs>
             <Unknown index="1"/>
             <Unknown index="2"/>
+            <Unknown index="3"/>
         </Outputs>
     </ModelStructure>
 
