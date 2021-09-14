@@ -10,7 +10,7 @@ The FMU is configured using a script TBD for the output variables that are model
 * adding all model outputs as:
 ```xml
 <ModelVariables>
-  <ScalarVariable name="seqno" valueReference="103" variability="continuous" causality="output">
+  <ScalarVariable name="seqno" valueReference="12" variability="continuous" causality="output">
     <Integer />
   </ScalarVariable> 
   <ScalarVariable name="level" valueReference="20" variability="continuous" causality="output">
@@ -39,7 +39,7 @@ The FMU is configured using a script TBD for the output variables that are model
 ```
 Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
-Note that the value reference `103`is reserved for output `seqno`, that refers to the sequence number of the message, and has to be present.  
+Note that the value reference `12`is reserved for output `seqno`, that refers to the sequence number of the message, and has to be present.  This output can be removed if not needed.
 
 * adding all model inputs as:
 ```xml
