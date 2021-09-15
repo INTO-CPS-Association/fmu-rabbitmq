@@ -19,7 +19,7 @@
             <Real />
         </ScalarVariable>
         
-        <ScalarVariable name = "seqno"  valueReference = "12" variability = "discrete"  causality = "output">
+        <ScalarVariable name = "seqno"  valueReference = "14" variability = "discrete"  causality = "output">
             <Integer />
         </ScalarVariable>
 
@@ -58,6 +58,15 @@
         </ScalarVariable>
         <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
             <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangename" valueReference="11" variability="fixed" causality="parameter" initial="exact">
+            <String start="fmi_digital_twin_sh"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangetype" valueReference="12" variability="fixed" causality="parameter" initial="exact">
+            <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower.data.from_cosim"/>
         </ScalarVariable>
 
     </ModelVariables>
