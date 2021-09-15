@@ -72,8 +72,8 @@ ValueReference 2 - username
 ValueReference 3 - Password
     Defines the password for the RabbitMQ Server
 
-ValueReference 4 - Routing Key PREFIX
-    Defines the Routing Key for the content data messages
+ValueReference 4 - Routing Key 
+    Defines the Routing Key for the data sent to the rabbitmq fmu
 
 ValueReference 5 - Communication Timeout
     Defines when to time out if the desired state cannot be reached.
@@ -91,22 +91,25 @@ ValueReference 8 - Look Ahead
     The maximum number of queue messages that should be considered on each processing.
     Does not cause blocking behaviour if less messages are available.
     
-ValueReference 9 - Exchange name PREFIX
+ValueReference 9 - Exchange name 
     Defines the exchange name.
     
 ValueReference 10 - Exchange type
     Defines the exchange type.
     
-The parameter with value reference 9 is used as aa base to configure two different exchange names, for the content data connection, and health data connection.
-As such, the name of the exchange for the content data connection is: :code:`${exchange base}+"_cd"`. Whereas, for the health data connection, the exchange name 
-is: :code:`${exchange base}+"_sh"`.
+ValueReference 11 - Exchange name for health data
+    Defines the exchange name for the health data connection.
+    
+ValueReference 12 - Exchange type for health data
+    Defines the exchange type for the health data connection.
+    
+ValueReference 13 - Routing Key for data sent by the rabbitmq fmu
+    Defines the Routing Key for the data sent by the rabbitmq fmu
+    
+In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
 
-The parameter with value reference 4 is used as a base to configure two different connections to the rabbitMQ server, with two channels each. 
-Based on the ``routingKey`` the fmu configures the name of the channels as follows:
-:code:`${routing key base}+".{data|system_health}."+"from_cosim"` for publishing, which would result in ``linefollower.data.from_cosim`` and ``linefollower.system_health.from_cosim`` given the values in the above example. Data sent from the
-rabbitMQ can be consumed from these topics.
-:code:`${routing key base}+".{data|system_health}."+"to_cosim"` for consuming, which would result in ``linefollower.data.to_cosim`` and ``linefollower.system_health.to_cosim`` given the values in the above example. Data to be sent
-to the rabbitMQ should be published to these topics.
+The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
+The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 
 **NOTE: If no system health data is published to RMQFMU then the operation of the fmu will continue normally, however no information regarding system health will be outputted from RMQFMU.**
 
