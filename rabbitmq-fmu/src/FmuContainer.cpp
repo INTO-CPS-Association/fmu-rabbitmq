@@ -132,8 +132,7 @@ void FmuContainer::consumerThreadFunc(void) {
                 std::stringstream startTimeStamp;
                 startTimeStamp << result.time;
                 /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
-                /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
-                /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
+                 FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now()); 
 
                 std::unique_lock<std::mutex> lock(this->core->m);
                 for (auto &pair: result.integerValues) {
