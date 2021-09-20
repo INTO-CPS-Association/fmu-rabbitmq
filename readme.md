@@ -109,8 +109,8 @@ It can be configured by setting the following parameters:
 
 In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
 
-The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `linefollower.data.from_cosim`.
-The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `linefollower.data.from_cosim`.
+The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
+The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 
 ## Dockerized RabbitMq
 To launch a Rabbitmq server the following can be used:
