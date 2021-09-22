@@ -279,7 +279,7 @@ void RabbitmqHandler::declareExchange(amqp_channel_t channelID, string exchange,
 void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey,string exchange) {
 
     amqp_queue_declare_ok_t *r = amqp_queue_declare(
-            conn, channelID, amqp_empty_bytes, 0, 0, 0, 0, amqp_empty_table);
+            conn, channelID, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     amqp_bytes_t queue = amqp_bytes_malloc_dup(r->queue);
     //printf("QUEUENAME %s\n", std::string(reinterpret_cast< char const * >(queue.bytes), queue.len).c_str());
