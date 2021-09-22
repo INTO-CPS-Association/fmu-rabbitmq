@@ -198,7 +198,21 @@ jobs:
         with:
           name: modelDescription.xml
           path: rabbitmq-fmu/modelDescription.xml
-
+          
+      - name: Upload rabbitmq configuration script
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: rabbitmq_fmu_configure.py
+          path: scripts/rabbitmq_fmu_configure.py
+          
+      - name: Upload readme
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: readme.md
+          path: readme.md
+        
   pack-fmu:
     runs-on: ubuntu-latest
     needs: build
@@ -232,6 +246,18 @@ jobs:
         with:
           name: modelDescription.xml
           path: rabbitmq/resources
+
+      - name: Download readme
+        uses: actions/download-artifact@v2
+        with:
+          name: readme.md
+          path: rabbitmq/readme.md
+          
+      - name: Download configuration script
+        uses: actions/download-artifact@v2
+        with:
+          name: rabbitmq_fmu_configure.py
+          path: rabbitmq/rabbitmq_fmu_configure.py
 
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
