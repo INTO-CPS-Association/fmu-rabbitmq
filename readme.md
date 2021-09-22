@@ -6,7 +6,7 @@ Two types of data are considered, content data, and system health data.
 The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will send only the changed inputs to the entity outside the co-sim. 
 System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
 
-The FMU is configured using a script TBD for the output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
+The FMU is configured using a script `rabbitmq_fmu_configure.py` for the output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
 * adding all model outputs as:
 ```xml
 <ModelVariables>
@@ -57,6 +57,23 @@ Note that the value reference `14`is reserved for output `seqno`, that refers to
       <String start="hello rabbitmq" />
   </ScalarVariable>
 ```
+
+* configuring the inputs/outputs through the script `rabbitmq_fmu_configure.py`:
+To add outputs, with default type equal to Real and variability continuous:
+```bash
+$ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 
+```
+To add outputs and specify type and variability:
+```bash
+$ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 -outputTypes Real Boolean  -outputVar continuous discrete discrete
+```
+Note that the length of the lists: output, output types and output variabilities must be the same.
+Similarly for inputs. A complete command looks like:
+```bash
+$ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 -outputTypes Real Boolean  -outputVar continuous discrete discrete -input in1 in2 -inputTypes Real String -inputVar continuous discrete 
+```
+
+Note that the script doesn't check for the validity of the modelDescription file, use the vdmCheck scripts for that purpose.
 
 * add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
