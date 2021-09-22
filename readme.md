@@ -1,4 +1,4 @@
-# Rabbitmq FMU
+#### Rabbitmq FMU
 
 This project builds a FMU which uses a rabbitmq server to feed live or log data into a simulation, as well as send data to an external entity (e.g. Gazebo simulation).
 
@@ -6,8 +6,12 @@ Two types of data are considered, content data, and system health data.
 The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will send only the changed inputs to the entity outside the co-sim. 
 System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
 
-The FMU is configured using a script `rabbitmq_fmu_configure.py` for the output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
-* adding all model outputs as:
+#### Usage Notes
+
+## How to Setup
+
+The FMU is configured using a script `rabbitmq_fmu_configure.py` for the input/output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
+* adding all model outputs manually as:
 ```xml
 <ModelVariables>
   <ScalarVariable name="seqno" valueReference="14" variability="continuous" causality="output">
@@ -41,7 +45,7 @@ Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
 Note that the value reference `14`is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
 
-* adding all model inputs as:
+* adding all model inputs manually as:
 ```xml
 <ModelVariables>
   <ScalarVariable name="command_stop" valueReference="22" variability="discrete" causality="input">
@@ -59,6 +63,7 @@ Note that the value reference `14`is reserved for output `seqno`, that refers to
 ```
 
 * configuring the inputs/outputs through the script `rabbitmq_fmu_configure.py`:
+
 To add outputs, with default type equal to Real and variability continuous:
 ```bash
 $ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 
@@ -68,16 +73,17 @@ To add outputs and specify type and variability:
 $ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 -outputTypes Real Boolean  -outputVar continuous discrete discrete
 ```
 Note that the length of the lists: output, output types and output variabilities must be the same.
+
 Similarly for inputs. A complete command looks like:
 ```bash
 $ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 -outputTypes Real Boolean  -outputVar continuous discrete discrete -input in1 in2 -inputTypes Real String -inputVar continuous discrete 
 ```
 
-Note that the script doesn't check for the validity of the modelDescription file, use the vdmCheck scripts for that purpose.
+__NOTE that the script doesn't check for the validity of the modelDescription file, use the vdmCheck scripts for that purpose.
 
 * add the `modelDescription.xml` file to the zip at both the root and `resources` folder.
 
-It can be configured by setting the following parameters:
+The RabbitMQ FMU can be configured by setting the following parameters:
 
 ```xml
 <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter">
@@ -135,7 +141,8 @@ To launch a Rabbitmq server the following can be used:
 ```bash
 cd server
 docker-compose up -d
-```bash
+```
+
 This will launch it at localhost `5672` for TCP communication and http://localhost:15672 will serve the management interface. The default login is username: `guest` and password: `guest`
 
 
@@ -151,6 +158,7 @@ A number of tools are required.
 Make sure that docker is installed and that the current user has sufficient permissions.
 
 Prepare dockcross helper scripts, for building across the three platforms locally
+
 ```bash
 # darwin
 docker run --rm docker.sweng.au.dk/dockcross-darwin-x64-clang:latest > ./darwin-x64-dockcross
@@ -164,6 +172,7 @@ chmod +x ./linux-x64-dockcross
 docker run --rm dockcross/windows-static-x64:latest > ./win-x64-dockcross
 chmod +x ./win-x64-dockcross
 ```
+#### Development Notes
 
 ## Preparing dependencies
 To compile the dependencies first make sure that the checkout contains submodules:
