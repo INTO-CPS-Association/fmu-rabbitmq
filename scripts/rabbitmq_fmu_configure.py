@@ -1,7 +1,6 @@
 import zipfile
 import xml.etree.ElementTree as ET
 import re
-import sys
 import argparse
 
 """
@@ -11,7 +10,7 @@ Author: Kenneth Lausdahl
 """
 
 
-def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[], input_types=[], output_types=[], input_var=[], output_var=[]):
+def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[]):
     with zipfile.ZipFile(path, 'r') as archive:
         md = archive.open('modelDescription.xml')
 
@@ -35,48 +34,55 @@ def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[]
     for n in model_initunknowns.findall("*"):
         model_initunknowns.remove(n)
 
-    # keep track of index
     index = 0
     # generate new entries
-    for idx, name in enumerate(names):
+    for idx, (name,t,v) in enumerate(names):
         # model_variables_node.append()
         output = ET.SubElement(model_variables_node, 'ScalarVariable')
         output.attrib['name'] = name
         output.attrib['valueReference'] = str(idx + 100)
-        if output_var:
-            output.attrib['variability'] = output_var[idx]
-        else:
-            output.attrib['variability'] = 'continuous'
+        # next two is combination 8
+        output.attrib['variability'] = v  # from a real system
         output.attrib['causality'] = 'output'
-        if output_types:
-            ET.SubElement(output, output_types[idx])
-        else:
-            ET.SubElement(output, 'Real')
+        # The variable is calculated from other variables during initialization.
+        # It is not allowed to provide a “start” value
+        # This is of cause not completely true but is related to the server it is connected to
+        output.attrib['initial'] = 'calculated'
+        ET.SubElement(output, t)
         index = idx + 100
 
     # generate new input entries
     index = index + 1
-    if input_names:
-        for idx, name in enumerate(input_names):
-            # model_variables_node.append()
-            inputsv = ET.SubElement(model_variables_node, 'ScalarVariable')
-            inputsv.attrib['name'] = name
-            inputsv.attrib['valueReference'] = str(idx + index)
-            if input_var:
-                inputsv.attrib['variability'] = input_var[idx]
-            else:
-                inputsv.attrib['variability'] = 'continuous'
-            inputsv.attrib['causality'] = 'input'
-
-            if input_types:
-                ET.SubElement(inputsv, input_types[idx])
-            else:
-                ET.SubElement(inputsv, 'Real')
+    # generate  new input entries
+    for idx, (name,t,v) in enumerate(input_names):
+        # model_variables_node.append()
+        inputs = ET.SubElement(model_variables_node, 'ScalarVariable')
+        inputs.attrib['name'] = name
+        inputs.attrib['valueReference'] = str(index + idx)
+        # next two is combination 8
+        inputs.attrib['variability'] = v  # from a real system
+        inputs.attrib['causality'] = 'input'
+        # The variable is calculated from other variables during initialization.
+        # It is not allowed to provide a “start” value
+        # This is of cause not completely true but is related to the server it is connected to
+        #input.attrib['initial'] = 'calculated'
+        ET.SubElement(inputs, t)
 
     # updated the model structure with the new outputs
     for idx, item in enumerate(model_variables_node.findall("ScalarVariable")):
         if item.attrib['causality'] == 'output':
             ET.SubElement(model_outputs, 'Unknown').attrib['index'] = str(idx + 1)
+
+    # we also need to set the initial unknowns
+    model_initial_unknowns_list = tree.findall('ModelStructure/InitialUnknowns')
+    if len(model_initial_unknowns_list) > 0:
+        model_initial_unknowns = model_initial_unknowns_list[0]
+    else:
+        model_initial_unknowns = ET.SubElement(tree.findall('ModelStructure')[0], 'InitialUnknowns')
+
+    for idx, item in enumerate(model_variables_node.findall("ScalarVariable")):
+        if item.attrib['causality'] == 'output' and 'initial' in item.attrib and item.attrib['initial']:
+            ET.SubElement(model_initial_unknowns, 'Unknown').attrib['index'] = str(idx + 1)
 
     # set default exchange
     for n in model_variables_node.findall("ScalarVariable[@name='config.routingkey']/String"):
@@ -102,52 +108,38 @@ def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[]
                     outzip.writestr(inzipinfo.filename, infile.read())
 
 
-def main():
-    options = argparse.ArgumentParser(prog="rabbitmq_fmu_configure.py", epilog="""
+def parse_signals(signal: str):
+    print(signal)
+    if ('=' not in signal) and (',' not in signal):
+        raise 'Signal triple invalid: %s' % signal
 
-    python rabbitmq_fmu_configure.py -fmu rabbitmq.fmu -dest my-rabbitmq.fmu -output level valve -input command1 command2
+    name = signal[0:signal.index('=')]
+    t = signal[signal.index('=') + 1:signal.index(',')]
+    v = signal[signal.index(',') + 1:]
+    return (name, t, v)
+
+
+def main():
+    options = argparse.ArgumentParser(prog="rabbitfmu", epilog="""
+
+    python rabbitmq_fmu.py -fmu rabbitmq.fmu -dest my-rabbitmq.fmu -output level valve
 
     """)
     options.add_argument("-fmu", dest="fmu", type=str, required=True, help='Path to the FMU file')
     options.add_argument("-dest", dest="dest", type=str, required=True,
                          help='Path to the destination FMU file that fill be generated')
     options.add_argument("-output", dest="output", action="extend", nargs="+", type=str, required=True,
-                         help="A list of output names to be set in the FMU, generated with default variability=continuous and type=Real")
+                         help="A list of output name type pairs (name=type,variability) to be set in the FMU. " +
+                              "Valid types are: string, int, boolean, real")
+    
     options.add_argument("-input", dest="input", action="extend", nargs="+", type=str, required=False,
-                         help="A list of input names to be set in the FMU, optional, generated with default variability=continuous and type=Real")
-    options.add_argument("-inputTypes", dest="inputTypes", action="extend", nargs="+", type=str, required=False,
-                         help="A list of input types")
-    options.add_argument("-outputTypes", dest="outputTypes", action="extend", nargs="+", type=str, required=False,
-                         help="A list of output types")
-
-    options.add_argument("-inputVar", dest="inputVar", action="extend", nargs="+", type=str, required=False,
-                         help="A list of input variabilities")
-    options.add_argument("-outputVar", dest="outputVar", action="extend", nargs="+", type=str, required=False,
-                         help="A list of output variabilities")
-
+                         help="A list of input name type pairs (name=type,variability) to be set in the FMU. " +
+                              "Valid types are: String, Integer, Boolean, Real; variability: continuous, discrete")
     options.add_argument("-v", "--verbose", required=False, help='Verbose', dest='verbose', action="store_true")
 
     args = options.parse_args()
-    # if types and variabilities are given, assert that the length of those arrays same as the outputs/inputs
-    if args.outputTypes and not len(args.outputTypes)==len(args.output):
-        print("list of output types should have the same length as the list of outputs")
-        print("exiting")
-        sys.exit()
-    if args.inputTypes and not len(args.inputTypes)==len(args.input):
-        print("list of input types should have the same length as the list of inputs")
-        print("exiting")
-        sys.exit()
-    if args.outputVar and not len(args.outputVar)==len(args.output):
-        print("list of output variabilities should have the same length as the list of inputs")
-        print("exiting")
-        sys.exit()
-    if args.inputVar and not len(args.inputVar)==len(args.input):
-        print("list of input variabilities should have the same length as the list of inputs")
-        print("exiting")
-        sys.exit()
 
-    create_fmu_with_outputs(args.fmu, args.dest, args.output, verbose=args.verbose, input_names=args.input, 
-                input_types=args.inputTypes, output_types=args.outputTypes, input_var=args.inputVar, output_var=args.outputVar)
+    create_fmu_with_outputs(args.fmu, args.dest, [parse_signals(s) for s in args.output], verbose=args.verbose, input_names=[parse_signals(s) for s in args.input])
 
 
 if __name__ == '__main__':
