@@ -1,4 +1,4 @@
-#### Rabbitmq FMU
+# Rabbitmq FMU
 
 This project builds a FMU which uses a rabbitmq server to feed live or log data into a simulation, as well as send data to an external entity (e.g. Gazebo simulation).
 
@@ -6,9 +6,9 @@ Two types of data are considered, content data, and system health data.
 The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will send only the changed inputs to the entity outside the co-sim. 
 System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
 
-#### Usage Notes
+## Usage Notes
 
-## How to Setup
+### How to Setup
 
 The FMU is configured using a script `rabbitmq_fmu_configure.py` for the input/output variables that are model specific or manually by (Value References from 0-20 are reserved for development.):
 * adding all model outputs manually as:
@@ -135,7 +135,7 @@ In total the fmu creates two connections with which the rabbitmq communicates wi
 The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 
-## Dockerized RabbitMq
+### Dockerized RabbitMq
 To launch a Rabbitmq server the following can be used:
 
 ```bash
@@ -146,14 +146,16 @@ docker-compose up -d
 This will launch it at localhost `5672` for TCP communication and http://localhost:15672 will serve the management interface. The default login is username: `guest` and password: `guest`
 
 
-# Building the project
+## Development Notes
+
+### Building the project
 The project uses CMake and is intended to be build for multiple platforms; Mac, Linux and Windows.
 
-# Environment
+### Environment
 
 A number of tools are required.
 
-## Docker and dockcross
+#### Docker and dockcross
 
 Make sure that docker is installed and that the current user has sufficient permissions.
 
@@ -172,9 +174,8 @@ chmod +x ./linux-x64-dockcross
 docker run --rm dockcross/windows-static-x64:latest > ./win-x64-dockcross
 chmod +x ./win-x64-dockcross
 ```
-#### Development Notes
 
-## Preparing dependencies
+#### Preparing dependencies
 To compile the dependencies first make sure that the checkout contains submodules:
 
 ```bash
@@ -193,7 +194,7 @@ mkdir -p build
 ./<platform>-dockcross make -Cbuild/<platform> -j8
 ```
 
-## Tests
+#### Tests
 
 In order to test the functionality without hooking it up with an actual external simulator, three scripts are included in the server/ folder to be executed with rabbitmq-main
 (which can be found in the /build/<build-distribution>/rabbitmq-fmu/ folder, after building the project). The three scripts should be executed before running the fmu.
@@ -219,7 +220,7 @@ Finally, on a fourth terminal run:
 The ```modelDescription.xml```used by this test is located under ```rabbitmq-fmu/xmls-for-tests```.
 
 Should the consume-systemHealthData.py crash and stop sending data to the rabbitmq fmu, simply restart the script.
-# Local development
+### Local development
 
 1. First run the compliation script for your platform to get the external libraries compiled. This is located in the scripts directory. Example: `./scripts/darwin64_build.sh`, this will use docker. Alternatively, if on mac, simply run: 
  ```bash
@@ -231,7 +232,7 @@ Should the consume-systemHealthData.py crash and stop sending data to the rabbit
 cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build/external/darwin-x86_64`
 ```
 
-# Procedure for additions and release of new features
+#### Procedure for additions and release of new features
 
 1. Do a single feature development in a branch that is NOT development and NOT master.
 2. Once the feature is ready, merge it into the development branch.
