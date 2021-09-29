@@ -185,10 +185,11 @@ jobs:
           name: rabbitmq.dll
           path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
 
-      - name: update version on modelDescription.xml
+      - name: Update version on modelDescription.xml
         shell: bash
         if: matrix.os == 'ubuntu-latest'
         run: |
+          ls
           cd rabbitmq-fmu/
           ../scripts/set_fmu_version.sh modelDescription.xml
 
