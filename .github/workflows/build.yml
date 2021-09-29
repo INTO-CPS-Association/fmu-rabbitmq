@@ -189,7 +189,7 @@ jobs:
         shell: bash
         if: matrix.os == 'ubuntu-latest'
         run: |
-          ls
+          echo ${GITHUB_REF#refs/*/}
           cd rabbitmq-fmu/
           ../scripts/set_fmu_version.sh modelDescription.xml
 
