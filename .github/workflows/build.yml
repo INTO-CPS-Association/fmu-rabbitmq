@@ -170,13 +170,6 @@ jobs:
         with:
           name: rabbitmq.dylib
           path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
-          
-      - name: check 
-        shell: bash
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          echo $(pwd)
-          ls build/linux-x64/rabbitmq-fmu/
 
       - name: Upload artifact linux 
         if: matrix.os == 'ubuntu-latest'
@@ -191,6 +184,13 @@ jobs:
         with:
           name: rabbitmq.dll
           path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
+
+      - name: update version on modelDescription.xml
+        shell: bash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd rabbitmq-fmu/
+          ../scripts/set_fmu_version.sh modelDescription.xml
 
       - name: Upload modelDescription.xml
         if: matrix.os == 'ubuntu-latest'
@@ -251,13 +251,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: readme.md
-          path: rabbitmq/readme.md
+          path: rabbitmq/
           
       - name: Download configuration script
         uses: actions/download-artifact@v2
         with:
           name: rabbitmq_fmu_configure.py
-          path: rabbitmq/rabbitmq_fmu_configure.py
+          path: rabbitmq/
 
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
