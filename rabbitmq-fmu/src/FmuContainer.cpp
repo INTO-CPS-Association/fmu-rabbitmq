@@ -310,7 +310,7 @@ bool FmuContainer::initialize() {
     FmuContainer_LOG(fmi2OK, "logAll",
                      "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
-        if (!this->rabbitMqHandler->createConnection()) {
+        if (!this->rabbitMqHandler->createSSLConnection()) {
             FmuContainer_LOG(fmi2Fatal, "logAll",
                              "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
                              hostname.c_str(), port);
@@ -349,7 +349,7 @@ bool FmuContainer::initialize() {
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Another rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
     try {
-        if (!this->rabbitMqHandlerSystemHealth->createConnection()) {
+        if (!this->rabbitMqHandlerSystemHealth->createSSLConnection()) {
             FmuContainer_LOG(fmi2Fatal, "logAll",
                              "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
                              hostname.c_str(), port);

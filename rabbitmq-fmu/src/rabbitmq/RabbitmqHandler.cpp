@@ -232,6 +232,33 @@ bool RabbitmqHandler::consume(string &payload) {
 }
 
 
+bool RabbitmqHandler::createSSLConnection(){
+    if (this->connected) {
+        return this->connected;
+    }
+    conn = amqp_new_connection();
+
+    socket = amqp_ssl_socket_new(conn);
+    if (!socket) {
+        throw RabbitMqHandlerException("creating SSL/TLS socket");
+    }
+
+    amqp_ssl_socket_set_verify_peer(socket, 0);
+    amqp_ssl_socket_set_verify_hostname(socket, 0);
+
+    auto status = amqp_socket_open(this->socket, this->hostname.c_str(), this->port);
+    if (status) {
+        throw RabbitMqHandlerException("opening SSL/TLS connection");
+    }
+
+    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
+                                   this->username.c_str(), this->password.c_str()),
+                        "Logging in");
+
+    this->connected = true;
+    return this->connected;
+}
+
 //Below methods that detach the creation of connections, channels, and exchanges.
 bool RabbitmqHandler::createConnection(){
     if (this->connected) {

@@ -22,6 +22,8 @@ extern "C"
 
 #include <amqp_tcp_socket.h>
 #include <amqp_time.h>
+#include <amqp.h>
+#include <amqp_ssl_socket.h>
 }
 
 #include "RabbitMqHandlerException.h"
@@ -49,6 +51,7 @@ public :
 
 
     virtual bool createConnection();
+    virtual bool createSSLConnection();
     virtual bool createChannel(amqp_channel_t channelID, string exchange, string exchangetype);
     virtual void bind(amqp_channel_t channelID, const string &routingkey, amqp_bytes_t &queue, string exchange);
     virtual void bind(amqp_channel_t channelID, const string &routingkey, string exchange);

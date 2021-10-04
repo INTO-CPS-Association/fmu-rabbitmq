@@ -191,14 +191,14 @@ int main(int argc, char *argv[]) {
 
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
                                           RABBITMQ_FMU_PORT};
-            int intVals[] = {60, 10, 5672};
+            int intVals[] = {60, 10, 5671};
             fmi2SetInteger(c, vrefs, 3, intVals);
 
 
             fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
                                                 RABBITMQ_FMU_ROUTING_KEY};
-            const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"};
-            fmi2SetString(c, vrefsString, 4, stringVals);
+            /* const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"}; */
+            /* fmi2SetString(c, vrefsString, 4, stringVals); */
 
             //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
 

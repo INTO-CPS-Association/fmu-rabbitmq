@@ -390,16 +390,16 @@
         </ScalarVariable>
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
-            <String start="localhost"/>
+            <String start="b-14c95d1b-b988-4039-a4fe-b5c6744b8a97.mq.eu-north-1.amazonaws.com"/>
         </ScalarVariable>
         <ScalarVariable name="config.port" valueReference="1" variability="fixed" causality="parameter" initial="exact">
-            <Integer start="5672"/>
+            <Integer start="5671"/>
         </ScalarVariable>
         <ScalarVariable name="config.username" valueReference="2" variability="fixed" causality="parameter" initial="exact">
-            <String start="guest"/>
+            <String start="rbmq-fmu"/>
         </ScalarVariable>
         <ScalarVariable name="config.password" valueReference="3" variability="fixed" causality="parameter" initial="exact">
-            <String start="guest"/>
+            <String start="6ASUs62hyj2T"/>
         </ScalarVariable>
 
 
