@@ -37,6 +37,7 @@
 #define RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM 13
 #define RABBITMQ_FMU_SEQNO_OUTPUT 14
 #define RABBITMQ_FMU_ENABLE_SEND_INPUT 15
+#define RABBITMQ_FMU_USE_SSL 16
 
 using namespace std;
 
@@ -123,7 +124,8 @@ private:
     void addToCore(DataPoint result);
 
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,
-    const string &exchange,const string &exchangetype,const string &queueBindingKey, const string &queueBindingKey_from_cosim, const int type);
+    const string &exchange,const string &exchangetype,const string &queueBindingKey, const string &queueBindingKey_from_cosim, const int type,
+    const bool ssl);
 
     const bool loggingOn;
 

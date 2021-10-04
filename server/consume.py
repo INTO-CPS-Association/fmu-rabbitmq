@@ -3,8 +3,10 @@ import pika
 import json
 import datetime
 import time
+import ssl
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+
 channel = connection.channel()
 
 print("Declaring exchange")

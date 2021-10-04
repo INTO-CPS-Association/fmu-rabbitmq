@@ -17,10 +17,10 @@
 
         <ScalarVariable name="xpos" valueReference="20" variability="continuous" causality="output">
             <Real />
-        </ScalarVariable>        
+        </ScalarVariable>
         <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
-        </ScalarVariable>    
+        </ScalarVariable>
 
         <ScalarVariable name="seqno" valueReference="14" variability="discrete" causality="output">
             <Integer/>
@@ -77,6 +77,9 @@
         </ScalarVariable>
         <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
             <String start="linefollower.data.from_cosim"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.ssl" valueReference="16" variability="fixed" causality="parameter" initial="exact">
+            <Boolean start="0"/>
         </ScalarVariable>
 
 
