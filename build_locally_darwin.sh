@@ -45,9 +45,9 @@ echo $MY_INSTALL_DIR
 make -C$working_dir/rabbitmq-fmu install
 cd $current_dir
 
-echo Running tests
+echo "TESTING STARTED"
+echo $working_dir
+echo $current_dir
 
-ctest -R unit-test-rabbitmq
-ctest -R unit-test-rabbitmq-core
-
+ctest --test-dir build/$target -R unit-test-rabbitmq 
 echo Done

@@ -55,6 +55,9 @@ namespace {
         fmi2Boolean loggingOn = false;
 
 
+        cout << "xml path for test " << currentUri << endl;
+
+
         auto c = fmi2Instantiate(
                 instanceName,
                 fmuType, fmuGUID,

@@ -20,10 +20,7 @@
         </ScalarVariable>        
         <ScalarVariable name="ypos" valueReference="21" variability="continuous" causality="output">
             <Real />
-        </ScalarVariable>        
-        <ScalarVariable name="seqno" valueReference="103" variability="discrete" causality="output">
-            <Integer/>
-        </ScalarVariable>
+        </ScalarVariable>    
 
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
@@ -40,8 +37,8 @@
         </ScalarVariable>
 
 
-        <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter" initial="exact">
-            <String start="linefollower"/>
+        <ScalarVariable name="config.routingkey.to_cosim" valueReference="4" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower.data.to_cosim"/>
         </ScalarVariable>
 
         <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
@@ -57,10 +54,19 @@
             <Integer start="1"/>
         </ScalarVariable>
         <ScalarVariable name="config.exchangename" valueReference="9" variability="fixed" causality="parameter" initial="exact">
-            <String start="fmi_digital_twin"/>
+            <String start="fmi_digital_twin_cd"/>
         </ScalarVariable>
         <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
             <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangename" valueReference="11" variability="fixed" causality="parameter" initial="exact">
+            <String start="fmi_digital_twin_sh"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangetype" valueReference="12" variability="fixed" causality="parameter" initial="exact">
+            <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower.data.from_cosim"/>
         </ScalarVariable>
 
 

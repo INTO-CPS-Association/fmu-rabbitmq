@@ -15,14 +15,6 @@
     <DefaultExperiment startTime="0.0" stopTime="16.0" stepSize="0.01"/>
     <ModelVariables>
 
-        <ScalarVariable name="var1" valueReference="20" variability="continuous" causality="output">
-            <Real />
-        </ScalarVariable>
-        
-        <ScalarVariable name = "seqno"  valueReference = "103" variability = "discrete"  causality = "output">
-            <Integer />
-        </ScalarVariable>
-
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>
         </ScalarVariable>
@@ -59,12 +51,19 @@
         <ScalarVariable name="config.exchangetype" valueReference="10" variability="fixed" causality="parameter" initial="exact">
             <String start="direct"/>
         </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangename" valueReference="11" variability="fixed" causality="parameter" initial="exact">
+            <String start="fmi_digital_twin_sh"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.healthdata.exchangetype" valueReference="12" variability="fixed" causality="parameter" initial="exact">
+            <String start="direct"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
+            <String start="linefollower.data.from_cosim"/>
+        </ScalarVariable>
 
     </ModelVariables>
     <ModelStructure>
         <Outputs>
-            <Unknown index="1"/>
-            <Unknown index="2"/>
         </Outputs>
     </ModelStructure>
 
