@@ -268,7 +268,7 @@ jobs:
 
       - name: Get version of the tool
         run: |
-          echo ::set-output name=VERSION::$(git describe --tags --long)
+          echo "::set-output name=VERSION::$(git describe --tags --long)"
         id: version
 
       - name: Upload FMU 
