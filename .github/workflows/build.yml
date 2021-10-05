@@ -228,7 +228,7 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-          
+
       - name: Download dll
         uses: actions/download-artifact@v2
         with:
@@ -273,7 +273,7 @@ jobs:
           
       - name: Get version of the tool
         run: |
-          cd rabbitmq-fmu/
+          cd fmu-rabbitmq/
           echo "::set-output name=VERSION::$(git describe --tags --long)"
         id: version
 
