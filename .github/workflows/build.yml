@@ -265,9 +265,16 @@ jobs:
         with:
           name: rabbitmq_fmu_configure.py
           path: rabbitmq/
-
+          
+      - name: Get repo
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          fetch-depth: 0
+          
       - name: Get version of the tool
         run: |
+          cd rabbitmq-fmu/
           echo "::set-output name=VERSION::$(git describe --tags --long)"
         id: version
 
