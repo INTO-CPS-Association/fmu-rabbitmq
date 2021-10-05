@@ -64,20 +64,19 @@ Note that the value reference `14`is reserved for output `seqno`, that refers to
 
 * configuring the inputs/outputs through the script `rabbitmq_fmu_configure.py`:
 
-To add outputs, with default type equal to Real and variability continuous:
-```bash
-$ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 
-```
 To add outputs and specify type and variability:
 ```bash
-$ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 -outputTypes Real Boolean  -outputVar continuous discrete discrete
+$ python3 rabbitmq_fmu_configure.py -fmu in.fmu -output greet=Real,continuous -dest=out.fmu 
 ```
+The command will add an output with name ```greet```, of type ```Real```, and variability ```continuous```.
+
 Note that the length of the lists: output, output types and output variabilities must be the same.
 
 Similarly for inputs. A complete command looks like:
 ```bash
-$ python3 rabbitmq_fmu_configure.py -fmu rabbitmqfmu.fmu -dest rmq2.fmu -output out1 out2 out3 -outputTypes Real Boolean  -outputVar continuous discrete discrete -input in1 in2 -inputTypes Real String -inputVar continuous discrete 
+$ python3 rabbitmq_fmu_configure.py -fmu in.fmu -output greet=Real,continuous -dest=out.fmu -input chat=String,discrete stop=Boolean,discrete beatles=Integer,discrete
 ```
+The command will add an output with name ```greet```, of type ```Real```, and variability ```continuous```, as well three inputs (i) with name ```chat```, of type ```String```, and variability ```discrete```, (ii) with name ```stop```, of type ```Boolean```, and variability ```discrete```, and (iii) with name ```beatles```, of type ```Integer```, and variability ```discrete```.
 
 __NOTE that the script doesn't check for the validity of the modelDescription file, use the vdmCheck scripts for that purpose.
 
