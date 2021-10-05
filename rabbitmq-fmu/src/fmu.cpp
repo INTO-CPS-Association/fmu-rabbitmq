@@ -120,6 +120,12 @@ extern "C" fmi2Component fmi2Instantiate(fmi2String instanceName,
 
     auto svs = ModelDescriptionParser::parse(modelDescriptionFile);
 
+    auto toolVersion = ModelDescriptionParser::extractToolVersion(modelDescriptionFile);
+
+    LOG(functions, instanceName, fmi2OK, "logAll",
+            "Using Tool:  '%s'",
+            toolVersion.c_str());
+
     if(loggingOn)
     {
         LOG(functions, instanceName, fmi2OK, "logAll",

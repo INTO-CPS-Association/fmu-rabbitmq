@@ -218,6 +218,48 @@ map <string, ModelDescriptionParser::ScalarVariable> ModelDescriptionParser::par
     return svNameRefMap;
 }
 
+string ModelDescriptionParser::extractToolVersion(string path) {
+
+    if (access(path.c_str(), 0) != 0) {
+        throw "Invalid file path";
+    }
+
+    XMLPlatformUtils::Initialize();
+
+    // create the DOM parser
+    XercesDOMParser *parser = new XercesDOMParser;
+    parser->
+            setValidationScheme(XercesDOMParser::Val_Never);
+    parser->parse(path.c_str());
+    // get the DOM representation
+    DOMDocument *doc = parser->getDocument();
+    // get the root element
+    DOMElement *root = doc->getDocumentElement();
+
+    {
+        DOMXPathResult *result = doc->evaluate(
+                XMLString::transcode("/fmiModelDescription"),
+                root,
+                NULL,
+                DOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                NULL);
+
+        if (result->getNodeValue() == NULL) {
+            cout << "There is no result for the provided XPath " <<
+                 endl;
+
+            throw std::runtime_error(std::string("Not a valid model description: ") + path);
+        } 
+        else {
+            auto version = XMLString::transcode(result->getNodeValue()->getAttributes()->getNamedItem(
+                    XMLString::transcode("generationTool"))->getNodeValue());
+            auto toolVersion = string(version);
+            return toolVersion;
+        }
+    }
+
+}
+
 DataPoint ModelDescriptionParser::extractDataPoint(map <string, ScalarVariable> svs) {
     DataPoint dp;
 

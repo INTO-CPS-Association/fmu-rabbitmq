@@ -20,7 +20,10 @@ def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[]
     # clean up the input FMU
     model_variables_node = tree.findall('ModelVariables')[0]
     model_outputs = tree.findall('ModelStructure/Outputs')[0]
-    model_initunknowns = tree.findall('ModelStructure/InitialUnknowns')[0]
+    if tree.findall('ModelStructure/InitialUnknowns'):
+        model_initunknowns = tree.findall('ModelStructure/InitialUnknowns')[0]
+        for n in model_initunknowns.findall("*"):
+            model_initunknowns.remove(n)
 
     for n in model_variables_node.findall("ScalarVariable[@causality='output']"):
         model_variables_node.remove(n)
@@ -31,8 +34,7 @@ def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[]
     for n in model_outputs.findall("*"):
         model_outputs.remove(n)
 
-    for n in model_initunknowns.findall("*"):
-        model_initunknowns.remove(n)
+
 
     index = 0
     # generate new entries
@@ -51,22 +53,23 @@ def create_fmu_with_outputs(path, new_path, names, verbose=False, input_names=[]
         ET.SubElement(output, t)
         index = idx + 100
 
-    # generate new input entries
-    index = index + 1
-    # generate  new input entries
-    for idx, (name,t,v) in enumerate(input_names):
-        # model_variables_node.append()
-        inputs = ET.SubElement(model_variables_node, 'ScalarVariable')
-        inputs.attrib['name'] = name
-        inputs.attrib['valueReference'] = str(index + idx)
-        # next two is combination 8
-        inputs.attrib['variability'] = v  # from a real system
-        inputs.attrib['causality'] = 'input'
-        # The variable is calculated from other variables during initialization.
-        # It is not allowed to provide a “start” value
-        # This is of cause not completely true but is related to the server it is connected to
-        #input.attrib['initial'] = 'calculated'
-        ET.SubElement(inputs, t)
+    if input_names:
+        # generate new input entries
+        index = index + 1
+        # generate  new input entries
+        for idx, (name,t,v) in enumerate(input_names):
+            # model_variables_node.append()
+            inputs = ET.SubElement(model_variables_node, 'ScalarVariable')
+            inputs.attrib['name'] = name
+            inputs.attrib['valueReference'] = str(index + idx)
+            # next two is combination 8
+            inputs.attrib['variability'] = v  # from a real system
+            inputs.attrib['causality'] = 'input'
+            # The variable is calculated from other variables during initialization.
+            # It is not allowed to provide a “start” value
+            # This is of cause not completely true but is related to the server it is connected to
+            #input.attrib['initial'] = 'calculated'
+            ET.SubElement(inputs, t)
 
     # updated the model structure with the new outputs
     for idx, item in enumerate(model_variables_node.findall("ScalarVariable")):
@@ -139,7 +142,12 @@ def main():
 
     args = options.parse_args()
 
-    create_fmu_with_outputs(args.fmu, args.dest, [parse_signals(s) for s in args.output], verbose=args.verbose, input_names=[parse_signals(s) for s in args.input])
+    if args.input:
+        inputs = [parse_signals(s) for s in args.input] 
+    else:
+        inputs = []
+
+    create_fmu_with_outputs(args.fmu, args.dest, [parse_signals(s) for s in args.output], verbose=args.verbose, input_names=inputs)
 
 
 if __name__ == '__main__':
