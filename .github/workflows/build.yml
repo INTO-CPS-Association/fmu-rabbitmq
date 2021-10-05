@@ -224,6 +224,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          fetch-depth: 0
+          
       - name: Download dll
         uses: actions/download-artifact@v2
         with:
@@ -265,10 +270,16 @@ jobs:
         with:
           name: rabbitmq_fmu_configure.py
           path: rabbitmq/
+          
+      - name: Get version of the tool
+        run: |
+          cd rabbitmq-fmu/
+          echo "::set-output name=VERSION::$(git describe --tags --long)"
+        id: version
 
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
         with:
-          name: rabbitmq.fmu
+          name: rabbitmq-${{steps.version.outputs.VERSION}}.fmu
           path: rabbitmq
  

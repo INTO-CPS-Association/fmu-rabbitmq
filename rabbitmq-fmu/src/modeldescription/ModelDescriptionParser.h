@@ -61,6 +61,7 @@ public:
 
    static map<string, ScalarVariable> parse(std::string path);
    static DataPoint extractDataPoint(map<string, ScalarVariable> svs);
+   static string extractToolVersion(std::string path);
 
 
 };
