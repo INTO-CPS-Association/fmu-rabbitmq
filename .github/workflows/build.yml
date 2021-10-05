@@ -266,9 +266,14 @@ jobs:
           name: rabbitmq_fmu_configure.py
           path: rabbitmq/
 
+      - name: Get version of the tool
+        run: |
+          echo ::set-output name=VERSION::$(echo $(git describe --tags --long))
+        id: version
+
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
         with:
-          name: rabbitmq-${{github.ref}}.fmu
+          name: rabbitmq-${{steps.version.outputs.VERSION}}.fmu
           path: rabbitmq
  
