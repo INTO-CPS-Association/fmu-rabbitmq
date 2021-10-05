@@ -269,6 +269,6 @@ jobs:
       - name: Upload FMU 
         uses: actions/upload-artifact@v2
         with:
-          name: rabbitmq.fmu
+          name: rabbitmq-${{$(git describe --tags --long)}}.fmu
           path: rabbitmq
  
