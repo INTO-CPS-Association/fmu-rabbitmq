@@ -242,6 +242,8 @@ int main(int argc, char *argv[]) {
             for(int i = 0; i <= simDuration; i++){
                 auto s1 = ((FmuContainer*) c)->coreIncomingSize();
                 auto t1 = std::chrono::high_resolution_clock::now();
+                fmi2Real maxStepSize = 0;
+                showStatus("fmi2GetMaxStepsize", fmi2GetMaxStepsize(c, &maxStepSize));
                 showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
                                                     noSetFMUStatePriorToCurrentPoint));
                 auto t2 = std::chrono::high_resolution_clock::now();
@@ -253,9 +255,9 @@ int main(int argc, char *argv[]) {
                 fmi2GetInteger(c, vr_seqno, 1, value_seqno);
                 currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
                 file << currentCommunicationPoint << ", " << dur << ", " << value_seqno[0] <<
-                    ", " << s1 << ", " << s2 << "\n"; 
+                    ", " << s1 << ", " << s2 << ", " << maxStepSize << "\n"; 
                 cout << "HE: " << currentCommunicationPoint << ", " << dur << ", "  << value_seqno[0] <<
-                    ", " << s1 << ", " << s2 << endl; 
+                    ", " << s1 << ", " << s2 << ", " << maxStepSize << endl; 
 
                 showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
                 for (int i = 0; i < nvr; i++) {

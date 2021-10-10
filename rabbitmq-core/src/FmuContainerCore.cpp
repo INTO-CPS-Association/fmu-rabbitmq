@@ -664,6 +664,61 @@ int FmuContainerCore::incomingSize(void){
     return this->incomingUnprocessed[10].size();
 }
 
+#ifndef USE_RBMQ_FMU_PRIORITY_QUEUE
+std::chrono::milliseconds FmuContainerCore::getMaxStepSize(void) {
+    // This method returns the minimum of the maximum present message times
+    // for all vrefs in the incoming queue.
+    /* date::sys_time<std::chrono::milliseconds> minMax; */
+    std::chrono::milliseconds minMax, maxId;
+    bool first(true);
+
+    // loop all defined vrefs
+    for (auto &lookaheadPair: this->lookahead) {
+        auto id = lookaheadPair.first;
+        date::sys_time<std::chrono::milliseconds> max;
+
+        auto existingValue = this->currentData.find(id);
+        if (existingValue == this->currentData.end()) {
+            continue;
+        }
+          
+        auto incomingList = this->incomingUnprocessed.find(id);
+        if (incomingList != this->incomingUnprocessed.end()) {
+            auto it = incomingList->second.begin();
+            for (int i = 0; i < this->lookahead[id] && it != incomingList->second.end(); i++, it++) {
+                auto timeValue = *it;
+                if (timeValue.first > max) {
+                    max = timeValue.first;
+                }
+            }
+        }
+
+        auto lookaheadList = this->incomingLookahead.find(id);
+        if (lookaheadList != this->incomingLookahead.end()) {
+            // lookaheadList is sorted
+            auto it = lookaheadList->second.end();
+            auto timeValue = *it;
+            if (timeValue.first > max) {
+                max = timeValue.first;
+            }
+        }
+
+        maxId = max - existingValue->second.first;  
+
+        if (first) {
+            minMax = maxId;
+            first = false;
+        }
+
+        if (maxId < minMax) {
+            minMax = maxId;
+        }
+    }
+
+    return minMax;
+}
+#endif
+
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
 bool FmuContainerCore::hasUnprocessedHealth(void){
     return !this->incomingUnprocessedHealth.empty();

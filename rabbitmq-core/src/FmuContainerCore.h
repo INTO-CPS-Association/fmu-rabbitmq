@@ -191,6 +191,7 @@ public:
     std::mutex m;
 #endif
     int incomingSize(void);
+    std::chrono::milliseconds getMaxStepSize(void);
 
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
     typedef pair<date::sys_time<std::chrono::milliseconds>, date::sys_time<std::chrono::milliseconds>> HealthData;
