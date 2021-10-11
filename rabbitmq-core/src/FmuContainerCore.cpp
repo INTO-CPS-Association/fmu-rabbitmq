@@ -696,8 +696,7 @@ std::chrono::milliseconds FmuContainerCore::getMaxStepSize(void) {
         auto lookaheadList = this->incomingLookahead.find(id);
         if (lookaheadList != this->incomingLookahead.end()) {
             // lookaheadList is sorted
-            auto it = lookaheadList->second.end();
-            auto timeValue = *it;
+            auto timeValue = lookaheadList->second.back();
             if (timeValue.first > max) {
                 max = timeValue.first;
             }
