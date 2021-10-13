@@ -62,21 +62,27 @@ if (UNIX AND NOT APPLE)
     find_package(ICU REQUIRED data uc)
 endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
-target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
+
+if (UNIX)
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
+else
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads)
+endif()
+
 set_target_properties(rabbitmq
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(rabbitmq PROPERTIES PREFIX "")
+
+
 
 if (UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix
     target_link_libraries(rabbitmq dl)
 endif ()
 
-if(WIN32)
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
-    target_link_libraries(rabbitmq PRIVATE Threads::Threads)
-endif()
+
 #foreach (LETTER ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
 #
 #    if (EXISTS "${LETTER}/libstdc++.a")
