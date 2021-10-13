@@ -58,12 +58,6 @@ file(GLOB C_FILES src/*.c)
 add_executable(${PROJECT_NAME}-main ${C_FILES} ${CPP_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(${PROJECT_NAME}-main XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 
-if(WIN32)
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
-    target_link_libraries(rabbitmq PRIVATE Threads::Threads)
-endif()
-
 if (UNIX AND NOT APPLE)
     find_package(ICU REQUIRED data uc)
 endif ()
@@ -78,7 +72,11 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(rabbitmq dl)
 endif ()
 
-
+if(WIN32)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    target_link_libraries(rabbitmq PRIVATE Threads::Threads)
+endif()
 #foreach (LETTER ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
 #
 #    if (EXISTS "${LETTER}/libstdc++.a")
