@@ -63,9 +63,9 @@ if (UNIX AND NOT APPLE)
 endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 
-if (UNIX)
+if(UNIX)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
-else
+else()
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads)
