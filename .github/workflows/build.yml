@@ -134,11 +134,6 @@ jobs:
           echo $(pwd)
           ls
 
-      - name: dumpbun windows DLL
-        if: matrix.os == 'windows-latest'
-        run: |
-          dumpbin.exe build/win-x64/rabbitmq-fmu/rabbitmq.dll
-
       - name: Run unit tests on UNIX
         if: matrix.os != 'windows-latest'
         shell: bash
