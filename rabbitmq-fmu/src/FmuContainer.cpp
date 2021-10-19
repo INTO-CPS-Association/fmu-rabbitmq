@@ -132,7 +132,9 @@ void FmuContainer::consumerThreadFunc(void) {
                 std::stringstream startTimeStamp;
                 startTimeStamp << result.time;
                 /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
-                 FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now()); 
+                /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
+                /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
+                 /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now()); */ 
 
                 std::unique_lock<std::mutex> lock(this->core->m);
                 for (auto &pair: result.integerValues) {
@@ -779,13 +781,10 @@ void FmuContainer::addToCore(DataPoint result){
  ###################################################*/
 
 bool FmuContainer::fmi2GetMaxStepsize(fmi2Real *size) {
-    if (!this->data.empty()) {
-
-        auto f = messageTimeToSim(this->data.front().time);
-        *size = f.count() / 1000.0;
+    if (this->core->hasUnprocessed()) {
+        *size = this->core->getMaxStepSize().count();
         return true;
     }
-
     return false;
 }
 
