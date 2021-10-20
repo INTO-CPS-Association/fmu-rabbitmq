@@ -59,8 +59,22 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
                              "The seqno output is present with vref '%d'.", RABBITMQ_FMU_SEQNO_OUTPUT);
     }
     else{
+        this->seqnoPresent = false;
         FmuContainer_LOG(fmi2Warning, "logWarn",
                              "The seqno output is NOT present with. %s", "");
+    }
+
+    //check if seqno output is present
+    if (this->currentData.booleanValues.find(RABBITMQ_FMU_ENABLE_SEND_INPUT) != this->currentData.booleanValues.end())
+    {
+        this->sendEnablePresent = true;
+        FmuContainer_LOG(fmi2Warning, "logWarn",
+                             "The enable send input is present with vref '%d'.", RABBITMQ_FMU_ENABLE_SEND_INPUT);
+    }
+    else{
+        this->sendEnablePresent = false;
+        FmuContainer_LOG(fmi2Warning, "logWarn",
+                             "The enable send input is NOT present with. %s", "");
     }
 
 #ifdef USE_RBMQ_FMU_THREAD
@@ -537,15 +551,24 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
     FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", cosim_time.c_str());
 
-    //Check which of the inputs of the fmu has changed since the last step
-    string message;
-    this->checkInputs(message);
+    bool enable = true;
+    //Enable or Disable the send function
+    if(this->sendEnablePresent){
+        enable = this->currentData.booleanValues[RABBITMQ_FMU_ENABLE_SEND_INPUT];
 
-    //if anything to send, publish to rabbitmq
-    if(!message.empty()){
-        message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
-        this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
-        FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
+        FmuContainer_LOG(fmi2OK, "logAll", "enable send status: %d", enable);
+    }
+    //Check which of the inputs of the fmu has changed since the last step
+    if(enable){
+        string message;
+        this->checkInputs(message);
+
+        //if anything to send, publish to rabbitmq
+        if(!message.empty()){
+            message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
+            this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
+            FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
+        }
     }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
@@ -721,7 +744,7 @@ void FmuContainer::checkInputs(string &message){
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
                 if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
-                    
+                    if(it->second.valueReference != RABBITMQ_FMU_ENABLE_SEND_INPUT){
                     bool previous, current;
                     previous = this->previousInputs.booleanValues[it->second.valueReference];
                     current = this->currentData.booleanValues[it->second.valueReference];
@@ -730,6 +753,8 @@ void FmuContainer::checkInputs(string &message){
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
                     this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
+                
+                    }
                 }
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){

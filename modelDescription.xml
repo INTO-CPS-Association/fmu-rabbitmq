@@ -22,6 +22,16 @@
             <Real />
         </ScalarVariable>    
 
+        <ScalarVariable name="seqno" valueReference="14" variability="discrete" causality="output">
+            <Integer/>
+        </ScalarVariable>
+        <ScalarVariable name="command_stop" valueReference="22" variability="discrete" causality="input">
+            <Boolean start="false" />
+        </ScalarVariable>
+        <ScalarVariable name="enable" valueReference="15" variability="discrete" causality="input">
+            <Boolean start="true" />
+        </ScalarVariable>
+
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
             <String start="localhost"/>
@@ -75,6 +85,7 @@
         <Outputs>
             <Unknown index="1"/>
             <Unknown index="2"/>
+            <Unknown index="3"/>
         </Outputs>
     </ModelStructure>
 

@@ -36,6 +36,7 @@
 #define RABBITMQ_FMU_SH_EXCHANGE_TYPE 12
 #define RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM 13
 #define RABBITMQ_FMU_SEQNO_OUTPUT 14
+#define RABBITMQ_FMU_ENABLE_SEND_INPUT 15
 
 
 using namespace std;
@@ -88,6 +89,7 @@ public:
 private:
 
     bool seqnoPresent;
+    bool sendEnablePresent;
     
     FmuContainerCore *core;
 
