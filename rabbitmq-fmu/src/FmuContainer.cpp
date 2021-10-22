@@ -548,8 +548,8 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
-    cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
-    FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", cosim_time.c_str());
+    string healthmessage = R"({"simAtTime":")" + cosim_time + R"("})";
+    FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", healthmessage.c_str());
 
     bool enable = true;
     //Enable or Disable the send function
@@ -572,7 +572,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
-    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, cosim_time, 
+    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, healthmessage, 
                                         this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange);
 //    cout << *this->core;
 //    cout << "Step " << simulationTime << "\n";
