@@ -75,10 +75,10 @@ void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, str
         if(no_digits==1)appendZeros.append("00");
         if(no_digits==2)appendZeros.append("0");
     }
-    formatString << "%FT%T."<< appendZeros.c_str() << milliseconds_remainder <<"%Ez";
-    //cout << "Format string: " << formatString.str().c_str() << endl;
-    transTime << put_time(formattedTime, formatString.str().c_str());
-    message = transTime.str().insert(transTime.str().length()-2, ":");
+    transTime << std::put_time(std::localtime(&time_after_duration), "%Y-%m-%dT%H:%M:%S.")<< appendZeros.c_str() << milliseconds_remainder << "+01:00";
+        //std::cout << "milliseconds remainder: " << milliseconds_remainder << std::endl;
+    message = transTime.str();
+    std::cout << "transtime: " << message.c_str() << std::endl;
     //cout <<"SIM time to REAL time"<< message << endl;
 }
 
