@@ -79,7 +79,7 @@ void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, str
     //cout << "Format string: " << formatString.str().c_str() << endl;
     transTime << put_time(formattedTime, formatString.str().c_str());
     message = transTime.str().insert(transTime.str().length()-2, ":");
-    //cout <<"SIM time to REAL time"<< message << endl;
+    cout <<"SIM time to REAL time"<< message << endl;
 }
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
