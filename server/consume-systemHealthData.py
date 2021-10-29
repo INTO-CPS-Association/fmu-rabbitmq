@@ -27,10 +27,10 @@ result2 = channelPublish.queue_declare(queue='', exclusive=True)
 qnamepub = result2.method.queue
 
 channelConsume.queue_bind(exchange='fmi_digital_twin_sh', queue=queue_name,
-                   routing_key='linefollower.system_health.from_cosim')
+                   routing_key='linefollower.data.from_cosim')
 
 channelPublish.queue_bind(exchange='fmi_digital_twin_sh', queue=qnamepub,
-                   routing_key='linefollower.system_health.to_cosim')
+                   routing_key='linefollower.data.to_cosim')
 
 print(' [*] Waiting for logs. To exit press CTRL+C')
 print(' [*] I am consuming and publishing information related to system health')
@@ -64,7 +64,7 @@ def publishRtime():
                 msg['cosimtime'] = cosimTime["simAtTime"]
                 print("\nSending [y] %s" % str(msg))
                 channelPublish.basic_publish(exchange='fmi_digital_twin_sh',
-                                    routing_key='linefollower.system_health.to_cosim',
+                                    routing_key='linefollower.data.to_cosim',
                                     body=json.dumps(msg))
                 #time.sleep(1)
 
