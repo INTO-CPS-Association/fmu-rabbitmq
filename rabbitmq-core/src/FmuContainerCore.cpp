@@ -8,6 +8,11 @@
 #include <iomanip>
 #include <chrono>
 #include <cmath>
+#include <string>
+#include <sstream>
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 #define SEQNOID 10
 
@@ -75,11 +80,27 @@ void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, str
         if(no_digits==1)appendZeros.append("00");
         if(no_digits==2)appendZeros.append("0");
     }
+    #ifdef _WIN32
+    cout <<"SIM time to REAL time - windows"<< endl;
+    TIME_ZONE_INFORMATION time_zone;
+    GetTimeZoneInformation(&time_zone);
+    //UTC = localtime + bias; bias is in minutes
+    int utc_offset_hours = time_zone.Bias / 60;
+    int utc_offset_minutes = abs(time_zone.Bias - (utc_offset_hours * 60));
+    char offset_sign = time_zone.Bias > 0 ? '-' : '+';
+    formatString << setfill('0') << "%Y-%m-%dT%H:%M:%S."<< appendZeros.c_str() << milliseconds_remainder << offset_sign << setw(2) << abs(utc_offset_hours) << ":" << utc_offset_minutes<< utc_offset_minutes ;
+
+    message << put_time(localtime(&time_after_duration), formatString.str().c_str());
+    #endif
+
+    #ifndef _WIN32
+
     formatString << "%FT%T."<< appendZeros.c_str() << milliseconds_remainder <<"%Ez";
     //cout << "Format string: " << formatString.str().c_str() << endl;
     transTime << put_time(formattedTime, formatString.str().c_str());
     message = transTime.str().insert(transTime.str().length()-2, ":");
     //cout <<"SIM time to REAL time"<< message << endl;
+    #endif
 }
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
