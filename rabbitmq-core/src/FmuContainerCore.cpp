@@ -90,7 +90,8 @@ void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, str
     char offset_sign = time_zone.Bias > 0 ? '-' : '+';
     formatString << setfill('0') << "%Y-%m-%dT%H:%M:%S."<< appendZeros.c_str() << milliseconds_remainder << offset_sign << setw(2) << abs(utc_offset_hours) << ":" << utc_offset_minutes<< utc_offset_minutes ;
 
-    message << put_time(localtime(&time_after_duration), formatString.str().c_str()).str();
+    transTime << put_time(localtime(&time_after_duration), formatString.str().c_str());
+    message = transTime.str();
     #endif
 
     #ifndef _WIN32
