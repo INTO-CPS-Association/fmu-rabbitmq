@@ -11,6 +11,7 @@
 #include <string>
 #include <sstream>
 #ifdef _WIN32
+#define _HAS_STD_BYTE 0
 #include <Windows.h>
 #endif
 
