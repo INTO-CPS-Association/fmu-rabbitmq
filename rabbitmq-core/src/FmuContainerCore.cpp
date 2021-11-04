@@ -1,7 +1,10 @@
 //
 // Created by Kenneth Guldbrandt Lausdahl on 09/03/2020.
 //
-
+#ifdef _WIN32
+#define _HAS_STD_BYTE 0
+#include <Windows.h>
+#endif
 #include "FmuContainerCore.h"
 
 #include <iostream>
@@ -10,10 +13,7 @@
 #include <cmath>
 #include <string>
 #include <sstream>
-#ifdef _WIN32
-#define _HAS_STD_BYTE 0
-#include <Windows.h>
-#endif
+
 
 #define SEQNOID 10
 
