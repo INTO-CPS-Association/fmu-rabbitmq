@@ -810,7 +810,10 @@ bool FmuContainer::fmi2GetMaxStepsize(fmi2Real *size) {
         *size = this->core->getMaxStepSize().count();
         return true;
     }
-    return false;
+    else {
+        *size = 0.0;
+        return true;
+    }
 }
 
 /*####################################################
