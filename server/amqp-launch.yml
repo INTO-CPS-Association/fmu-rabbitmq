@@ -1,0 +1,40 @@
+execution:
+  capture_output: true
+implementation: AMQP-AMQP
+servers:
+  source:
+    embedded: true
+    host: localhost
+    password: guest
+    port: '5672'
+    user: guest
+  target:
+    embedded: true
+    host: localhost
+    password: guest
+    port: '5672'
+    user: guest
+signals:
+  level:
+    source:
+      datatype: double
+      exchange: test
+      routing_key: level
+    target:
+      datatype: double
+      exchange: fmi_digital_twin
+      pack: JSON
+      path: level
+      routing_key: 157ead53-696c-4e9c-aba2-f11c57557de4
+  valve:
+    source:
+      datatype: boolean
+      exchange: test
+      routing_key: valve
+    target:
+      datatype: double
+      exchange: fmi_digital_twin
+      pack: JSON
+      path: valve
+      routing_key: 157ead53-696c-4e9c-aba2-f11c57557de4
+type: data-repeater

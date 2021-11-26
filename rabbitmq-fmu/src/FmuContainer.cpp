@@ -167,7 +167,7 @@ void FmuContainer::consumerThreadFunc(void) {
                     this->core->add(pair.first, std::make_pair(result.time, pair.second));
                 }
                 lock.unlock();
-                FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
+                //FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
                 cv.notify_one();
             } else {
                 FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
@@ -197,7 +197,7 @@ void FmuContainer::healthThreadFunc(void) {
                 lock.unlock();
             }
             else{
-                FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+                //FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
             }
         }
     }
@@ -321,8 +321,8 @@ bool FmuContainer::initialize() {
         this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->rbmqExchange, this->rabbitMqHandler->rbmqExchangetype); //Channel where to consume data
 
         FmuContainer_LOG(fmi2OK, "logAll",
-                             "Routing key data: %s for pub and %s for sub",
-                             this->rabbitMqHandler->routingKey.c_str(), this->rabbitMqHandler->bindingKey.c_str());
+                             "Routing key data: %s for pub and %s for sub, on exchange %s",
+                             this->rabbitMqHandler->routingKey.c_str(), this->rabbitMqHandler->bindingKey.c_str(), this->rabbitMqHandler->rbmqExchange.c_str());
         //We bind only the queue from which we want to get the data.
         this->rabbitMqHandler->bind(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->bindingKey, this->rabbitMqHandler->rbmqExchange);
 
@@ -356,8 +356,8 @@ bool FmuContainer::initialize() {
             return false;
         }
         FmuContainer_LOG(fmi2OK, "logAll",
-                             "Routing key data: %s for pub and %s for sub",
-                             this->rabbitMqHandlerSystemHealth->routingKey.c_str(), this->rabbitMqHandlerSystemHealth->bindingKey.c_str());
+                             "Routing key data: %s for pub and %s for sub, exchange %s",
+                             this->rabbitMqHandlerSystemHealth->routingKey.c_str(), this->rabbitMqHandlerSystemHealth->bindingKey.c_str(), this->rabbitMqHandlerSystemHealth->rbmqExchange.c_str());
         //Create channel for handling the publishing
         this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelPub); //Channel where to publish system health data
         //Declare exchange
@@ -643,7 +643,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 #else
             // Wait for signal from consumer thread that core has messages
             std::unique_lock<std::mutex> lock(this->core->m);
-            FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
+            //FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
 #endif //!USE_RBMQ_FMU_THREAD
@@ -690,7 +690,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
                 }
             } else {
-                FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+                //FmuContainer_LOG(fmi2OK, "logAll", "[health data] No health data consumed: %s", systemHealthData.c_str());
             }
 
             LOG_TIME(4);
