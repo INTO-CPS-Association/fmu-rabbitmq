@@ -558,7 +558,7 @@ extern "C" fmi2Status fmi2GetMaxStepsize(fmi2Component c, fmi2Real *size) {
     }
 
     if (fmu != nullptr && fmu->fmi2GetMaxStepsize(size)) {
-        if(fmu !=nullptr  && fmu->isLoggingOn())
+        if(fmu->isLoggingOn())
         {
             LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
                 "fmi2GetMaxStepsize '%s' - size %f",fmu->m_name.c_str(), *size);
