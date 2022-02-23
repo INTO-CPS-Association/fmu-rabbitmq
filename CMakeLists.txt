@@ -82,7 +82,7 @@ if (USE_RBMQ_FMU_HEALTH_THREAD)
     add_definitions(-DUSE_RBMQ_FMU_HEALTH_THREAD)
 endif ()
 
-option(USE_RBMQ_FMU_PROF "Use RBMQ profiling of step function" OFF)
+option(USE_RBMQ_FMU_PROF "Use RBMQ profiling of step function" ON)
 message("USE_RBMQ_FMU_PROF: ${USE_RBMQ_FMU_PROF}")
 if (USE_RBMQ_FMU_PROF)
     add_definitions(-DUSE_RBMQ_FMU_PROF)

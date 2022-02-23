@@ -8,7 +8,8 @@
 #include <thread>
 #include <message/MessageParser.h>
 #include "Iso8601TimeParser.h"
-
+#include <iostream>
+#include <fstream>
 
 #define FmuContainer_LOG(status, category, message, args...)       \
   if (m_functions != NULL) {                                             \
@@ -519,7 +520,7 @@ std::chrono::high_resolution_clock::time_point log_time_last;
 #define LOG_TIME_TOTAL \
     std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - log_time[0]).count() 
 #define LOG_TIME_PRINT \
-    FmuContainer_LOG(fmi2OK, "logAll",  "HE: 0:%lld, 1:+%lld, 2:+%lld, 3:+%lld, 4:+%lld, 5:+%lld\n", \
+    FmuContainer_LOG(fmi2OK, "logAll",  "PROFFILING: 0:%lld, 1:+%lld, 2:+%lld, 3:+%lld, 4:+%lld, 5:+%lld\n", \
          std::chrono::duration_cast<std::chrono::microseconds>(log_time[0] - log_time_last).count(), \
          LOG_TIME_ELAPSED(0,1), \
          LOG_TIME_ELAPSED(1,2), \
@@ -560,14 +561,22 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     }
     //Check which of the inputs of the fmu has changed since the last step
     if(enable){
+        std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
         string message;
         this->checkInputs(message);
 
         //if anything to send, publish to rabbitmq
         if(!message.empty()){
             message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
+
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
+
+            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+            ofstream myfile;
+            myfile.open ("timeLogs.txt", ios::out | ios::app);
+            myfile << "TIME DIFF at simulation time " << simulationTime << "\n" << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << "\n";
+            myfile.close();
         }
     }
 
