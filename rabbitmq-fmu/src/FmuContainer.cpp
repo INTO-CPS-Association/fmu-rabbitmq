@@ -718,6 +718,10 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                 LOG_TIME(5);
                 LOG_TIME_PRINT;
+                ofstream myfile;
+                myfile.open ("timeLogs.txt", ios::out | ios::app);
+                myfile << "PROFILING " << std::chrono::duration_cast<std::chrono::microseconds>(log_time[0] - log_time_last).count() << " " << LOG_TIME_ELAPSED(0,1) << " " << LOG_TIME_ELAPSED(1,2) << " " << LOG_TIME_ELAPSED(2,3) << " " << LOG_TIME_ELAPSED(3,4) << " " << LOG_TIME_ELAPSED(4,5) << "\n";
+                myfile.close();
 #ifdef USE_RBMQ_FMU_PROF
                 FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
 #endif
