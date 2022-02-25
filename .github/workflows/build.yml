@@ -184,35 +184,7 @@ jobs:
         with:
           name: rabbitmq.so
           path: build/linux-x64/rabbitmq-fmu/rabbitmq.so
-
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: rabbitmq.dll
-          path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
           
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: it-test-rabbitmq.exe  
-          path: build/win-x64/rabbitmq-fmu/it-test-rabbitmq.exe  
-          
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: unit-test-rabbitmq.exe  
-          path: build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe  
-          
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: it-test-rabbitmq-core.exe 
-          path: build/win-x64/rabbitmq-core/it-test-rabbitmq-core.exe  
-
       - name: Update version on modelDescription.xml
         shell: bash
         if: matrix.os == 'ubuntu-latest'
@@ -249,12 +221,6 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-          
-      - name: Download dll
-        uses: actions/download-artifact@v2
-        with:
-          name: rabbitmq.dll
-          path: rabbitmq/binaries/win64/
 
       - name: Download shared library
         uses: actions/download-artifact@v2
