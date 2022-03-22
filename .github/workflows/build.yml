@@ -88,6 +88,7 @@ jobs:
       - name: Fix openssl  
         if: matrix.os == 'macos-latest'
         run: | 
+          brew install openssl
           brew upgrade openssl
           brew link --force openssl
           export LDFLAGS="-L/usr/local/opt/openssl@3/lib"              
