@@ -91,10 +91,9 @@ jobs:
           brew install openssl
           brew upgrade openssl
           brew link --force openssl
-          export LDFLAGS="-L/usr/local/opt/openssl@3/lib"              
-          export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
-          export PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig"
-          pkg-config --modversion openssl
+          echo 'LDFLAGS="-L/usr/local/opt/openssl@3/lib"' >> /Users/runner/.bash_profile
+          echo 'CPPFLAGS="-I/usr/local/opt/openssl@3/include"' >> /Users/runner/.bash_profile
+          echo 'PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig"' >> /Users/runner/.bash_profile
 
       - name: Build
         shell: bash
