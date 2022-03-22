@@ -239,6 +239,7 @@ namespace {
     }
     
     TEST(FmuSendTest, EnableSend){
+        GTEST_SKIP();
         cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
 
