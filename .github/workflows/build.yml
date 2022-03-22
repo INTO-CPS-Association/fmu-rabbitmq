@@ -85,28 +85,16 @@ jobs:
           echo "darwin-x86_64" > install_name
           echo " " > cmakeFlag
           echo " " > cmakeFlagValue
-      - name: Fix openssl
+      - name: Fix openssl  
         if: matrix.os == 'macos-latest'
         run: | 
-          brew install openssl@1.1
-          echo 'backup existing lib files, if they exist'
-          if [ -f /usr/local/lib/libssl.dylib ]; then
-            mv /usr/local/lib/libssl.dylib /usr/local/lib/libssl_bak.dylib
-          fi
-          if [ -f /usr/local/lib/libcrypto.dylib ]; then
-              mv /usr/local/lib/libcrypto.dylib /usr/local/lib/libcrypto_bak.dylib
-          fi
-          
-          echo 'add symlink to missing openssl libs'
-          if [ -f /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libssl.1.1.dylib ]; then
-              sudo ln -s /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libssl.1.1.dylib /usr/local/lib/libssl.dylib
-          fi 
+        brew upgrade openssl
+        brew link --force openssl
+        export LDFLAGS="-L/usr/local/opt/openssl@3/lib"              
+        export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+        export PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig"
+        pkg-config --modversion openssl
 
-          if [ -f /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib ]; then
-              sudo ln -s /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib /usr/local/lib/libcrypto.dylib
-          fi
-          
-          
       - name: Build
         shell: bash
         run: |
