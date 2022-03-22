@@ -88,12 +88,12 @@ jobs:
       - name: Fix openssl  
         if: matrix.os == 'macos-latest'
         run: | 
-        brew upgrade openssl
-        brew link --force openssl
-        export LDFLAGS="-L/usr/local/opt/openssl@3/lib"              
-        export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
-        export PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig"
-        pkg-config --modversion openssl
+          brew upgrade openssl
+          brew link --force openssl
+          export LDFLAGS="-L/usr/local/opt/openssl@3/lib"              
+          export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+          export PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig"
+          pkg-config --modversion openssl
 
       - name: Build
         shell: bash
