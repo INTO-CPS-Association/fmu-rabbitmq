@@ -85,6 +85,7 @@ jobs:
           echo "darwin-x86_64" > install_name
           echo " " > cmakeFlag
           echo " " > cmakeFlagValue
+          brew install openssl
           
       - name: Build
         shell: bash
