@@ -561,7 +561,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     }
     //Check which of the inputs of the fmu has changed since the last step
     if(enable){
-        std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
         string message;
         this->checkInputs(message);
 
@@ -569,13 +568,16 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         if(!message.empty()){
             message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
 
+
+            std::chrono::high_resolution_clock::time_point time_before_send = std::chrono::high_resolution_clock::now();
+
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
 
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
             ofstream myfile;
+            auto duration = time_before_send.time_since_epoch();
             myfile.open ("timeLogs.txt", ios::out | ios::app);
-            myfile << "TIME DIFF at simulation time " << simulationTime << "\n" << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << "\n";
+            myfile << "TIME DIFF at simulation time " << simulationTime << "\n" << duration.count() << "\n";
             myfile.close();
         }
     }
@@ -718,10 +720,12 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
                 LOG_TIME(5);
                 LOG_TIME_PRINT;
+                #ifdef USE_RBMQ_FMU_PROF
                 ofstream myfile;
                 myfile.open ("timeLogs.txt", ios::out | ios::app);
                 myfile << "PROFILING " << std::chrono::duration_cast<std::chrono::microseconds>(log_time[0] - log_time_last).count() << " " << LOG_TIME_ELAPSED(0,1) << " " << LOG_TIME_ELAPSED(1,2) << " " << LOG_TIME_ELAPSED(2,3) << " " << LOG_TIME_ELAPSED(3,4) << " " << LOG_TIME_ELAPSED(4,5) << "\n";
                 myfile.close();
+                #endif
 #ifdef USE_RBMQ_FMU_PROF
                 FmuContainer_LOG(fmi2OK, "logAll", "simtime_stepdur %.0f,%lld", simulationTime, LOG_TIME_TOTAL);
 #endif
