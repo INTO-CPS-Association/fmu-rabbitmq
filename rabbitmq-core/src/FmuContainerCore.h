@@ -177,17 +177,17 @@ public:
     std::chrono::milliseconds message2SimTime(date::sys_time<std::chrono::milliseconds> rTime);
 
     std::chrono::milliseconds simTimeToReal(long long simTime);
-    
+
     void convertTimeToString(long long milliSecondsSinceEpoch, string &message);
-    
+
     //void setTimeDiscrepancyOutput(double time, int vref);
     void setTimeDiscrepancyOutput(bool valid, double timeDiffNew, double timeDiffOld, int vref);
     double getTimeDiscrepancyOutput(int vref);
     int getSeqNO(int vref);
     std::chrono::milliseconds messageTimeToSim(date::sys_time<std::chrono::milliseconds> messageTime);
+    bool hasUnprocessed(void);
 
 #ifdef USE_RBMQ_FMU_THREAD
-    bool hasUnprocessed(void);
     std::mutex m;
 #endif
     int incomingSize(void);
@@ -208,7 +208,7 @@ protected:
         public:
           bool operator()(const TimedScalarBasicValue &a, const TimedScalarBasicValue &b)
             {
-                return a.first > b.first; 
+                return a.first > b.first;
             }
     };
 
@@ -227,7 +227,7 @@ protected:
     std::map<ScalarVariableId, int> lookahead;
     std::chrono::milliseconds maxAge;
     std::string currentOutput; // current message without timestamp
-    
+
 private:
 
     bool verbose;

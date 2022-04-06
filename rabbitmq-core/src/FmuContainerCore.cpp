@@ -65,7 +65,7 @@ std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
     return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
 }
 
-void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){                
+void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){
     const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
     const std::chrono::time_point<std::chrono::system_clock> tp_after_duration(durationSinceEpoch);
     time_t time_after_duration = std::chrono::system_clock::to_time_t(tp_after_duration);
@@ -109,7 +109,7 @@ void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
     for (auto &p : list){
         cout << "showL ( " << p.first.time_since_epoch().count() << " , " << p.second << ") ";
      }
-        
+
 }
 
 #ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
@@ -247,7 +247,7 @@ void FmuContainerCore::processIncoming() {
                 cout << std::endl << endl;
     #ifdef USE_RBMQ_FMU_THREAD
                 m.unlock();
-            
+
 #endif
             }
         }
@@ -279,7 +279,7 @@ void FmuContainerCore::processIncoming() {
             }
             if (itr->second.empty()) {
                 if (verbose) {
-                    printf("8 deleting list id=%d\n", itr->first);                
+                    printf("8 deleting list id=%d\n", itr->first);
                     //FmuContainerCore_LOG(fmi2OK, "logAll", "deleting list id=%d",itr->first);
 
                 }
@@ -335,7 +335,7 @@ template<typename Predicate>
 void FmuContainerCore::processLookahead(Predicate predicate) {
 
     if (verbose) {
-        cout << "Lookaheads:" << endl;                            
+        cout << "Lookaheads:" << endl;
         //FmuContainerCore_LOG(fmi2OK, "logAll", "FmuContainerCore_LOG Lookaheads=%s","");
 
         //FmuContainerCore_LOG(fmi2OK, "logAll", "Lookaheads:%s","");
@@ -369,7 +369,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                             cout << "Updated state with id=" << id << " time value=" << timeValue->second.i.i << " at iteration " << iteration << endl;
 
                             //FmuContainerCore_LOG(fmi2OK, "logAll", "FmuContainerCore_LOG Updated state with id=%d value=%f",id, timeValue->second.d.d);
-                    
+
                         }
                     }
                 }
@@ -398,7 +398,7 @@ void FmuContainerCore::processLookahead(Predicate predicate) {
                 std::cout << "\t --  Incoming lookahead  : Id=" << id << " - Size="
                           << this->incomingLookahead[id].size()
                           << ": ";
-                
+
                 //FmuContainerCore_LOG(fmi2OK, "logAll", "\t --  Incoming lookahead  : Id=%d size=%lu :",id, this->incomingLookahead[id].size());
                 showL(this->incomingLookahead[id]);
                 cout << std::endl;
@@ -559,7 +559,7 @@ bool FmuContainerCore::check(double time) {
 
 
         auto valueTime = this->currentData.at(id).first;
-        
+
         std::stringstream temp;
         temp << valueTime.time_since_epoch().count();
         if(verbose){
@@ -673,7 +673,7 @@ int FmuContainerCore::getSeqNO(int vref){
     }
 }
 
-#ifdef USE_RBMQ_FMU_THREAD
+/* #ifdef USE_RBMQ_FMU_THREAD */
 bool FmuContainerCore::hasUnprocessed(void){
     /* cout << "HERE: " << this->incomingUnprocessed.empty() << " " << this->incomingLookahead.empty() << endl; */
 #ifdef USE_RBMQ_FMU_PRIORITY_QUEUE
@@ -682,7 +682,7 @@ bool FmuContainerCore::hasUnprocessed(void){
     return !this->incomingUnprocessed.empty() || !this->incomingLookahead.empty();
 #endif
 }
-#endif
+/* #endif */
 int FmuContainerCore::incomingSize(void){
     return this->incomingUnprocessed[10].size();
 }
@@ -704,7 +704,7 @@ std::chrono::milliseconds FmuContainerCore::getMaxStepSize(void) {
         if (existingValue == this->currentData.end()) {
             continue;
         }
-          
+
         auto incomingList = this->incomingUnprocessed.find(id);
         if (incomingList != this->incomingUnprocessed.end()) {
             auto it = incomingList->second.begin();
@@ -725,7 +725,7 @@ std::chrono::milliseconds FmuContainerCore::getMaxStepSize(void) {
             }
         }
 
-        maxId = max - existingValue->second.first;  
+        maxId = max - existingValue->second.first;
 
         if (first) {
             minMax = maxId;
