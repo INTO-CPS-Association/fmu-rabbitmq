@@ -8,7 +8,8 @@
 #include <thread>
 #include <message/MessageParser.h>
 #include "Iso8601TimeParser.h"
-
+#include <fstream>
+#include <iostream>
 
 #define FmuContainer_LOG(status, category, message, args...)       \
   if (m_functions != NULL) {                                             \
@@ -562,12 +563,19 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     if(enable){
         string message;
         this->checkInputs(message);
-
         //if anything to send, publish to rabbitmq
         if(!message.empty()){
             message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
+
+            std::chrono::high_resolution_clock::time_point time_before_send = std::chrono::high_resolution_clock::now();
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
+
+            ofstream myfile;
+            auto duration = time_before_send.time_since_epoch();
+            myfile.open ("timeLogs.txt", ios::out | ios::app);
+            myfile << "TIME DIFF at simulation time " << simulationTime << "\n" << duration.count() << "\n";
+            myfile.close();
         }
     }
 
