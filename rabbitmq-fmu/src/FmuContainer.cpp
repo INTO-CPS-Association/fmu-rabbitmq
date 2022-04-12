@@ -551,18 +551,18 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     cosim_time = R"({"simAtTime":")" + cosim_time + R"("})";
     FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", cosim_time.c_str());
 
-    bool enable = true;
+    bool disable = true;
     //Enable or Disable the send function
     if(this->sendEnablePresent){
-        enable = this->currentData.booleanValues[RABBITMQ_FMU_ENABLE_SEND_INPUT];
+        disable = this->currentData.booleanValues[RABBITMQ_FMU_ENABLE_SEND_INPUT];
 
-        FmuContainer_LOG(fmi2OK, "logAll", "enable send status: %d", enable);
+        FmuContainer_LOG(fmi2OK, "logAll", "disable send status: %d", disable);
     }
     //Check which of the inputs of the fmu has changed since the last step
-    if(enable){
+    if(disable==0){
         string message;
         this->checkInputs(message);
-
+        FmuContainer_LOG(fmi2OK, "logAll", "Send enabled on this step, for message %s", message.c_str());
         //if anything to send, publish to rabbitmq
         if(!message.empty()){
             message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
