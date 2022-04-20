@@ -76,7 +76,7 @@ if (USE_RBMQ_FMU_THREAD)
     add_definitions(-DUSE_RBMQ_FMU_THREAD)
 endif ()
 
-option(USE_RBMQ_FMU_HEALTH_THREAD "Use RBMQ health thread" OFF)
+option(USE_RBMQ_FMU_HEALTH_THREAD "Use RBMQ health thread" ON)
 message("USE_RBMQ_FMU_HEALTH_THREAD: ${USE_RBMQ_FMU_HEALTH_THREAD}")
 if (USE_RBMQ_FMU_HEALTH_THREAD)
     add_definitions(-DUSE_RBMQ_FMU_HEALTH_THREAD)

@@ -552,30 +552,23 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     string healthmessage = R"({"simAtTime":")" + cosim_time + R"("})";
     FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", healthmessage.c_str());
 
-    bool enable = true;
+    bool disable = true;
     //Enable or Disable the send function
     if(this->sendEnablePresent){
-        enable = this->currentData.booleanValues[RABBITMQ_FMU_ENABLE_SEND_INPUT];
+        disable = this->currentData.booleanValues[RABBITMQ_FMU_ENABLE_SEND_INPUT];
 
-        FmuContainer_LOG(fmi2OK, "logAll", "enable send status: %d", enable);
+        FmuContainer_LOG(fmi2OK, "logAll", "disable send status: %d", disable);
     }
     //Check which of the inputs of the fmu has changed since the last step
-    if(enable){
+    if(disable==0){
         string message;
         this->checkInputs(message);
+        FmuContainer_LOG(fmi2OK, "logAll", "Send enabled on this step, for message %s", message.c_str());
         //if anything to send, publish to rabbitmq
         if(!message.empty()){
             message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
-
-            std::chrono::high_resolution_clock::time_point time_before_send = std::chrono::high_resolution_clock::now();
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
-
-            ofstream myfile;
-            auto duration = time_before_send.time_since_epoch();
-            myfile.open ("timeLogs.txt", ios::out | ios::app);
-            myfile << "TIME DIFF at simulation time " << simulationTime << "\n" << duration.count() << "\n";
-            myfile.close();
         }
     }
 
