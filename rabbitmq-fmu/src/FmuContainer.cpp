@@ -40,8 +40,8 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
         : m_functions(mFunctions), m_name(mName), nameToValueReference((nameToValueReference)),
           currentData(std::move(initialDataPoint)), rabbitMqHandler(NULL),
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
-          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(), 
-          timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42), 
+          communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(),
+          timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42),
           simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43), seqnoPresent(false){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
@@ -79,10 +79,10 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
 
 #ifdef USE_RBMQ_FMU_THREAD
     consumerThreadStop = false;
-#endif 
+#endif
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
     healthThreadStop = false;
-#endif 
+#endif
 
     for (auto const &value: intConfigs) {
         auto vRef = value.first;
@@ -105,7 +105,11 @@ FmuContainer::~FmuContainer() {
     {
         this->consumerThread.join();
     }
-#endif 
+    if (this->rabbitMqHandlerConsume) {
+        this->rabbitMqHandlerConsume->close(this->rabbitMqHandlerConsume->channelSub);
+        delete this->rabbitMqHandlerConsume;
+    }
+#endif
 
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
     healthThreadStop = true;
@@ -113,13 +117,21 @@ FmuContainer::~FmuContainer() {
     {
         this->healthThread.join();
     }
+    if (this->rabbitMqHandlerSystemHealthConsume) {
+        this->rabbitMqHandlerSystemHealthConsume->close(this->rabbitMqHandlerSystemHealthConsume->channelSub);
+        delete this->rabbitMqHandlerSystemHealthConsume;
+    }
 #endif
 
     if (this->rabbitMqHandler) {
-        this->rabbitMqHandler->close();
+        this->rabbitMqHandler->close(this->rabbitMqHandler->channelPub);
         delete this->rabbitMqHandler;
     }
 
+    if (this->rabbitMqHandlerSystemHealth) {
+        this->rabbitMqHandlerSystemHealth->close(this->rabbitMqHandlerSystemHealth->channelPub);
+        delete this->rabbitMqHandlerSystemHealth;
+    }
 }
 
 bool FmuContainer::isLoggingOn() {
@@ -140,7 +152,7 @@ void FmuContainer::consumerThreadFunc(void) {
     string json;
 
     while (!consumerThreadStop) {
-        if (this->rabbitMqHandler->consume(json)) {
+        if (this->rabbitMqHandlerConsume->consume(json)) {
             DataPoint result;
             if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
                 std::stringstream startTimeStamp;
@@ -148,7 +160,7 @@ void FmuContainer::consumerThreadFunc(void) {
                 /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
                 /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
                 /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
-                 /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now()); */ 
+                 /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now()); */
 
                 std::unique_lock<std::mutex> lock(this->core->m);
                 for (auto &pair: result.integerValues) {
@@ -185,13 +197,13 @@ void FmuContainer::healthThreadFunc(void) {
     double simTime_d, rTime_d;
 
     while (!healthThreadStop) {
-        if (this->rabbitMqHandlerSystemHealth->consume(systemHealthData)){
+        if (this->rabbitMqHandlerSystemHealthConsume->consume(systemHealthData)){
 
             FmuContainer_LOG(fmi2OK, "logAll", "New health message %s", systemHealthData.c_str());
             //Extract rtime value from message
             date::sys_time<std::chrono::milliseconds> simTime, rTime;
             if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
-                FmuContainerCore::HealthData healthData = std::make_pair(rTime, simTime); 
+                FmuContainerCore::HealthData healthData = std::make_pair(rTime, simTime);
                 std::unique_lock<std::mutex> lock(this->core->mHealth);
                 this->core->incomingUnprocessedHealth.push_back(healthData);
                 lock.unlock();
@@ -303,85 +315,56 @@ bool FmuContainer::initialize() {
                      "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d)",
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
                      this->communicationTimeout, this->precision, precisionDecimalPlaces);
-    /////////////////////////////////////////////////////////////////////////////////////
-    //create a separate connection that deals with publishing to the rabbitmq server/////
+
+#ifdef USE_RBMQ_FMU_THREAD
+    // create a separate connection that deals with publishing to the rabbitmq server
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey, routingKeyFromCosim);//this routing key does not affect what is defined below.
-    FmuContainer_LOG(fmi2OK, "logAll",
-                     "rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
-    try {
-        if (!this->rabbitMqHandler->createConnection()) {
-            FmuContainer_LOG(fmi2Fatal, "logAll",
-                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
-                             hostname.c_str(), port);
-            return false;
-        }
-        this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange, this->rabbitMqHandler->rbmqExchangetype); //Channel where to publish data
-
-        this->rabbitMqHandler->createChannel(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->rbmqExchange, this->rabbitMqHandler->rbmqExchangetype); //Channel where to consume data
-
-        FmuContainer_LOG(fmi2OK, "logAll",
-                             "Routing key data: %s for pub and %s for sub",
-                             this->rabbitMqHandler->routingKey.c_str(), this->rabbitMqHandler->bindingKey.c_str());
-        //We bind only the queue from which we want to get the data.
-        this->rabbitMqHandler->bind(this->rabbitMqHandler->channelSub, this->rabbitMqHandler->bindingKey, this->rabbitMqHandler->rbmqExchange);
-
-
-    } catch (RabbitMqHandlerException &ex) {
-        FmuContainer_LOG(fmi2Fatal, "logAll",
-                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
-                         ex.what());
+                                                       routingKey, routingKeyFromCosim, PUB);
+    if (!this->rabbitMqHandler)
         return false;
-    }
+
+    // create a separate connection that deals with consuming from the rabbitmq server
+    this->rabbitMqHandlerConsume = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
+                                                       routingKey, routingKeyFromCosim, SUB);
+    if (!this->rabbitMqHandlerConsume)
+        return false;
+#else
+    // create a connection that deals with publishing to and consuming from the rabbitmq server
+    this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
+                                                       routingKey, routingKeyFromCosim, PUB|SUB);
+    if (!this->rabbitMqHandler)
+        return false;
+#endif
+
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+    // create a separate connection that deals with publishing to the rabbitmq server
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
+                                                       routingKey, routingKeyFromCosim, PUB);
+    if (!this->rabbitMqHandlerSystemHealth)
+        return false;
+
+    // create a separate connection that deals with consuming from the rabbitmq server
+    this->rabbitMqHandlerSystemHealthConsume = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
+                                                       routingKey, routingKeyFromCosim, SUB);
+    if (!this->rabbitMqHandlerSystemHealthConsume)
+        return false;
+#else
+    // create a connection that deals with publishing to and consuming from the rabbitmq server
+    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
+                                                       routingKey, routingKeyFromCosim, PUB|SUB);
+    if (!this->rabbitMqHandlerSystemHealth)
+        return false;
+#endif
     FmuContainer_LOG(fmi2OK, "logAll",
                      "Sending RabbitMQ ready message%s", "");
 
     this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey,
                                    R"({"internal_status":"ready", "internal_message":"waiting for input data for simulation"})",this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    //create a separate connection that deals with publishing and consuming system health data, using a channel for eavh/////
-    this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password,  exchangeNameSH,  exchangeTypeSH,
-                                                       routingKey, routingKeyFromCosim);
-    FmuContainer_LOG(fmi2OK, "logAll",
-                     "Another rabbitmq publisher connecting to rabbitmq server at '%s:%d'", hostname.c_str(), port);
-    try {
-        if (!this->rabbitMqHandlerSystemHealth->createConnection()) {
-            FmuContainer_LOG(fmi2Fatal, "logAll",
-                             "Connection failed to rabbitmq server. Please make sure that a rabbitmq server is running at '%s:%d'",
-                             hostname.c_str(), port);
-            return false;
-        }
-        FmuContainer_LOG(fmi2OK, "logAll",
-                             "Routing key data: %s for pub and %s for sub",
-                             this->rabbitMqHandlerSystemHealth->routingKey.c_str(), this->rabbitMqHandlerSystemHealth->bindingKey.c_str());
-        //Create channel for handling the publishing
-        this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelPub); //Channel where to publish system health data
-        //Declare exchange
-        this->rabbitMqHandlerSystemHealth->declareExchange(this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange, this->rabbitMqHandlerSystemHealth->rbmqExchangetype);
-
-        //Create channel for handling the consuming
-        this->rabbitMqHandlerSystemHealth->createChannel(this->rabbitMqHandlerSystemHealth->channelSub); //Channel where to consume system health data 
-        //we bind only the consume queue
-        this->rabbitMqHandlerSystemHealth->bind(this->rabbitMqHandlerSystemHealth->channelSub, this->rabbitMqHandlerSystemHealth->bindingKey, this->rabbitMqHandlerSystemHealth->rbmqExchange);
-
-
-    } catch (RabbitMqHandlerException &ex) {
-        FmuContainer_LOG(fmi2Fatal, "logAll",
-                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
-                         ex.what());
-        return false;
-    }
-    ////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
 
     //Initialise previousInputs and check whether the time_discrepancy is given
     for(auto it = this->nameToValueReference.cbegin(); it != this-> nameToValueReference.cend(); it++){
         if(it->second.input){
-            //Init value 
+            //Init value
             //cout << "Input type: " << it->second.type << endl;
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
                 this->previousInputs.doubleValues.insert(pair<unsigned int, double>(it->second.valueReference, it->second.d_value));
@@ -443,8 +426,40 @@ bool FmuContainer::initialize() {
 RabbitmqHandler *FmuContainer::createCommunicationHandler(const string &hostname, int port, const string &username,
                                                           const string &password, const string &exchange,const string &exchangetype,
                                                           const string &queueBindingKey,
-                                                          const string &queueBindingKey_from_cosim) {
-    return new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey, queueBindingKey_from_cosim);
+                                                          const string &queueBindingKey_from_cosim,
+                                                          const int type) {
+    RabbitmqHandler *hdl =  new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey, queueBindingKey_from_cosim);
+
+    try {
+        if (!hdl->createConnection()) {
+            FmuContainer_LOG(fmi2Fatal, "logAll", "Connection failed to rabbitmq server at '%s:%d'",
+                             hostname.c_str(), port);
+            delete hdl;
+            return nullptr;
+        }
+        if (type & PUB)
+        {
+            //Create channel for handling the publishing
+            hdl->createChannel(hdl->channelPub);
+            //Declare exchange
+            hdl->declareExchange(hdl->channelPub, hdl->rbmqExchange, hdl->rbmqExchangetype);
+        }
+        if (type & SUB)
+        {
+            //Create channel for handling the consuming
+            hdl->createChannel(hdl->channelSub);
+            //we bind only the consume queue
+            hdl->bind(hdl->channelSub, hdl->bindingKey, hdl->rbmqExchange);
+        }
+    } catch (RabbitMqHandlerException &ex) {
+        FmuContainer_LOG(fmi2Fatal, "logAll",
+                         "Connection failed to rabbitmq server at '%s:%d' with exception '%s'", hostname.c_str(), port,
+                         ex.what());
+        delete hdl;
+        return nullptr;
+    }
+
+    return hdl;
 }
 
 
@@ -458,7 +473,11 @@ bool FmuContainer::initializeCoreState() {
         while (((std::chrono::duration<double>) (std::chrono::system_clock::now() - start)).count() <
                this->communicationTimeout) {
 
+#ifdef USE_RBMQ_FMU_THREAD
+            if (this->rabbitMqHandlerConsume->consume(json)) {
+#else
             if (this->rabbitMqHandler->consume(json)) {
+#endif
                 //data received
                 DataPoint result;
                 if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
@@ -517,7 +536,7 @@ std::chrono::high_resolution_clock::time_point log_time_last;
 #define LOG_TIME_ELAPSED(x, y) \
     std::chrono::duration_cast<std::chrono::microseconds>(log_time[y] - log_time[x]).count()
 #define LOG_TIME_TOTAL \
-    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - log_time[0]).count() 
+    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - log_time[0]).count()
 #define LOG_TIME_PRINT \
     FmuContainer_LOG(fmi2OK, "logAll",  "HE: 0:%lld, 1:+%lld, 2:+%lld, 3:+%lld, 4:+%lld, 5:+%lld\n", \
          std::chrono::duration_cast<std::chrono::microseconds>(log_time[0] - log_time_last).count(), \
@@ -528,7 +547,7 @@ std::chrono::high_resolution_clock::time_point log_time_last;
          LOG_TIME_ELAPSED(4,5))
 #else
 #define LOG_TIME(x)
-#define LOG_TIME_ELAPSED(x,y) 
+#define LOG_TIME_ELAPSED(x,y)
 #define LOG_TIME_TOTAL
 #define LOG_TIME_PRINT
 #endif //USE_RBMQ_FMU_PROF
@@ -572,23 +591,13 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
-    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, healthmessage, 
+    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, healthmessage,
                                         this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange);
-//    cout << *this->core;
-//    cout << "Step " << simulationTime << "\n";
-
-//    std::ostringstream stream;
-//    stream << *this->core;
-//    std::string str = stream.str();
-//    const char *chr = str.c_str();
-//    FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]: %s", simulationTime, chr);
-//    cout << "Checking with existing messages\n";
-#ifndef USE_RBMQ_FMU_THREAD
     if (this->core->process(simulationTime)) {
         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
 
         FmuContainer_LOG(fmi2OK, "logAll", "************ Exit 1 FmuContainer::step ***************%s", "");
-        LOG_TIME(1); LOG_TIME(2); LOG_TIME(3); LOG_TIME(4); LOG_TIME(5); 
+        LOG_TIME(1); LOG_TIME(2); LOG_TIME(3); LOG_TIME(4); LOG_TIME(5);
         //get time now here, and get difference between time now - log_time(0)
         LOG_TIME_PRINT;
 #ifdef USE_RBMQ_FMU_PROF
@@ -597,7 +606,6 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
         return true;
     }
-#endif //!USE_RBMQ_FMU_THREAD
 
     LOG_TIME(1);
     if (!this->rabbitMqHandler) {
@@ -635,7 +643,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                 } else {
                     FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
                 }
-            } 
+            }
             // If failing consuming or parsing a message, then continue the while loop and try again
             if (!msgAddSuccess) {
                 continue;
@@ -694,16 +702,16 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
             }
 
             LOG_TIME(4);
-            if (this->core->process(simulationTime)) {    
-                if(this->timeOutputPresent){     
+            if (this->core->process(simulationTime)) {
+                if(this->timeOutputPresent){
                     this->core->setTimeDiscrepancyOutput(validHealthData, simTime_d-rTime_d, this->previousTimeOutputVal, this->timeOutputVRef);
-                } 
-                if(this->simtimeOutputPresent){     
+                }
+                if(this->simtimeOutputPresent){
                     this->core->setTimeDiscrepancyOutput(validHealthData, abs(simulationTime-simTime_d), this->simpreviousTimeOutputVal, this->simtimeOutputVRef);
-                } 
+                }
                 FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
                 if(this->seqnoPresent)
-                {                
+                {
                     FmuContainer_LOG(fmi2OK, "logAll", "Current data point seqno %d, time %ld", this->core->getSeqNO(RABBITMQ_FMU_SEQNO_OUTPUT), std::chrono::high_resolution_clock::now());
                 }
 
@@ -753,7 +761,7 @@ void FmuContainer::checkInputs(string &message){
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
                     this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
-                
+
                     }
                 }
             }
@@ -784,7 +792,7 @@ void FmuContainer::checkInputs(string &message){
                 }
             }
         }
-    }      
+    }
 }
 
 void FmuContainer::addToCore(DataPoint result){
