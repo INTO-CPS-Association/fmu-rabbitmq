@@ -563,8 +563,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     FmuContainer_LOG(fmi2OK, "logAll", "************ Enter FmuContainer::step ***************%s", "");
     FmuContainer_LOG(fmi2OK, "logAll", "Step time %f s converted time %f ms", currentCommunicationPoint + communicationStepSize, simulationTime);
 
-    simulationTime = std::round(simulationTime * precision) / precision;
-    long long int milliSecondsSinceEpoch = this->core->simTimeToReal((long long) simulationTime).count(); // this is your starting point
+    long long int milliSecondsSinceEpoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
     string healthmessage = R"({"simAtTime":")" + cosim_time + R"("})";
@@ -584,7 +583,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 
         //if anything to send, publish to rabbitmq
         if(!message.empty()){
-            message = R"({)" + message + R"("timestep":")" + cosim_time + R"("})";
+            message = R"({)" + message + R"( "timestep":")" + cosim_time + R"(, "simstep":")" + to_string(simulationTime) + R"("})";
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
         }
