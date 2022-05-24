@@ -7,6 +7,12 @@ set(CMAKE_PROJECT_VERSION_MAJOR "")
 set(CMAKE_PROJECT_VERSION_MINOR "")
 set(CMAKE_PROJECT_VERSION_PATCH "")
 
+#so that it can find the ssl stuff
+if (APPLE)
+    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
+    set(OPENSSL_LIBRARIES "/usr/local/opt/openssl/lib")
+ENDIF ()
+
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
 
 message("FMU will be installed to: ${CMAKE_INSTALL_PREFIX}")
