@@ -165,7 +165,7 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          ./build/$target/rabbitmq-fmu/unit-test-rabbitmq
+          ./build/$target/rabbitmq-fmu/unit-test-rabbitmq.exe
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
         if: matrix.os == 'ubuntu-latest'
