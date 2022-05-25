@@ -165,7 +165,6 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          ./build/$target/rabbitmq-fmu/unit-test-rabbitmq-core
           ./build/$target/rabbitmq-fmu/unit-test-rabbitmq
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
