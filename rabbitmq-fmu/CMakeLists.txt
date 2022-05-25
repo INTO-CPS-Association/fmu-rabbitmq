@@ -69,6 +69,7 @@ else()
     #set(THREADS_PREFER_PTHREAD_FLAG ON)
     #find_package(Threads REQUIRED)
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 endif()
 
 set_target_properties(rabbitmq
