@@ -170,7 +170,7 @@ jobs:
           echo $(pwd) 
           cmake --install build/$target
           ls ./build/win-x64/rabbitmq-fmu/
-          ./build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe
+          start ./build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
         if: matrix.os == 'ubuntu-latest'
