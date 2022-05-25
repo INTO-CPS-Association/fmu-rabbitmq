@@ -156,18 +156,18 @@ jobs:
           ctest --test-dir build/$target -R unit-test-rabbitmq
           echo Tests complete
           
-      - name: Run unit tests on WIN
+      - name: Run unit tests on WIN #cmake --install build/$target
+          #echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
+          #ctest --output-on-failure --test-dir build/$target -R unit-test-rabbitmq
+          #echo Tests complete
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          cmake --install build/$target
-          echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
-          ctest --output-on-failure --test-dir build/$target -R unit-test-rabbitmq
-          echo Tests complete
-
-        
+          ./build/$target/rabbitmq-fmu/unit-test-core
+          ./build/$target/rabbitmq-fmu/unit-test-rabbitmq
+          
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
         if: matrix.os == 'ubuntu-latest'
         run: |
