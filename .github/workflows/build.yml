@@ -68,6 +68,7 @@ jobs:
         shell: bash
         if: matrix.os == 'windows-latest'
         run: | 
+          which openssl
           echo "win-x64" > target
           echo "win-x86_64" > install_name
           echo -G > cmakeFlag
