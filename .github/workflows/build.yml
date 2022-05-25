@@ -70,7 +70,7 @@ jobs:
         run: | 
           echo "win-x64" > target
           echo "win-x86_64" > install_name
-          echo "-G" > cmakeFlag
+          echo "-G "Unix Makefiles"" > cmakeFlag
           echo MSYS Makefiles > cmakeFlagValue
           
       - name: Other win prep
