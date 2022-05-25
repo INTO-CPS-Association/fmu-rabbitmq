@@ -23,7 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        #os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ windows-latest ]
         
     steps:
       - uses: actions/checkout@v2
@@ -85,6 +86,7 @@ jobs:
           echo "darwin-x86_64" > install_name
           echo " " > cmakeFlag
           echo " " > cmakeFlagValue
+          
       - name: Fix openssl  
         if: matrix.os == 'macos-latest'
         run: | 
@@ -156,7 +158,7 @@ jobs:
           ctest --test-dir build/$target -R unit-test-rabbitmq
           echo Tests complete
           
-      - name: Run unit tests on WIN #cmake --install build/$target
+      - name: Run unit tests on WIN
           #echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
           #ctest --output-on-failure --test-dir build/$target -R unit-test-rabbitmq
           #echo Tests complete
@@ -165,6 +167,8 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
+          cmake --install build/$target
+          ls ./build/win-x64/rabbitmq-fmu/
           ./build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
