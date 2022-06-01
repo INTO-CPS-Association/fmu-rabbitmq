@@ -485,8 +485,7 @@ bool FmuContainer::initializeCoreState() {
                     std::stringstream startTimeStamp;
                     startTimeStamp << result.time;
 
-                    /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), */
-                    /*                  json.c_str()); */
+                     FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str()); 
 
                     //propagate new data to core
                     this->addToCore(result);
