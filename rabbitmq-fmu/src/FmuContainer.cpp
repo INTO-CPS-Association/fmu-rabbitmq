@@ -160,7 +160,7 @@ void FmuContainer::consumerThreadFunc(void) {
                 /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
                 /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
                 /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
-                 /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now()); */
+                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now());
 
                 std::unique_lock<std::mutex> lock(this->core->m);
                 for (auto &pair: result.integerValues) {
@@ -486,6 +486,13 @@ bool FmuContainer::initializeCoreState() {
                     startTimeStamp << result.time;
 
                      FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str()); 
+
+                     for (const auto& stone: result.stringValues) {
+
+                        cout << stone.first << ": " << stone.second << endl;
+
+                        FmuContainer_LOG(fmi2OK, "logOk", "Got data '%d' '%s'", stone.first, stone.second.c_str()); 
+                    }
 
                     //propagate new data to core
                     this->addToCore(result);
@@ -868,7 +875,19 @@ bool FmuContainer::getReal(const fmi2ValueReference *vr, size_t nvr, fmi2Real *v
 bool FmuContainer::getString(const fmi2ValueReference *vr, size_t nvr, fmi2String *value) {
     try {
         for (int i = 0; i < nvr; i++) {
-            value[i] = this->core->getData().at(vr[i]).second.s.s.c_str();
+            const std::string::size_type size = this->core->getData().at(vr[i]).second.s.s.size();
+            value[i] = new char[size + 1];   //we need extra char for NUL
+
+            char * temp = new char[size + 1]; 
+            strcpy(temp, this->core->getData().at(vr[i]).second.s.s.c_str());
+            value[i] = temp;
+
+            /*
+            FmuContainer_LOG(fmi2OK, "logAll", "value: %s", temp);
+            FmuContainer_LOG(fmi2OK, "logAll", "vr: %d, value: %s", vr[i], this->core->getData().at(vr[i]).second.s.s.c_str());
+            FmuContainer_LOG(fmi2OK, "logAll", "vr: %d, value: %s", vr[i], value[i]);
+            */
+                
         }
 
         return true;
