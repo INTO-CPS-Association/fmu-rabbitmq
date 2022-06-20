@@ -38,8 +38,10 @@
 #define RABBITMQ_FMU_SEQNO_OUTPUT 14
 #define RABBITMQ_FMU_ENABLE_SEND_INPUT 15
 
-
 using namespace std;
+
+const int PUB = 1;
+const int SUB = 2;
 
 class FmuContainer {
 public:
@@ -90,7 +92,7 @@ private:
 
     bool seqnoPresent;
     bool sendEnablePresent;
-    
+
     FmuContainerCore *core;
 
     date::sys_time<std::chrono::milliseconds> startOffsetTime;
@@ -103,10 +105,14 @@ private:
     DataPoint previousInputs;
     enum SvType{Real,Integer,Boolean,String};
 
-    //this connection is for exchanging data regarding actual state content, e.g., robot data
     RabbitmqHandler *rabbitMqHandler;
-    //this connection is for exchanging data regarding system health
     RabbitmqHandler *rabbitMqHandlerSystemHealth;
+#ifdef USE_RBMQ_FMU_THREAD
+    RabbitmqHandler *rabbitMqHandlerConsume;
+#endif
+#ifdef USE_RBMQ_FMU_HEALTH_THREAD
+    RabbitmqHandler *rabbitMqHandlerSystemHealthConsume;
+#endif
 
    // bool readMessage(DataPoint *dataPoint, int timeout, bool *timeoutOccured);
 
@@ -117,7 +123,7 @@ private:
     void addToCore(DataPoint result);
 
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,
-    const string &exchange,const string &exchangetype,const string &queueBindingKey, const string &queueBindingKey_from_cosim);
+    const string &exchange,const string &exchangetype,const string &queueBindingKey, const string &queueBindingKey_from_cosim, const int type);
 
     const bool loggingOn;
 

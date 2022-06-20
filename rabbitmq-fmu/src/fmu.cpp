@@ -27,7 +27,6 @@
 #else
 
 
-
 #endif
 
 #include <unistd.h>
@@ -65,9 +64,6 @@ static void notimplemented(fmi2Component c, fmi2String message) {
                                  "error", (base + m).c_str());
     }
 }
-
-
-
 
 
 #define LOG(functions, name, status, category, message, args...)       \
@@ -109,10 +105,9 @@ extern "C" fmi2Component fmi2Instantiate(fmi2String instanceName,
         return nullptr;
     }
 
-    cout << "Model description path: "<<modelDescriptionFile.c_str() <<endl <<flush;
+    cout << "Model description path: " << modelDescriptionFile.c_str() << endl << flush;
 
-    if(loggingOn)
-    {
+    if (loggingOn) {
         LOG(functions, instanceName, fmi2OK, "logAll",
             "FMU: Resource model description file location is '%s'",
             modelDescriptionFile.c_str());
@@ -145,11 +140,10 @@ extern "C" fmi2Component fmi2Instantiate(fmi2String instanceName,
     auto toolVersion = ModelDescriptionParser::extractToolVersion(modelDescriptionFile);
 
     LOG(functions, instanceName, fmi2OK, "logAll",
-            "Using Tool:  '%s'",
-            toolVersion.c_str());
+        "Using Tool:  '%s'",
+        toolVersion.c_str());
 
-    if(loggingOn)
-    {
+    if (loggingOn) {
         LOG(functions, instanceName, fmi2OK, "logAll",
             "Parsed model description to obtain name, ref, type triples '%s'",
             modelDescriptionFile.c_str());
@@ -157,22 +151,20 @@ extern "C" fmi2Component fmi2Instantiate(fmi2String instanceName,
 
     DataPoint dp = ModelDescriptionParser::extractDataPoint(svs);
 
-    if(loggingOn)
-    {
+    if (loggingOn) {
         LOG(functions, instanceName, fmi2OK, "logAll",
             "Extracted start values from model description '%s'",
             modelDescriptionFile.c_str());
     }
 
     auto *container =
-            new FmuContainer(functions,loggingOn, instanceName, svs, dp);
+            new FmuContainer(functions, loggingOn, instanceName, svs, dp);
 
     g_clients.push_back(container);
 
-    if(loggingOn)
-    {
+    if (loggingOn) {
         LOG(functions, instanceName, fmi2OK, "logAll",
-            "Initialization done '%s'",instanceName);
+            "Initialization done '%s'", instanceName);
     }
 
     return (void *) container;
@@ -184,10 +176,9 @@ extern "C" fmi2Status fmi2SetupExperiment(
 
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2SetupExperiment '%s'",fmu->m_name.c_str());
+            "fmi2SetupExperiment '%s'", fmu->m_name.c_str());
     }
 
 
@@ -201,10 +192,9 @@ extern "C" fmi2Status fmi2SetupExperiment(
 extern "C" fmi2Status fmi2EnterInitializationMode(fmi2Component c) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2EnterInitializationMode '%s'",fmu->m_name.c_str());
+            "fmi2EnterInitializationMode '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->initialize()) {
@@ -215,10 +205,9 @@ extern "C" fmi2Status fmi2EnterInitializationMode(fmi2Component c) {
 
 extern "C" fmi2Status fmi2ExitInitializationMode(fmi2Component c) {
     FmuContainer *fmu = getFmuContainer(c);
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2ExitInitializationMode '%s'",fmu->m_name.c_str());
+            "fmi2ExitInitializationMode '%s'", fmu->m_name.c_str());
     }
 
     return fmi2OK;
@@ -227,10 +216,9 @@ extern "C" fmi2Status fmi2ExitInitializationMode(fmi2Component c) {
 extern "C" fmi2Status fmi2Terminate(fmi2Component c) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2Terminate '%s'",fmu->m_name.c_str());
+            "fmi2Terminate '%s'", fmu->m_name.c_str());
     }
 
 
@@ -242,10 +230,9 @@ extern "C" fmi2Status fmi2Terminate(fmi2Component c) {
 
 extern "C" fmi2Status fmi2Reset(fmi2Component c) {
     FmuContainer *fmu = getFmuContainer(c);
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2Reset '%s'",fmu->m_name.c_str());
+            "fmi2Reset '%s'", fmu->m_name.c_str());
     }
 
     return fmi2OK;
@@ -254,10 +241,9 @@ extern "C" fmi2Status fmi2Reset(fmi2Component c) {
 extern "C" void fmi2FreeInstance(fmi2Component c) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2FreeInstance '%s'",fmu->m_name.c_str());
+            "fmi2FreeInstance '%s'", fmu->m_name.c_str());
     }
 
 
@@ -284,10 +270,9 @@ extern "C" fmi2Status fmi2SetDebugLogging(fmi2Component c,
                                           size_t nCategories,
                                           const fmi2String categories[]) {
     FmuContainer *fmu = getFmuContainer(c);
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2SetDebugLogging '%s'",fmu->m_name.c_str());
+            "fmi2SetDebugLogging '%s'", fmu->m_name.c_str());
     }
 
     return fmi2OK;
@@ -298,10 +283,9 @@ extern "C" fmi2Status fmi2GetReal(fmi2Component c,
                                   fmi2Real value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2GetReal '%s'",fmu->m_name.c_str());
+            "fmi2GetReal '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->getReal(vr, nvr, value)) {
@@ -315,10 +299,9 @@ extern "C" fmi2Status fmi2GetInteger(fmi2Component c,
                                      fmi2Integer value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2GetInteger '%s'",fmu->m_name.c_str());
+            "fmi2GetInteger '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->getInteger(vr, nvr, value)) {
@@ -332,10 +315,9 @@ extern "C" fmi2Status fmi2GetBoolean(fmi2Component c,
                                      fmi2Boolean value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2GetBoolean '%s'",fmu->m_name.c_str());
+            "fmi2GetBoolean '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->getBoolean(vr, nvr, value)) {
@@ -349,10 +331,9 @@ extern "C" fmi2Status fmi2GetString(fmi2Component c,
                                     fmi2String value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2GetString '%s'",fmu->m_name.c_str());
+            "fmi2GetString '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->getString(vr, nvr, value)) {
@@ -366,10 +347,9 @@ extern "C" fmi2Status fmi2SetReal(fmi2Component c,
                                   const fmi2Real value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2SetReal '%s'",fmu->m_name.c_str());
+            "fmi2SetReal '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->setReal(vr, nvr, value)) {
@@ -383,10 +363,9 @@ extern "C" fmi2Status fmi2SetInteger(fmi2Component c,
                                      const fmi2Integer value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2SetInteger '%s'",fmu->m_name.c_str());
+            "fmi2SetInteger '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->setInteger(vr, nvr, value)) {
@@ -400,10 +379,9 @@ extern "C" fmi2Status fmi2SetBoolean(fmi2Component c,
                                      const fmi2Boolean value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2SetBoolean '%s'",fmu->m_name.c_str());
+            "fmi2SetBoolean '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->setBoolean(vr, nvr, value)) {
@@ -417,10 +395,9 @@ extern "C" fmi2Status fmi2SetString(fmi2Component c,
                                     const fmi2String value[]) {
     FmuContainer *fmu = getFmuContainer(c);
 
-    if(fmu !=nullptr  && fmu->isLoggingOn())
-    {
+    if (fmu != nullptr && fmu->isLoggingOn()) {
         LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
-            "fmi2SetString '%s'",fmu->m_name.c_str());
+            "fmi2SetString '%s'", fmu->m_name.c_str());
     }
 
     if (fmu != nullptr && fmu->setString(vr, nvr, value)) {
@@ -603,6 +580,11 @@ extern "C" fmi2Status fmi2GetMaxStepsize(fmi2Component c, fmi2Real *size) {
     }
 
     if (fmu != nullptr && fmu->fmi2GetMaxStepsize(size)) {
+        if(fmu->isLoggingOn())
+        {
+            LOG(fmu->m_functions, fmu->m_name.c_str(), fmi2OK, "logAll",
+                "fmi2GetMaxStepsize '%s' - size %f",fmu->m_name.c_str(), *size);
+        }
         return fmi2OK;
     }
 
