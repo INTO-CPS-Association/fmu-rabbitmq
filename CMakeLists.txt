@@ -13,7 +13,10 @@ if (APPLE)
     set(OPENSSL_LIBRARIES "/usr/local/opt/openssl/lib")
 ENDIF ()
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
+#set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
+
+set(CMAKE_INSTALL_PREFIX 
+get_filename_component(PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/install" DIRECTORY))
 
 message("FMU will be installed to: ${CMAKE_INSTALL_PREFIX}")
 
