@@ -21,8 +21,8 @@ message("#########################################")
 message("${CMAKE_CURRENT_SOURCE_DIR}/build/install")
 message("#########################################")
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
 get_filename_component(PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/install" PATH)
+set(CMAKE_INSTALL_PREFIX "${PARENT_DIR}/${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
 
 message("FMU will be installed to: ${CMAKE_INSTALL_PREFIX}")
 
