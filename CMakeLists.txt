@@ -18,7 +18,7 @@ ENDIF ()
 
 
 message("#########################################")
-message("${CMAKE_CURRENT_SOURCE_DIR}/build/install")
+message(get_filename_component(PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/install" PATH))
 message("#########################################")
 
 set(CMAKE_INSTALL_PREFIX 
