@@ -16,7 +16,6 @@
 #define timegm _mkgmtime
 #endif
 
-/* #include <filesystem> */
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -256,9 +255,9 @@ int main(int argc, char *argv[]) {
                 fmi2GetInteger(c, vr_seqno, 1, value_seqno);
                 currentCommunicationPoint = currentCommunicationPoint + communicationStepSize;
                 file << currentCommunicationPoint << ", " << dur << ", " << value_seqno[0] <<
-                    ", " << s1 << ", " << s2 << ", " << maxStepSize << "\n"; 
+                    ", " << s1 << ", " << s2 << ", " << maxStepSize << "\n";
                 cout << "HE: " << currentCommunicationPoint << ", " << dur << ", "  << value_seqno[0] <<
-                    ", " << s1 << ", " << s2 << ", " << maxStepSize << endl; 
+                    ", " << s1 << ", " << s2 << ", " << maxStepSize << endl;
 
                 showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
                 for (int i = 0; i < nvr; i++) {

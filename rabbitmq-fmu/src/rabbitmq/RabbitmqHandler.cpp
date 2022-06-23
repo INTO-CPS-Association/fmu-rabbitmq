@@ -36,7 +36,7 @@ void RabbitmqHandler::throw_on_error(int x, char const *context) {
 RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string &username, const string &password,
                                  const string &exchange,
                                  const string &exchangetype,
-                                 const string &queueBindingKey, 
+                                 const string &queueBindingKey,
                                  const string &queueBindingKey_from_cosim) {
     this->hostname = hostname;
     this->port = port;
@@ -50,7 +50,7 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
 
     this->queueBindinngKey = queueBindingKey;
     //End Obsolete****************************
- 
+
     this->channelPub = 1;
     this->channelSub = 2;
 
@@ -62,12 +62,12 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
     //for consuming
     this->bindingKey = queueBindingKey;
 
-    this->timeout.tv_sec = 1;
-    this->timeout.tv_usec = 0;
+    this->timeout.tv_sec = 0;
+    this->timeout.tv_usec = 100000;
 }
 
 RabbitmqHandler::~RabbitmqHandler() {
-    close();
+    /* close(); */
 }
 
 
@@ -137,11 +137,23 @@ bool RabbitmqHandler::open() {
 
     return this->connected;
 }
-//End Obsolete*********************************
 
 void RabbitmqHandler::close() {
     if (this->connected) {
         throw_on_amqp_error(amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS),
+                            "Closing channel");
+        throw_on_amqp_error(amqp_connection_close(conn, AMQP_REPLY_SUCCESS),
+                            "Closing connection");
+
+        throw_on_error(amqp_destroy_connection(conn), "Ending connection");
+        this->connected = false;
+    }
+}
+//End Obsolete*********************************
+
+void RabbitmqHandler::close(amqp_channel_t channelID) {
+    if (this->connected) {
+        throw_on_amqp_error(amqp_channel_close(conn, channelID, AMQP_REPLY_SUCCESS),
                             "Closing channel");
         throw_on_amqp_error(amqp_connection_close(conn, AMQP_REPLY_SUCCESS),
                             "Closing connection");
@@ -186,7 +198,7 @@ void RabbitmqHandler::publish(const string &routingkey, const string &messagebod
     amqp_basic_properties_t props;
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
     props.content_type = amqp_cstring_bytes("text/plain");
-    props.delivery_mode = 2; // persistent delivery mode 
+    props.delivery_mode = 2; // persistent delivery mode
     throw_on_error(amqp_basic_publish(conn, 1, amqp_cstring_bytes(exchange.c_str()),
                                       amqp_cstring_bytes(routingkey.c_str()), 0, 0,
                                       &props, amqp_cstring_bytes(messagebody.c_str())),
@@ -286,7 +298,7 @@ bool RabbitmqHandler::createConnection(){
 
 bool RabbitmqHandler::createChannel(amqp_channel_t channelID, string exchange, string exchangetype){
     amqp_channel_open(conn, channelID);
-    
+
     string printText = "Opening channel with ID: " + to_string(channelID);
     printf("\n%s", printText.c_str());
     throw_on_amqp_error(amqp_get_rpc_reply(conn), printText.c_str());
@@ -325,7 +337,7 @@ void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingK
 
     bound = true;
 }
-                   
+
 void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingKey, amqp_bytes_t &queue, string exchange) {
 
     amqp_queue_declare_ok_t *r = amqp_queue_declare(
@@ -348,7 +360,7 @@ void RabbitmqHandler::bind(amqp_channel_t channelID, const string &queueBindingK
 
     bound = true;
 }
-                   
+
 void RabbitmqHandler::publish(const string &routingkey, const string &messagebody, amqp_channel_t channelID, string exchange) {
     amqp_basic_properties_t props;
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
@@ -377,11 +389,11 @@ void RabbitmqHandler::queue_declare(amqp_channel_t channelID, const char *queueN
       /*durable*/ 0,
       /*exclusive*/ 0,
       /*auto_delete*/ 1, amqp_empty_table);
-    assert(res != NULL);           
+    assert(res != NULL);
 }
 
 bool RabbitmqHandler::getFromChannel(string &payload, amqp_channel_t channelID, const char* queueName) {
-    
+
     amqp_rpc_reply_t rpc_reply;
     amqp_time_t deadline;
     struct timeval timeout = {5, 0};

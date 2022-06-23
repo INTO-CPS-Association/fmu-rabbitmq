@@ -81,6 +81,7 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
                         break;
                     case SvType::String:
                         if (d[memberName].IsString()){
+                            cout << "[INFO]: dmember value " << d[memberName].GetString() << endl;
                             result.stringValues[sv.valueReference] = string(d[memberName].GetString());
                         }
                         else{

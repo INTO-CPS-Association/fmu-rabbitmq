@@ -17,7 +17,6 @@
 #endif
 
 
-/* #include <filesystem> */
 using namespace std;
 
 void showStatus(const char *what, fmi2Status status) {
@@ -216,7 +215,7 @@ namespace {
         fmi2FreeInstance(c);
     }
 
-    TEST(FmuContainerCoreTest, checksConvertTimeToString) 
+    TEST(FmuContainerCoreTest, checksConvertTimeToString)
     {
         GTEST_SKIP();
         cout << "Testing: FmuContainerCore::convertTimeToString " << endl;
@@ -232,12 +231,12 @@ namespace {
             string out;
             test.convertTimeToString(milliSecondsSinceEpoch[i], out);
             cout << "Calculated string: " << out << endl << "Expected: " << message[i] << endl;
-            
+
             ASSERT_STREQ(out.c_str(), message[i].c_str());
 
         }
     }
-    
+
     TEST(FmuSendTest, EnableSend){
         GTEST_SKIP();
         cout << " Simulation test for FMI " << fmi2GetVersion() << endl;

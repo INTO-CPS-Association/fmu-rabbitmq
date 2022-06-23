@@ -115,6 +115,28 @@ extern "C" fmi2Component fmi2Instantiate(fmi2String instanceName,
 
     auto svs = ModelDescriptionParser::parse(modelDescriptionFile);
 
+    for (const auto &pair : svs) {
+
+        auto st = pair.first;
+        auto sv = pair.second;
+
+        switch (sv.type) {
+            case ModelDescriptionParser::ScalarVariable::SvType::Integer:
+                LOG(functions, instanceName, fmi2OK, "logAll", "'%s %s %d %d %d'", st.c_str(), sv.name.c_str(), sv.valueReference, sv.i_value, sv.hasStartValue);
+                break;
+            case ModelDescriptionParser::ScalarVariable::SvType::Real:
+                LOG(functions, instanceName, fmi2OK, "logAll", "'%s %s %d %lf %d'", st.c_str(), sv.name.c_str(), sv.valueReference, sv.d_value, sv.hasStartValue);
+                break;
+            case ModelDescriptionParser::ScalarVariable::SvType::Boolean:
+                LOG(functions, instanceName, fmi2OK, "logAll", "'%s %s %d %d %d'", st.c_str(), sv.name.c_str(), sv.valueReference, sv.b_value, sv.hasStartValue);
+                break;
+                case ModelDescriptionParser::ScalarVariable::SvType::String:
+                LOG(functions, instanceName, fmi2OK, "logAll", "'%s %s %d %s %d'", st.c_str(), sv.name.c_str(), sv.valueReference, sv.s_value.c_str(), sv.hasStartValue);
+                break;
+        }
+    }
+
+
     auto toolVersion = ModelDescriptionParser::extractToolVersion(modelDescriptionFile);
 
     LOG(functions, instanceName, fmi2OK, "logAll",
