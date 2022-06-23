@@ -166,9 +166,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          export target=$(cat target)
-          echo $(pwd) 
-          cmake --install build/$target
+          $env:target='win-x64'
           cd .\build\win-x64\rabbitmq-fmu\
           .\unit-test-rabbitmq.exe
           
