@@ -684,7 +684,20 @@ bool FmuContainerCore::hasUnprocessed(void){
 }
 #endif
 int FmuContainerCore::incomingSize(void){
-    return this->incomingUnprocessed[10].size();
+    //Get size for each array
+    //return the max value
+    int size = 0;
+
+    for(const auto &incomingUnprocessedItem: this->incomingUnprocessed)
+    {
+        int incomingSize =  incomingUnprocessedItem.second.size();
+        if(incomingSize > size)
+        {
+            size = incomingSize;
+        }
+    }
+    //return this->incomingUnprocessed[10].size();
+    return size;
 }
 
 #ifndef USE_RBMQ_FMU_PRIORITY_QUEUE

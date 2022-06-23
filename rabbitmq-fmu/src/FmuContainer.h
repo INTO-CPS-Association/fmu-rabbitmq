@@ -37,6 +37,7 @@
 #define RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM 13
 #define RABBITMQ_FMU_SEQNO_OUTPUT 14
 #define RABBITMQ_FMU_ENABLE_SEND_INPUT 15
+#define RABBITMQ_FMU_QUEUE_UPPER_BOUND 16
 
 using namespace std;
 
@@ -92,6 +93,7 @@ private:
 
     bool seqnoPresent;
     bool sendEnablePresent;
+    int queueUpperBound;
 
     FmuContainerCore *core;
 

@@ -188,10 +188,12 @@ int main(int argc, char *argv[]) {
 #define RABBITMQ_FMU_COMMAND_STOP 23
 #define RABBITMQ_FMU_COMMAND_INT 24
 
+#define RABBITMQ_FMU_QUEUE_UPPER_BOUND 16
+
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
-                                          RABBITMQ_FMU_PORT};
-            int intVals[] = {60, 10, 5672};
-            fmi2SetInteger(c, vrefs, 3, intVals);
+                                          RABBITMQ_FMU_PORT, RABBITMQ_FMU_QUEUE_UPPER_BOUND};
+            int intVals[] = {60, 10, 5672, 1000};
+            fmi2SetInteger(c, vrefs, 4, intVals);
 
 
             fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,

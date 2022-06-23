@@ -6,6 +6,7 @@
 
 #include <utility>
 #include <thread>
+#include <chrono>
 #include <message/MessageParser.h>
 #include "Iso8601TimeParser.h"
 
@@ -42,7 +43,7 @@ FmuContainer::FmuContainer(const fmi2CallbackFunctions *mFunctions, bool logginO
           startOffsetTime(floor<milliseconds>(std::chrono::system_clock::now())),
           communicationTimeout(30), loggingOn(logginOn), precision(10), previousInputs(),
           timeOutputPresent(false), timeOutputVRef(-1), previousTimeOutputVal(0.42),
-          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43), seqnoPresent(false){
+          simtimeOutputPresent(false), simtimeOutputVRef(-1), simpreviousTimeOutputVal(0.43), seqnoPresent(false), queueUpperBound(100){
 
     auto intConfigs = {std::make_pair(RABBITMQ_FMU_MAX_AGE, "max_age"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead")};
@@ -152,39 +153,54 @@ void FmuContainer::consumerThreadFunc(void) {
     string json;
 
     while (!consumerThreadStop) {
-        if (this->rabbitMqHandlerConsume->consume(json)) {
-            DataPoint result;
-            if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
-                std::stringstream startTimeStamp;
-                startTimeStamp << result.time;
-                /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
-                /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
-                /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
-                FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now());
+        int queue_size = this->coreIncomingSize();
 
-                std::unique_lock<std::mutex> lock(this->core->m);
-                for (auto &pair: result.integerValues) {
-                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                    /* if (pair.first == 10) { */
-                    /*     cout << "HE: Got seqno=" << pair.second << endl; */
-                    /* } */
-                }
-                for (auto &pair: result.stringValues) {
-                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                }
-                for (auto &pair: result.doubleValues) {
-                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                }
-                for (auto &pair: result.booleanValues) {
-                    this->core->add(pair.first, std::make_pair(result.time, pair.second));
-                }
-                lock.unlock();
-                FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
-                cv.notify_one();
-            } else {
-                FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
-            }
+        if(queue_size <= this->queueUpperBound)
+        {
+            if (this->rabbitMqHandlerConsume->consume(json)) {
+                        DataPoint result;
+                        if (MessageParser::parse(&this->nameToValueReference, json.c_str(), &result)) {
+                            std::stringstream startTimeStamp;
+                            startTimeStamp << result.time;
+                            /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
+                            /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
+                            /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
+                            FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now());
+
+                            std::unique_lock<std::mutex> lock(this->core->m);
+                            for (auto &pair: result.integerValues) {
+                                this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                                /* if (pair.first == 10) { */
+                                /*     cout << "HE: Got seqno=" << pair.second << endl; */
+                                /* } */
+                            }
+                            for (auto &pair: result.stringValues) {
+                                this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                            }
+                            for (auto &pair: result.doubleValues) {
+                                this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                            }
+                            for (auto &pair: result.booleanValues) {
+                                this->core->add(pair.first, std::make_pair(result.time, pair.second));
+                            }
+                            lock.unlock();
+                            FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
+                            cv.notify_one();
+                        } else {
+                            FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
+                        }
+                    }
         }
+        else
+        {
+            FmuContainer_LOG(fmi2OK, "logOk", "Queue_size '%d' over the limit '%d'. Sleep for 1ms ", queue_size, RABBITMQ_FMU_QUEUE_UPPER_BOUND); 
+
+            std::chrono::milliseconds timespan(1); // or whatever
+
+            std::this_thread::sleep_for(timespan);
+        }
+
+        
     }
 }
 #endif //USE_RBMQ_FMU_THREAD
@@ -248,7 +264,8 @@ bool FmuContainer::initialize() {
                        std::make_pair(RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, "communicationtimeout"),
                        std::make_pair(RABBITMQ_FMU_PRECISION, "precision"),
                        std::make_pair(RABBITMQ_FMU_LOOKAHEAD, "lookahead"),
-                       std::make_pair(RABBITMQ_FMU_MAX_AGE, "maxage")};
+                       std::make_pair(RABBITMQ_FMU_MAX_AGE, "maxage"),
+                       std::make_pair(RABBITMQ_FMU_QUEUE_UPPER_BOUND, "queueupperbound")};
 
     int lookaheadBound = 1;
     int maxAgeBound = 0;
@@ -300,6 +317,7 @@ bool FmuContainer::initialize() {
     auto port = this->currentData.integerValues[RABBITMQ_FMU_PORT];
     this->communicationTimeout = this->currentData.integerValues[RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT];
     auto precisionDecimalPlaces = this->currentData.integerValues[RABBITMQ_FMU_PRECISION];
+    this->queueUpperBound = this->currentData.integerValues[RABBITMQ_FMU_QUEUE_UPPER_BOUND];
 
     if (precisionDecimalPlaces < 1) {
         FmuContainer_LOG(fmi2Fatal, "logAll",
@@ -312,9 +330,9 @@ bool FmuContainer::initialize() {
 
 
     FmuContainer_LOG(fmi2OK, "logAll",
-                     "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d)",
+                     "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d), queue upper bound %d",
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
-                     this->communicationTimeout, this->precision, precisionDecimalPlaces);
+                     this->communicationTimeout, this->precision, precisionDecimalPlaces, this->queueUpperBound);
 
 #ifdef USE_RBMQ_FMU_THREAD
     // create a separate connection that deals with publishing to the rabbitmq server

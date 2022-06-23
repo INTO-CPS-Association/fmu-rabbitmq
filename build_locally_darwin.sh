@@ -49,5 +49,7 @@ echo "TESTING STARTED"
 echo $working_dir
 echo $current_dir
 
-ctest --test-dir build/$target -R unit-test-rabbitmq 
+ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq 
+
+
 echo Done

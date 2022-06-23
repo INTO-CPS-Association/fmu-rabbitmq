@@ -31,6 +31,9 @@
         <ScalarVariable name="outofsync" valueReference="15" variability="discrete" causality="input">
             <Boolean start="false" />
         </ScalarVariable>
+        <ScalarVariable name="queueUpperBound" valueReference="16" variability="discrete" causality="parameter">
+            <Integer start="1200"/>
+        </ScalarVariable>
 
 
         <ScalarVariable name="config.hostname" valueReference="0" variability="fixed" causality="parameter" initial="exact">
