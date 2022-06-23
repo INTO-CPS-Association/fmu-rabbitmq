@@ -23,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: [ ubuntu-latest, windows-latest, macos-latest ]
-        os: [windows-latest]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        #os: [windows-latest]
         
     steps:
       - uses: actions/checkout@v2
@@ -164,11 +164,13 @@ jobs:
           #ctest --output-on-failure --test-dir build/$target -R unit-test-rabbitmq
           #echo Tests complete
         if: matrix.os == 'windows-latest'
-        shell: pwsh
+        shell: bash
         run: |
-          $env:target='win-x64'
-          cd .\build\win-x64\rabbitmq-fmu\
-          .\unit-test-rabbitmq.exe
+          export target=$(cat target)
+          echo $(pwd) 
+          cmake --install build/$target
+          ctest --test-dir build/$target -R unit-test-rabbitmq
+          echo Tests complete
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
         if: matrix.os == 'ubuntu-latest'
