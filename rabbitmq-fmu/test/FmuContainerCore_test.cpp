@@ -2,7 +2,7 @@
 // Created by Kenneth Guldbrandt Lausdahl on 21/01/2020.
 //
 #include "gtest/gtest.h"
-#include "FmuContainer.h"
+//#include "FmuContainer.h"
 #include "FmuContainerCore.h"
 #include "DataPoint.h"
 
