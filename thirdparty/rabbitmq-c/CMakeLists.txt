@@ -18,6 +18,8 @@ endif ()
 
 add_subdirectory(rabbitmq-c)
 
-target_include_directories(rabbitmq-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/rabbitmq-c/librabbitmq)
+#target_include_directories(rabbitmq-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/rabbitmq-c/librabbitmq)
+
+target_include_directories(rabbitmq-static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rabbitmq-c/librabbitmq>)
 set_target_properties(rabbitmq-static
         PROPERTIES POSITION_INDEPENDENT_CODE ON)
