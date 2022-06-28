@@ -23,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: [ ubuntu-latest, windows-latest, macos-latest ]
-        os: [windows-latest]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        #os: [windows-latest]
         
     steps:
       - uses: actions/checkout@v2
@@ -172,11 +172,9 @@ jobs:
           #ctest --test-dir build/$target -R unit-test-rabbitmq
           cd build/$target/rabbitmq-fmu/
           ./unit-test-rabbitmq.exe
-          cd ../rabbitmq-core/
-          echo $(pwd) 
-          ls
+          #cd ../rabbitmq-core/
           #./unit-test-rabbitmq-core.exe
-          type D:/a/fmu-rabbitmq/fmu-rabbitmq/build/win-x64/Testing/Temporary/LastTest.log
+          #type D:/a/fmu-rabbitmq/fmu-rabbitmq/build/win-x64/Testing/Temporary/LastTest.log
           echo Tests complete
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
