@@ -198,7 +198,7 @@ namespace {
 
         ASSERT_EQ(initSuccess, expectStepOk) << "dostep error";
 
-        //ASSERT_EQ(post.maxAge, c.getMaxAge()) << "Max age must match";
+        ASSERT_TRUE(post.maxAge == c.getMaxAge()) << "Max age must match";
 
 
         ASSERT_TRUE(post.currentData == c.getCurrentData()) << "State must match";
