@@ -226,7 +226,14 @@ jobs:
         with:
           name: unit-test-rabbitmq.exe  
           path: build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe  
-          
+        
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit-test-rabbitmq-core.exe  
+          path: build/win-x64/rabbitmq-core/unit-test-rabbitmq-core.exe  
+        
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
