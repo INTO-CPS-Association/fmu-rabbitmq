@@ -173,7 +173,7 @@ jobs:
           cd build/$target/rabbitmq-fmu/
           ./unit-test-rabbitmq.exe
           cd ../rabbitmq-core
-          ../unit-test-rabbitmq-core.exe
+          ./unit-test-rabbitmq-core.exe
           type D:/a/fmu-rabbitmq/fmu-rabbitmq/build/win-x64/Testing/Temporary/LastTest.log
           echo Tests complete
           
