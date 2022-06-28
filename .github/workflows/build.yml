@@ -169,7 +169,12 @@ jobs:
           export target=$(cat target)
           echo $(pwd) 
           cmake --install build/$target
-          ctest --test-dir build/$target -R unit-test-rabbitmq
+          #ctest --test-dir build/$target -R unit-test-rabbitmq
+          cd build/$target/rabbitmq-fmu/
+          ./unit-test-rabbitmq.exe
+          cd ../rabbitmq-core
+          ../unit-test-rabbitmq-core.exe
+          type D:/a/fmu-rabbitmq/fmu-rabbitmq/build/win-x64/Testing/Temporary/LastTest.log
           echo Tests complete
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
