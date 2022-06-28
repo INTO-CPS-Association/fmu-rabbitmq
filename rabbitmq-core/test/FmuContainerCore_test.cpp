@@ -164,14 +164,14 @@ namespace {
         tmp.show();
         //}
 
-        //ASSERT_EQ(initSuccess, expectInitOk) << "Initialisation error";
+        ASSERT_EQ(initSuccess, expectInitOk) << "Initialisation error";
 
-        //ASSERT_EQ(post.maxAge, c.getMaxAge()) << "Max age must match";
+        ASSERT_TRUE(post.maxAge == c.getMaxAge()) << "Max age must match";
 
 
-        //ASSERT_TRUE(post.currentData == c.getCurrentData()) << "State must match";
-        //ASSERT_TRUE(post.incomingUnprocessed == c.getIncomingUnprocessed()) << "Incoming unprocessed  must match";
-        //ASSERT_TRUE(post.startOffsetTime == c.getStartOffsetTime()) << "Start time offset  must match";
+        ASSERT_TRUE(post.currentData == c.getCurrentData()) << "State must match";
+        ASSERT_TRUE(post.incomingUnprocessed == c.getIncomingUnprocessed()) << "Incoming unprocessed  must match";
+        ASSERT_TRUE(post.startOffsetTime == c.getStartOffsetTime()) << "Start time offset  must match";
 
 
     }
@@ -237,7 +237,6 @@ namespace {
         checkInitialize(pre, post, true);
     }
 
-/*
     TEST(FmuContainerCore, BasicOk
     ) {
 
@@ -381,5 +380,5 @@ namespace {
 
         checkStep(post, postDoStep, 1, true);
     }
-*/
+
 }
