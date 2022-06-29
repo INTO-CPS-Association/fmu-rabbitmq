@@ -334,6 +334,8 @@ pair<bool, date::sys_time<std::chrono::milliseconds>> FmuContainerCore::calculat
 template<typename Predicate>
 void FmuContainerCore::processLookahead(Predicate predicate) {
 
+    /* verbose = false; */
+
     if (verbose) {
         cout << "Lookaheads:" << endl;                            
         //FmuContainerCore_LOG(fmi2OK, "logAll", "FmuContainerCore_LOG Lookaheads=%s","");

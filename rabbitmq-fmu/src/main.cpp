@@ -191,15 +191,21 @@ int main(int argc, char *argv[]) {
 #define RABBITMQ_FMU_QUEUE_UPPER_BOUND 16
 
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
+<<<<<<< HEAD
                                           RABBITMQ_FMU_PORT, RABBITMQ_FMU_QUEUE_UPPER_BOUND};
             int intVals[] = {60, 10, 5672, 1000};
             fmi2SetInteger(c, vrefs, 4, intVals);
+=======
+                                          RABBITMQ_FMU_PORT};
+            int intVals[] = {60, 10, 5671};
+            fmi2SetInteger(c, vrefs, 3, intVals);
+>>>>>>> development
 
 
             fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
                                                 RABBITMQ_FMU_ROUTING_KEY};
-            const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"};
-            fmi2SetString(c, vrefsString, 4, stringVals);
+            /* const char *stringVals[] = {"localhost", "guest", "guest", "linefollower"}; */
+            /* fmi2SetString(c, vrefsString, 4, stringVals); */
 
             //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
 

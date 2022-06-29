@@ -300,6 +300,21 @@ bool FmuContainer::initialize() {
 
     std::chrono::milliseconds maxAge = std::chrono::milliseconds(maxAgeBound);
 
+    auto boolMap = this->currentData.booleanValues;
+
+    auto boolConfigs = {std::make_pair(RABBITMQ_FMU_USE_SSL, "ssl")};
+
+    for (auto const &value: boolConfigs) {
+        auto vRef = value.first;
+        auto description = value.second;
+
+        if (boolMap.find(vRef) == boolMap.end()) {
+            FmuContainer_LOG(fmi2Fatal, "logError", "Missing parameter. Value reference '%d', Description '%s' ", vRef,
+                             description);
+            allParametersPresent = false;
+        }
+    }
+
     if (!allParametersPresent) {
         return false;
     }
@@ -328,28 +343,29 @@ bool FmuContainer::initialize() {
 
     this->precision = std::pow(10, precisionDecimalPlaces);
 
+    auto useSSL = boolMap[RABBITMQ_FMU_USE_SSL];
 
     FmuContainer_LOG(fmi2OK, "logAll",
-                     "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d), queue upper bound %d",
+                     "Preparing initialization. Hostname='%s', Port='%d', Username='%s', routingkey='%s', communication timeout %d s, precision %lu (%d), SSL %d",
                      hostname.c_str(), port, username.c_str(), routingKey.c_str(),
-                     this->communicationTimeout, this->precision, precisionDecimalPlaces, this->queueUpperBound);
+                     this->communicationTimeout, this->precision, precisionDecimalPlaces, useSSL);
 
 #ifdef USE_RBMQ_FMU_THREAD
     // create a separate connection that deals with publishing to the rabbitmq server
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey, routingKeyFromCosim, PUB);
+                                                       routingKey, routingKeyFromCosim, PUB, useSSL);
     if (!this->rabbitMqHandler)
         return false;
 
     // create a separate connection that deals with consuming from the rabbitmq server
     this->rabbitMqHandlerConsume = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey, routingKeyFromCosim, SUB);
+                                                       routingKey, routingKeyFromCosim, SUB, useSSL);
     if (!this->rabbitMqHandlerConsume)
         return false;
 #else
     // create a connection that deals with publishing to and consuming from the rabbitmq server
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey, routingKeyFromCosim, PUB|SUB);
+                                                       routingKey, routingKeyFromCosim, PUB|SUB, useSSL);
     if (!this->rabbitMqHandler)
         return false;
 #endif
@@ -357,19 +373,19 @@ bool FmuContainer::initialize() {
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
     // create a separate connection that deals with publishing to the rabbitmq server
     this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
-                                                       routingKey, routingKeyFromCosim, PUB);
+                                                       routingKey, routingKeyFromCosim, PUB, useSSL);
     if (!this->rabbitMqHandlerSystemHealth)
         return false;
 
     // create a separate connection that deals with consuming from the rabbitmq server
     this->rabbitMqHandlerSystemHealthConsume = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
-                                                       routingKey, routingKeyFromCosim, SUB);
+                                                       routingKey, routingKeyFromCosim, SUB, useSSL);
     if (!this->rabbitMqHandlerSystemHealthConsume)
         return false;
 #else
     // create a connection that deals with publishing to and consuming from the rabbitmq server
     this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
-                                                       routingKey, routingKeyFromCosim, PUB|SUB);
+                                                       routingKey, routingKeyFromCosim, PUB|SUB, useSSL);
     if (!this->rabbitMqHandlerSystemHealth)
         return false;
 #endif
@@ -445,11 +461,12 @@ RabbitmqHandler *FmuContainer::createCommunicationHandler(const string &hostname
                                                           const string &password, const string &exchange,const string &exchangetype,
                                                           const string &queueBindingKey,
                                                           const string &queueBindingKey_from_cosim,
-                                                          const int type) {
+                                                          const int type,
+                                                          const bool ssl) {
     RabbitmqHandler *hdl =  new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey, queueBindingKey_from_cosim);
 
     try {
-        if (!hdl->createConnection()) {
+        if (!((!ssl) ? hdl->createConnection() : hdl->createSSLConnection())) {
             FmuContainer_LOG(fmi2Fatal, "logAll", "Connection failed to rabbitmq server at '%s:%d'",
                              hostname.c_str(), port);
             delete hdl;
@@ -503,13 +520,13 @@ bool FmuContainer::initializeCoreState() {
                     std::stringstream startTimeStamp;
                     startTimeStamp << result.time;
 
-                     FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str()); 
+                     FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s'", startTimeStamp.str().c_str(), json.c_str());
 
                      for (const auto& stone: result.stringValues) {
 
                         cout << stone.first << ": " << stone.second << endl;
 
-                        FmuContainer_LOG(fmi2OK, "logOk", "Got data '%d' '%s'", stone.first, stone.second.c_str()); 
+                        FmuContainer_LOG(fmi2OK, "logOk", "Got data '%d' '%s'", stone.first, stone.second.c_str());
                     }
 
                     //propagate new data to core
@@ -896,7 +913,7 @@ bool FmuContainer::getString(const fmi2ValueReference *vr, size_t nvr, fmi2Strin
             const std::string::size_type size = this->core->getData().at(vr[i]).second.s.s.size();
             value[i] = new char[size + 1];   //we need extra char for NUL
 
-            char * temp = new char[size + 1]; 
+            char * temp = new char[size + 1];
             strcpy(temp, this->core->getData().at(vr[i]).second.s.s.c_str());
             value[i] = temp;
 
@@ -905,7 +922,7 @@ bool FmuContainer::getString(const fmi2ValueReference *vr, size_t nvr, fmi2Strin
             FmuContainer_LOG(fmi2OK, "logAll", "vr: %d, value: %s", vr[i], this->core->getData().at(vr[i]).second.s.s.c_str());
             FmuContainer_LOG(fmi2OK, "logAll", "vr: %d, value: %s", vr[i], value[i]);
             */
-                
+
         }
 
         return true;

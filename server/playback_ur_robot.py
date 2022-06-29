@@ -5,11 +5,13 @@ import datetime
 import time
 import csv
 import pandas as pd
+import ssl
 
 csvFilePath = r'ur_robot.csv'
 # csvFilePath = r'ur_robot_clean.csv'
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+
 channel = connection.channel()
 print("Declaring exchange")
 channel.exchange_declare(exchange='fmi_digital_twin_cd', exchange_type='direct')

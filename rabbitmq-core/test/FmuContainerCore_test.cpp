@@ -166,7 +166,7 @@ namespace {
 
         ASSERT_EQ(initSuccess, expectInitOk) << "Initialisation error";
 
-        ASSERT_EQ(post.maxAge, c.getMaxAge()) << "Max age must match";
+        ASSERT_TRUE(post.maxAge == c.getMaxAge()) << "Max age must match";
 
 
         ASSERT_TRUE(post.currentData == c.getCurrentData()) << "State must match";
@@ -198,7 +198,7 @@ namespace {
 
         ASSERT_EQ(initSuccess, expectStepOk) << "dostep error";
 
-        ASSERT_EQ(post.maxAge, c.getMaxAge()) << "Max age must match";
+        ASSERT_TRUE(post.maxAge == c.getMaxAge()) << "Max age must match";
 
 
         ASSERT_TRUE(post.currentData == c.getCurrentData()) << "State must match";
@@ -236,7 +236,6 @@ namespace {
 
         checkInitialize(pre, post, true);
     }
-
 
     TEST(FmuContainerCore, BasicOk
     ) {
@@ -381,4 +380,5 @@ namespace {
 
         checkStep(post, postDoStep, 1, true);
     }
+
 }
