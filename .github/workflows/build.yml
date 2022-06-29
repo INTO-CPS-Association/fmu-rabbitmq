@@ -178,7 +178,7 @@ jobs:
           echo Tests complete
           
       - name: debug failing test on WIN
-        if: matrix.os == 'windows-latest'
+        if: always()
         shell: bash
         run: |
           cscript eventquery.vbs /L application /FI "type eq error"
