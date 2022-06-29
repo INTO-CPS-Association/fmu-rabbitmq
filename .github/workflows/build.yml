@@ -169,9 +169,9 @@ jobs:
           export target=$(cat target)
           echo $(pwd) 
           cmake --install build/$target
-          #ctest --test-dir build/$target -R unit-test-rabbitmq
-          cd build/$target/rabbitmq-fmu/
-          ./unit-test-rabbitmq.exe
+          ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq
+          #cd build/$target/rabbitmq-fmu/
+          #./unit-test-rabbitmq.exe
           #cd ../rabbitmq-core/
           #./unit-test-rabbitmq-core.exe
           #type D:/a/fmu-rabbitmq/fmu-rabbitmq/build/win-x64/Testing/Temporary/LastTest.log
