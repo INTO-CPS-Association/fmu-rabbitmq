@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import pika
 import json
-import datetime
 import time
+
+from datetime import datetime, timezone
 import csv
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
@@ -17,10 +18,12 @@ time_sleep = 0.1
 data = 'gazebo_playback_data.csv'
 print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sleep*1000)
 def publish():
-    dt=datetime.datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
+    dt=datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
     print(dt)
     msg = {}
     msg['time']= dt.isoformat()
+    
+    msg['time']= datetime.now(tz = datetime.now().astimezone().tzinfo).isoformat(timespec='milliseconds')
     msg['xpos']=0.0
     msg['ypos']=0.0
     i = 1
@@ -36,8 +39,10 @@ def publish():
             i = i +1
 			#dt = dt+ datetime.timedelta(seconds=float(row['step-size']))
 			#msg['time']= dt.isoformat()
-            timet = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f%z")
+            timet = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f%z")
             msg['time']= timet.isoformat()
+
+            msg['time']= datetime.now(tz = datetime.now().astimezone().tzinfo).isoformat(timespec='milliseconds')
             print(" [x] Sent %s" % json.dumps(msg))
             channel.basic_publish(exchange='fmi_digital_twin_cd',
 						routing_key='linefollower.data.to_cosim',

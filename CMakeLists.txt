@@ -114,6 +114,7 @@ set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(thirdparty/rapidjson)
 #add_subdirectory(thirdparty/amqp-cpp)
+#### Comment line 118 to build locally.
 add_subdirectory(thirdparty/googletest)
 
 #execute_process(COMMAND ${CMAKE_EXECUTABLE} thirdparty/rapidjson -DCMAKE_INSTALL_PREFIX="${CMAKE_CURRENT_SOURCE_DIR}/build/install/thirdparty/rapidjson" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/thirdparty/rapidjson")

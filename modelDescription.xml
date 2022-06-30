@@ -31,7 +31,7 @@
         <ScalarVariable name="outofsync" valueReference="15" variability="discrete" causality="input">
             <Boolean start="false" />
         </ScalarVariable>
-        <ScalarVariable name="queueUpperBound" valueReference="16" variability="discrete" causality="parameter">
+        <ScalarVariable name="queueUpperBound" valueReference="17" variability="discrete" causality="parameter">
             <Integer start="1200"/>
         </ScalarVariable>
 
@@ -83,6 +83,9 @@
         </ScalarVariable>
         <ScalarVariable name="config.ssl" valueReference="16" variability="fixed" causality="parameter" initial="exact">
             <Boolean start="0"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.queueupperbound" valueReference="17" variability="fixed" causality="parameter" initial="exact">
+            <Integer start="100"/>
         </ScalarVariable>
 
 

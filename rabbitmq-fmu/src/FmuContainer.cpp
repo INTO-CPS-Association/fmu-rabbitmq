@@ -154,6 +154,7 @@ void FmuContainer::consumerThreadFunc(void) {
 
     while (!consumerThreadStop) {
         int queue_size = this->coreIncomingSize();
+        FmuContainer_LOG(fmi2OK, "logOk", "queue size '%d'", queue_size);
 
         if(queue_size <= this->queueUpperBound)
         {

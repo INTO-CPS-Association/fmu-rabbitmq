@@ -32,11 +32,17 @@ namespace {
     TEST(FmuTest, BasicFlow
     ) {
 
+        GTEST_SKIP();
         cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
 
+        char cCurrentPath[FILENAME_MAX];
 
+        if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+            return;
+        }
 
+        cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
 
 
         cout << "Working directory is " << cCurrentPath << endl;
@@ -232,7 +238,6 @@ namespace {
     }
 
     TEST(FmuSendTest, EnableSend){
-        //GTEST_SKIP();
         cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
 
@@ -367,4 +372,139 @@ namespace {
         fmi2FreeInstance(c);
     }
 
+    TEST(FmuSendTest, BufferLimit){
+    cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
+
+
+    char cCurrentPath[FILENAME_MAX];
+
+    if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+        return;
+    }
+
+    cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
+
+
+    cout << "Working directory is " << cCurrentPath << endl;
+
+
+    fmi2String instanceName = "rabbitmq";
+    fmi2Type fmuType = fmi2CoSimulation;
+    fmi2String fmuGUID = "63ba49fe-07d3-402c-b9db-2df495167424";
+    string currentUri = (string("file://") + string(cCurrentPath));
+    fmi2String fmuResourceLocation = currentUri.c_str();
+    const fmi2CallbackFunctions *functions = nullptr;
+    fmi2Boolean visible = false;
+    fmi2Boolean loggingOn = false;
+
+
+    auto c = fmi2Instantiate(
+            instanceName,
+            fmuType, fmuGUID,
+            fmuResourceLocation,
+            functions,
+            visible,
+            loggingOn);
+
+    try {
+        fmi2Boolean toleranceDefined = false;
+        fmi2Real tolerance = 0;
+        fmi2Real startTime = 0;
+        fmi2Boolean stopTimeDefined = true;
+        fmi2Real stopTime = true;
+
+        showStatus("fmi2SetupExperiment", fmi2SetupExperiment(
+                c, toleranceDefined, tolerance,
+                startTime, stopTimeDefined, stopTime));
+
+#define RABBITMQ_FMU_HOSTNAME_ID 0
+#define RABBITMQ_FMU_PORT 1
+#define RABBITMQ_FMU_USER 2
+#define RABBITMQ_FMU_PWD 3
+#define RABBITMQ_FMU_ROUTING_KEY 4
+#define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
+#define RABBITMQ_FMU_PRECISION 6
+#define RABBITMQ_FMU_MAXAGE 7
+#define RABBITMQ_FMU_SEND_ENABLE 15
+#define RABBITMQ_FMU_USE_SSL 16
+#define RABBITMQ_FMU_QUEUE_UPPER_BOUND 17
+#define RABBITMQ_FMU_XPOS 20
+#define RABBITMQ_FMU_YPOS 21
+#define RABBITMQ_FMU_COMMAND_STOP 22
+
+        fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
+                                        RABBITMQ_FMU_PORT, RABBITMQ_FMU_MAXAGE, RABBITMQ_FMU_QUEUE_UPPER_BOUND };
+        int intVals[] = {60, 10, 5672, 150, 2};
+        fmi2SetInteger(c, vrefs, 5, intVals);
+
+
+        fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
+                                            RABBITMQ_FMU_ROUTING_KEY};
+        const char *stringVals[] = {"localhost", "guest", "guest", "linefollower.data.to_cosim"};
+        fmi2SetString(c, vrefsString, 4, stringVals);
+
+        //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
+
+        showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
+        showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
+
+        cout << "Initialization one"<<endl;
+
+        size_t nvr = 2;
+        const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{RABBITMQ_FMU_XPOS,RABBITMQ_FMU_YPOS};
+        fmi2Real *value = new fmi2Real[nvr];
+
+        showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
+        for (int i = 0; i < nvr; i++) {
+            cout << "Ref: '" << vr[i] << "' Value '" << value[i] << "'" << endl;
+        }
+
+
+        fmi2Real currentCommunicationPoint = 0;
+        fmi2Real communicationStepSize = 0.1;
+        /* fmi2Real communicationStepSize = 0.002; */
+        fmi2Boolean noSetFMUStatePriorToCurrentPoint = false;
+
+        fmi2Real simDuration = 3.0;
+        /* fmi2Real simDuration = 10*4; */
+        /* fmi2Real simDuration = 10*20*50; */
+        bool changeInput = true;
+        fmi2ValueReference vrefsBool[] = {RABBITMQ_FMU_COMMAND_STOP, RABBITMQ_FMU_SEND_ENABLE };
+        fmi2Real reals[] = {3.5};
+        fmi2Integer ints[] = {5};
+        fmi2Boolean enable = true;
+        fmi2Boolean bools[] = {changeInput, enable};
+        fmi2String strs[] = {"hejsan"};
+
+        showStatus("fmi2SetBoolean", fmi2SetBoolean(c, vrefsBool, 2, bools));
+
+        for(int i = 0; i <= simDuration; i++){
+            cout << "ENTER STEP" << endl;
+            fmi2Real maxStepSize = 0;
+            showStatus("fmi2DoStep", fmi2DoStep(c, currentCommunicationPoint, communicationStepSize,
+                                                noSetFMUStatePriorToCurrentPoint));
+            currentCommunicationPoint = currentCommunicationPoint  + communicationStepSize;
+            cout << "EXIT STEP" << endl;
+            showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
+            for (int i = 0; i < nvr; i++) {
+                cout << "Ref: '" << vr[i] << "' Value '" << setprecision(10) << value[i] << "'" << endl;
+            }
+
+            enable = !enable;
+            if(enable){
+                changeInput = !changeInput;
+
+            }
+            fmi2Boolean t[] = {changeInput, enable};
+            showStatus("fmi2SetBoolean", fmi2SetBoolean(c, vrefsBool, 2, t));
+            cout << "SHOULD have updated" << endl;
+
+        }
+
+//        fmi2Terminate(fmi2Component c)
+    } catch (const char *status) {
+        cout << "Error " << status << endl;
+    }
+    fmi2FreeInstance(c);
+}
 }
