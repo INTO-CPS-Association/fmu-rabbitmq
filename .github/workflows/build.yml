@@ -168,7 +168,7 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
-          pacman -S mingw-w64-x86_64-gcc-libs
+          pacman -S --noconfirm mingw-w64-x86_64-gcc-libs
           cmake --install build/$target
           echo check for dll dependencies for the core test
           ldd build/$target/rabbitmq-core/unit-test-rabbitmq-core.exe
