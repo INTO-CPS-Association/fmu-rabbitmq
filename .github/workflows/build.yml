@@ -168,13 +168,14 @@ jobs:
         run: |
           export target=$(cat target)
           echo $(pwd) 
+          pacman -S mingw-w64-x86_64-gcc-libs
           cmake --install build/$target
-          #ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq
-          #cd build/$target/rabbitmq-fmu/
-          #./unit-test-rabbitmq.exe
-          #cd ../rabbitmq-core/
-          #./unit-test-rabbitmq-core.exe
-          #type D:/a/fmu-rabbitmq/fmu-rabbitmq/build/win-x64/Testing/Temporary/LastTest.log
+          echo check for dll dependencies for the core test
+          ldd build/$target/rabbitmq-core/unit-test-rabbitmq-core.exe
+          echo check for dll dependencies for the container test
+          ldd build/$target/rabbitmq-fmu/unit-test-rabbitmq.exe
+          #Call ctest
+          ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq
           echo Tests complete
           
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
