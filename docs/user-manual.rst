@@ -58,7 +58,7 @@ Model Description File
 ----------------------
 :code:`ScalarVariables` within the Model Description File are used to configure properties of RMQFMU, mapping message data to FMU outputs, as well as FMU inputs to message data.
 The first 0-9 `valueReference` of the model description file are used for configuring RMQFMU. It is adviced **not** to use `valueReference` 0-19, as these might be used for future updates.
-Below is a description of the configuration of RMQFMU via scalar variables of the model description file:
+Below is a description of the configuration of RMQFMU via scalar variables of the model description file (parameter and obligatory field where not specified):
 
 ValueReference 0 - hostname
     Defines the host, i.e. `localhost`
@@ -105,8 +105,22 @@ ValueReference 12 - Exchange type for health data
     
 ValueReference 13 - Routing Key for data sent by the rabbitmq fmu
     Defines the Routing Key for the data sent by the rabbitmq fmu
+        
+ValueReference 14 - Optional output reserved for the sequential number 
+    The sequential number is treated as any other output that needs to be part of the message. Useful for debugging
+        
+ValueReference 15 - Optional input reserved for enable send input
+    Allows the fmu to enable/disable sending a message based on the output of another control fmu
+        
+ValueReference 16 - Optional parameter (default false) for SSL configuration
+    Allows to enable an ssl connection to the rabbitMQ server
+        
+ValueReference 17 - Optional parameter (default at 100) for limiting the incoming queue
+    Allows the specification of an upper bound for the number of messages present in the incoming queue
     
-In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
+If the RMQFMU is configured to build with the threaded option on (the default behaviour, and what you get with the release package), then for each type of data, two connections are created, one for publishing to the server, and one for consuming from the server. This is to ensure that there is no bottleneck at the socket level. 
+
+Otherwise fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
 
 The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
@@ -114,10 +128,6 @@ The connection for health data is configured through: `config.healthdata.exchang
 **NOTE: If no system health data is published to RMQFMU then the operation of the fmu will continue normally, however no information regarding system health will be outputted from RMQFMU.**
 
 A mapping of message data to FMU output is carried out via the name property of a :code:`ScalarVariable`. For example: :code:`<ScalarVariable name="level" valueReference="20" variability="continuous" causality="output"><Real /></ScalarVariable>` maps the value of the key :code:`level` within a message to the output with :code:`valueReference 20`.
-
-Note that, an output with name `seqno`, with a specific value reference of 103, is required in the model description file, and can be added as follows:
-:code:`<ScalarVariable name="seqno" valueReference="103" variability="discrete" causality="output"><Integer /></ScalarVariable>`.
-This represented the sequence number of a message, and is used to differentiate between two or more messages in the RMQFMU. The field `seqno` has to be included in the message sent to the RMQFMU.
 
 Remember, when adding an additional output this also has to be added to outputs in modelstructure. Note, that it uses index and not valuereference! Index is related to the order of the respective scalarvariable. I.e. the topmost scalar variable within ``ModelVariables`` has index 1. Example of adding two indices to ``ModelStructure/Outputs``:
 
