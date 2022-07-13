@@ -57,7 +57,7 @@ Finally, consuming system health data is not blocking. If no data is available w
 Model Description File
 ----------------------
 :code:`ScalarVariables` within the Model Description File are used to configure properties of RMQFMU, mapping message data to FMU outputs, as well as FMU inputs to message data.
-The first 0-9 `valueReference` of the model description file are used for configuring RMQFMU. It is adviced **not** to use `valueReference` 0-19, as these might be used for future updates.
+The first 0-17 `valueReference` of the model description file are used for configuring RMQFMU. It is adviced **not** to use `valueReference` 0-19, as these might be used for future updates.
 Below is a description of the configuration of RMQFMU via scalar variables of the model description file (parameter and obligatory field where not specified):
 
 ValueReference 0 - hostname
