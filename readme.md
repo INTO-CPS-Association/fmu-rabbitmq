@@ -43,7 +43,6 @@ The FMU is configured using a script `rabbitmq_fmu_configure.py` for the input/o
 ```
 Remember to add the outputs before the configuration variables.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
-Note that the value reference `14`is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
 
 * adding all model inputs manually as:
 ```xml
@@ -127,9 +126,24 @@ The RabbitMQ FMU can be configured by setting the following parameters:
 <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
     <String start="linefollower.data.from_cosim"/>
 </ScalarVariable>
+<ScalarVariable name="config.ssl" valueReference="16" variability="fixed" causality="parameter" initial="exact">
+    <Boolean start="true"/>
+</ScalarVariable>
+<ScalarVariable name="config.queueupperbound" valueReference="17" variability="fixed" causality="parameter" initial="exact">
+    <Integer start="100"/>
+</ScalarVariable>
 ```
 
-In total the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
+Note that the value reference `14` is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
+Note that the value reference `15` is reserved for input `enable send input`, that allows a user to send a control signal to RMQFMU to enable/disable its ability to send messages outside of the co-sim.  This input can be removed if not needed.
+Note that the value reference `16` is reserved for parameter `ssl`, which allows a user to configure an ssl connection to the rabbitMQ server.  This parameter can be removed if not needed, it will default to false, that is connection without ssl.
+Note that the value reference `17` is reserved for parameter `queue upper bound`, that bounds the size of the incoming queue in the RMQFMU.  This parameter can be removed if not needed, it will default to 100.
+
+### Notes on connections created to the rabbitMQ server
+
+If the RMQFMU is configured to build with the threaded option on (the default behaviour, and what you get with the release package), then for each type of data, two connections are created, one for publishing to the server, and one for consuming from the server. This is to ensure that there is no bottleneck at the socket level. 
+
+Otherwise fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
 
 The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
@@ -239,3 +253,12 @@ cmake . -DTHIRD_PARTY_LIBRARIES_ROOT=`readlink -f build/external/darwin-x86_64`
 4. Finally to release it, switch to the master branch and merge with the TAG.
 
 Note that: the master branch always contains the latest release, whereas the development branch is always stable. Github actions are triggered on push to master, and development.
+
+#### Development on windows
+
+This is currently a problem for local development, as the project does not build. However, it succeeds on actions. In order to run locally on windows the unit tests, the following need to be installed first, from a msys2 shell:
+
+```bash
+$ pacman -S --noconfirm mingw-w64-x86_64-gcc-libs
+$ pacman -S openssl
+```
