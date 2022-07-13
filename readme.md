@@ -137,13 +137,13 @@ The RabbitMQ FMU can be configured by setting the following parameters:
 Note that the value reference `14` is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
 Note that the value reference `15` is reserved for input `enable send input`, that allows a user to send a control signal to RMQFMU to enable/disable its ability to send messages outside of the co-sim.  This input can be removed if not needed.
 Note that the value reference `16` is reserved for parameter `ssl`, which allows a user to configure an ssl connection to the rabbitMQ server.  This parameter can be removed if not needed, it will default to false, that is connection without ssl.
-Note that the value reference `17` is reserved for parameter `queue upper bound`, that bounds the size of the incoming queue in the RMQFMU.  This parameter can be removed if not needed, it will default to 100.
+Note that the value reference `17` is reserved for parameter `queue upper bound`, that bounds the size of the incoming queue in the RMQFMU. If the limit is reached then RMQFMU will not consume from the server. This parameter can be removed if not needed, it will default to 100.
 
 ### Notes on connections created to the rabbitMQ server
 
 If the RMQFMU is configured to build with the threaded option on (the default behaviour, and what you get with the release package), then for each type of data, two connections are created, one for publishing to the server, and one for consuming from the server. This is to ensure that there is no bottleneck at the socket level. 
 
-Otherwise fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
+Otherwise the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
 
 The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
