@@ -619,7 +619,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         FmuContainer_LOG(fmi2OK, "logAll", "disable send status: %d", disable);
     }
     //Check which of the inputs of the fmu has changed since the last step
-    if(disable==0){
+    if(disable==false){
         string message;
         this->checkInputs(message);
         FmuContainer_LOG(fmi2OK, "logAll", "Send enabled on this step, for message %s", message.c_str());
