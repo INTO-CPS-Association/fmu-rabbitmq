@@ -611,7 +611,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     string healthmessage = R"({"simAtTime":")" + cosim_time + R"("})";
     FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", healthmessage.c_str());
 
-    bool disable = true;
+    bool disable = false;
     //Enable or Disable the send function
     if(this->sendEnablePresent){
         disable = this->currentData.booleanValues[RABBITMQ_FMU_ENABLE_SEND_INPUT];
