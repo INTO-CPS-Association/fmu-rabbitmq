@@ -36,7 +36,7 @@ fi
 
 echo Running CMake
 rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
-cmake -B$working_dir -H.
+cmake -B$working_dir -Dprotobuf_BUILD_TESTS=OFF -H.
 
 echo Compiling
 
