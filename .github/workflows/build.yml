@@ -30,13 +30,13 @@ jobs:
       - uses: actions/checkout@v2
         if: matrix.os == 'ubuntu-latest'
         with:
-          submodules: true
+          submodules: recursive
           fetch-depth: 0
 
       - uses: actions/checkout@v2
         if: matrix.os != 'ubuntu-latest'
         with:
-          submodules: true
+          submodules: recursive
 
       - name: get rabbitmq Ubuntu ONLY
         if: matrix.os == 'ubuntu-latest'
