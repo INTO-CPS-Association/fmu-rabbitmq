@@ -13,7 +13,7 @@ print("Creating queue")
 result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
 channel.queue_bind(exchange='fmi_digital_twin_cd', queue=queue_name,
-                   routing_key='linefollower.data.to_cosim')
+                   routing_key='linefollower.data.from_cosim')
 time_sleep = 0.1
 data = 'gazebo_playback_data.csv'
 print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sleep*1000)
