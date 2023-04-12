@@ -97,7 +97,7 @@ The RabbitMQ FMU can be configured by setting the following parameters:
     <String start="guest"/>
 </ScalarVariable>
 <ScalarVariable name="config.routingkey" valueReference="4" variability="fixed" causality="parameter">
-    <String start="linefollower.data.from_cosim"/>
+    <String start="linefollower.data.to_cosim"/>
 </ScalarVariable>
 <ScalarVariable name="config.communicationtimeout" valueReference="5" variability="fixed" causality="parameter" description="Network read time out in seconds" initial="exact">
     <Integer start="60"/>
