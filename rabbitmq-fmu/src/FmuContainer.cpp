@@ -164,8 +164,8 @@ void FmuContainer::consumerThreadFunc(void) {
                             std::stringstream startTimeStamp;
                             startTimeStamp << result.time;
                             /* FmuContainer_LOG(fmi2OK, "logOk", "message time to sim time %ld, at simtime", this->core->messageTimeToSim(result.time)); */
-                            /* FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), */
-                            /*     json.c_str(), std::chrono::high_resolution_clock::now()); */
+                             FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), 
+                                 json.c_str(), std::chrono::high_resolution_clock::now()); 
                             FmuContainer_LOG(fmi2OK, "logOk", "Got data '%s', '%s', '%lld'", startTimeStamp.str().c_str(), json.c_str(), std::chrono::high_resolution_clock::now());
 
                             std::unique_lock<std::mutex> lock(this->core->m);
@@ -185,7 +185,7 @@ void FmuContainer::consumerThreadFunc(void) {
                                 this->core->add(pair.first, std::make_pair(result.time, pair.second));
                             }
                             lock.unlock();
-                            FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
+                            //FmuContainer_LOG(fmi2OK, "logWarn", "unlocked '%s'", "");
                             cv.notify_one();
                         } else {
                             FmuContainer_LOG(fmi2OK, "logWarn", "Got unknown json '%s'", json.c_str());
@@ -216,7 +216,7 @@ void FmuContainer::healthThreadFunc(void) {
     while (!healthThreadStop) {
         if (this->rabbitMqHandlerSystemHealthConsume->consume(systemHealthData)){
 
-            FmuContainer_LOG(fmi2OK, "logAll", "New health message %s", systemHealthData.c_str());
+            //FmuContainer_LOG(fmi2OK, "logAll", "New health message %s", systemHealthData.c_str());
             //Extract rtime value from message
             date::sys_time<std::chrono::milliseconds> simTime, rTime;
             if(MessageParser::parseSystemHealthMessage(simTime, rTime, systemHealthData.c_str())){
@@ -226,7 +226,7 @@ void FmuContainer::healthThreadFunc(void) {
                 lock.unlock();
             }
             else{
-                FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+                //FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
             }
         }
     }
