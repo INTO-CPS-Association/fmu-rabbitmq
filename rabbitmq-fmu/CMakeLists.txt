@@ -106,13 +106,6 @@ if (WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
 endif ()
 
-if (UNIX AND NOT APPLE)
-    #unix
-    #add icu libraries
-    string(APPEND CMAKE_SHARED_LINKER_FLAGS "-licuuc")
-
-endif ()
-
 #################################### TESTS ####################################
 
 list(FILTER CPP_FILES EXCLUDE REGEX ".*src\\/main\\.cpp")
