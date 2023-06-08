@@ -23,23 +23,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-20.04, windows-latest, macos-latest ]
         #os: [windows-latest]
 
     steps:
       - uses: actions/checkout@v2
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         with:
           submodules: true
           fetch-depth: 0
 
       - uses: actions/checkout@v2
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os != 'ubuntu-20.04'
         with:
           submodules: true
 
       - name: get rabbitmq Ubuntu ONLY
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         uses: getong/rabbitmq-action@v1.2
         with:
           rabbitmq version: '3.8.2-management'
@@ -50,7 +50,7 @@ jobs:
       - uses: lukka/get-cmake@v3.20.1
 
       - name: Prepare variables for ubuntu
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           echo "linux-x64" > target
           echo "linux-x86_64" > install_name
@@ -58,7 +58,7 @@ jobs:
           echo " " > cmakeFlagValue
 
       - name: Set up CLANG
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         uses: egor-tensin/setup-clang@v1
         with:
           version: latest
@@ -184,14 +184,14 @@ jobs:
           echo Tests complete
 
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           cd server
           python3 -m pip install pika --upgrade
           nohup python3 playback_gazebo_data-test.py & exit
 
       - name: Run integration tests UBUNTU # there are no integration tests yet for the core.
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           export target=$(cat target)
           cp modelDescription.xml build/$target/rabbitmq-fmu/
@@ -206,7 +206,7 @@ jobs:
           path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Upload artifact linux
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq.so
@@ -249,34 +249,34 @@ jobs:
 
       - name: Update version on modelDescription.xml
         shell: bash
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           cd rabbitmq-fmu/
           ../scripts/set_fmu_version.sh modelDescription.xml
 
       - name: Upload modelDescription.xml
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         uses: actions/upload-artifact@v2
         with:
           name: modelDescription.xml
           path: rabbitmq-fmu/modelDescription.xml
 
       - name: Upload rabbitmq configuration script
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         uses: actions/upload-artifact@v2
         with:
           name: rabbitmq_fmu_configure.py
           path: scripts/rabbitmq_fmu_configure.py
 
       - name: Upload readme
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         uses: actions/upload-artifact@v2
         with:
           name: readme.md
           path: readme.md
 
   pack-fmu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build
     steps:
       - uses: actions/checkout@v2
