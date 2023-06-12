@@ -154,7 +154,7 @@ void FmuContainer::consumerThreadFunc(void) {
 
     while (!consumerThreadStop) {
         int queue_size = this->coreIncomingSize();
-        FmuContainer_LOG(fmi2OK, "logOk", "queue size '%d'", queue_size);
+        //FmuContainer_LOG(fmi2OK, "logOk", "queue size '%d'", queue_size);
 
         if(queue_size <= this->queueUpperBound)
         {
@@ -194,7 +194,7 @@ void FmuContainer::consumerThreadFunc(void) {
         }
         else
         {
-            FmuContainer_LOG(fmi2OK, "logOk", "Queue_size '%d' over the limit '%d'. Sleep for 1ms ", queue_size, RABBITMQ_FMU_QUEUE_UPPER_BOUND); 
+            //FmuContainer_LOG(fmi2OK, "logOk", "Queue_size '%d' over the limit '%d'. Sleep for 1ms ", queue_size, RABBITMQ_FMU_QUEUE_UPPER_BOUND); 
 
             std::chrono::milliseconds timespan(1); // or whatever
 
@@ -739,7 +739,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
                     FmuContainer_LOG(fmi2OK, "logWarn", "Co-sim behind in time by %f [ms]", rTime_d-simTime_d);
                 }
             } else {
-                FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
+                //FmuContainer_LOG(fmi2OK, "logAll", "[health data] Ignoring (either bad json or own message): %s", systemHealthData.c_str());
             }
 
             LOG_TIME(4);
