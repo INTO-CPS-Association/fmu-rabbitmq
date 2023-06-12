@@ -692,7 +692,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
 #else
             // Wait for signal from consumer thread that core has messages
             std::unique_lock<std::mutex> lock(this->core->m);
-            FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
+            //FmuContainer_LOG(fmi2OK, "logOk", "locked'%s'", "");
             cv.wait(lock, [this] {return this->core->hasUnprocessed();});
             lock.unlock();
 #endif //!USE_RBMQ_FMU_THREAD
