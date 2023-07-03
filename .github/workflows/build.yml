@@ -187,6 +187,7 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
         run: |
           cd rmqfmu-example/old_scripts
+          ls
           python3 -m pip install pika --upgrade
           nohup python3 playback_gazebo_data-test.py & exit
 
