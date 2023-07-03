@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pika
 import json
-import datetime
+from datetime import datetime
 import time
 import csv
 
@@ -32,7 +32,7 @@ print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sle
 
 #Read from file and publish to rabbitMQ
 def publish():
-    dt=datetime.datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
+    dt=datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
     print(dt)
     msg = {}
     msg['time']= dt.isoformat()
@@ -44,10 +44,11 @@ def publish():
             t = row['time']
             xpos = float(row['xpos'])
             ypos = float(row['ypos'])
-            msg['xpos']=xpos
-            msg['ypos']=ypos  
-            timet = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f%z")
-            msg['time']= timet.isoformat()
+            msg['xpos'] = xpos
+            msg['ypos'] = ypos  
+            timet = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f%z")
+            msg['time'] = timet.isoformat()
+            #msg['time'] = datetime.now(tz = datetime.now().astimezone().tzinfo).isoformat(timespec='milliseconds')
             print(" [x] Sent %s" % json.dumps(msg))
             channel.basic_publish(exchange='fmi_digital_twin',
 						routing_key='data.to_cosim',

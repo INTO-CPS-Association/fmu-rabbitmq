@@ -188,7 +188,7 @@ jobs:
         run: |
           cd server
           python3 -m pip install pika --upgrade
-          nohup python3 playback_gazebo_data-test.py & exit
+          nohup python3 rmqfmu-example/old_scripts/playback_gazebo_data-test.py & exit
 
       - name: Run integration tests UBUNTU # there are no integration tests yet for the core.
         if: matrix.os == 'ubuntu-20.04'
