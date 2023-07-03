@@ -15,7 +15,7 @@ queue_name = result.method.queue
 channel.queue_bind(exchange='fmi_digital_twin_cd', queue=queue_name,
                    routing_key='linefollower.data.from_cosim')
 time_sleep = 0.1
-data = 'csv_files/gazebo_playback_data.csv'
+data = 'gazebo_playback_data.csv'
 print(' [*] Waiting for logs. To exit press CTRL+C, sleep time [ms]: ', time_sleep*1000)
 def publish():
     dt=datetime.strptime('2019-01-04T16:41:24+0200', "%Y-%m-%dT%H:%M:%S%z")
