@@ -1,0 +1,24 @@
+{
+    "fmus": {
+        "{rbmq}": "fmus/rmqfmu.fmu",
+        "{distance}": "fmus/distance_from_zero.fmu"
+    },
+    "connections": {
+        "{rbmq}.rbmqInstance.xpos":[
+            "{distance}.distanceInstance.xpos"
+        ],
+        "{rbmq}.rbmqInstance.ypos":[
+            "{distance}.distanceInstance.ypos"
+        ],
+        "{distance}.distanceInstance.distance":[
+            "{rbmq}.rbmqInstance.distance"
+        ]
+    },
+    "parameters": {
+        "{rbmq}.rbmqInstance.config.maxage": 300,
+        "{rbmq}.rbmqInstance.config.hostname": "localhost",
+        "{rbmq}.rbmqInstance.config.precision": 10
+    },
+    "algorithm":{"type":"fixed-step","size":0.1}
+
+}     

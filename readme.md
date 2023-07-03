@@ -6,6 +6,11 @@ Two types of data are considered, content data, and system health data.
 The rabbitMQ steps once it has valid content data. In case any of its inputs changes between two consecutive timesteps, the fmu will send only the changed inputs to the entity outside the co-sim. 
 System health data are auxilliary, that is the fmu will publish it's current time-step (formatted to system time) to a topic, and will consume from a topic if the 'real' time of the outside entity is published. Note that the real time data should be coupled with the simulation time data sent by the rabbitmq FMU (a more detailed description can be found at https://into-cps-rabbitmq-fmu.readthedocs.io/en/latest/user-manual.html#). If the latter information is available the fmu will calculate whether the co-sim is ahead or behind the external entity. Note that the simulation will just continue as usual if this data is not available.
 
+## Running a simple example
+
+In this [example](rmqfmu-example/README.md) you will be shown how to setup a co-simulation with two FMUS, of which one is the RMQFMU, and how to feed data to this co-simulation through a python publisher script.
+All files for running the example can be found in ```rmqfmu-example```.
+
 ## Usage Notes
 
 ### How to Setup
