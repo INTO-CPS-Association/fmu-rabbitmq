@@ -778,58 +778,58 @@ void FmuContainer::checkInputs(string &message){
         ostringstream val;
         if(it->second.input){
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Real){
-                if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
+                //if(this->currentData.doubleValues[it->second.valueReference] != this->previousInputs.doubleValues[it->second.valueReference]){
                     double previous, current;
                     previous = this->previousInputs.doubleValues[it->second.valueReference];
                     current = this->currentData.doubleValues[it->second.valueReference];
-                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %f, previous data: %f", current, previous);
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT to send: current data: %f, previous data: %f", current, previous);
 
                     val << this->currentData.doubleValues[it->second.valueReference];
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
                     this->previousInputs.doubleValues[it->second.valueReference] = this->currentData.doubleValues[it->second.valueReference];
-                }
+                //}
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Boolean){
-                if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
+                //if(this->currentData.booleanValues[it->second.valueReference] != this->previousInputs.booleanValues[it->second.valueReference]){
                     if(it->second.valueReference != RABBITMQ_FMU_ENABLE_SEND_INPUT){
                     bool previous, current;
                     previous = this->previousInputs.booleanValues[it->second.valueReference];
                     current = this->currentData.booleanValues[it->second.valueReference];
-                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %d, previous data: %d", current, previous);
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT to send: current data: %d, previous data: %d", current, previous);
                     val << this->currentData.booleanValues[it->second.valueReference];
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
                     this->previousInputs.booleanValues[it->second.valueReference] = this->currentData.booleanValues[it->second.valueReference];
 
                     }
-                }
+                //}
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::Integer){
-                if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
+                //if(this->currentData.integerValues[it->second.valueReference] != this->previousInputs.integerValues[it->second.valueReference]){
                     int previous, current;
                     previous = this->previousInputs.integerValues[it->second.valueReference];
                     current = this->currentData.integerValues[it->second.valueReference];
-                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %d, previous data: %d", current, previous);
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT to send: current data: %d, previous data: %d", current, previous);
                     val << this->currentData.integerValues[it->second.valueReference];
                     this->core->messageCompose(pair<string, string>(it->second.name, val.str()), message);
                     //Update previous to current value
                     this->previousInputs.integerValues[it->second.valueReference] = this->currentData.integerValues[it->second.valueReference];
-                }
+                //}
             }
             if(it->second.type == ModelDescriptionParser::ScalarVariable::SvType::String){
-                if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
+                //if(this->currentData.stringValues[it->second.valueReference] != this->previousInputs.stringValues[it->second.valueReference]){
                     string previous, current;
                     previous = this->previousInputs.stringValues[it->second.valueReference];
                     current = this->currentData.stringValues[it->second.valueReference];
-                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT has changed: current data: %s, previous data: %s", current.c_str(), previous.c_str());
+                    FmuContainer_LOG(fmi2OK, "logAll", "INPUT to send: current data: %s, previous data: %s", current.c_str(), previous.c_str());
                     string str = "\"";
                     str.append(this->currentData.stringValues[it->second.valueReference]);
                     str.append("\"");
                     this->core->messageCompose(pair<string, string>(it->second.name, str), message);
                     //Update previous to current value
                     this->previousInputs.stringValues[it->second.valueReference] = this->currentData.stringValues[it->second.valueReference];
-                }
+                //}
             }
         }
     }
