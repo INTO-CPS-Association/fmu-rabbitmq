@@ -167,6 +167,7 @@ jobs:
           echo "$RUNNER_OS"
           systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
           echo Dependencies
+          Install-Module -Name Microsoft.WinGet.Client
           winget install -e --id Microsoft.VisualStudio.2022.BuildTools --override "--passive --wait --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended"
           dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
           
