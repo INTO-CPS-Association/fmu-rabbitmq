@@ -64,7 +64,7 @@ endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 
 if(UNIX AND NOT APPLE)
-    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core -static -pthread -Wl,--whole-archive -lrt -lpthread -Wl,--no-whole-archive)
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core -pthread -Wl,--whole-archive -lrt -lpthread -Wl,--no-whole-archive)
 elseif(APPLE)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 else()
