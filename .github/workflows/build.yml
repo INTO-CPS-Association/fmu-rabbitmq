@@ -152,8 +152,25 @@ jobs:
 
           echo Done
           echo $(pwd)
-          ls
-
+  
+      - name: List dependencies for ubuntu
+        if: matrix.os == 'ubuntu-20.04'
+        run: | 
+          echo "$RUNNER_OS"
+          ldd build/linux-x64/rabbitmq-fmu/rabbitmq.so
+          
+      - name: List dependencies for windows
+        if: matrix.os == 'windows-latest'
+        run: | 
+          echo "$RUNNER_OS"
+          dumpbin /dependents build/linux-x64/rabbitmq-fmu/rabbitmq.dll
+          
+      - name: List dependencies for macos
+        if: matrix.os == 'macos-latest'
+        run: | 
+          echo "$RUNNER_OS"
+          otool -L build/linux-x64/rabbitmq-fmu/rabbitmq.dylib
+          
       - name: Run unit tests on UNIX
         if: matrix.os != 'windows-latest'
         shell: bash
