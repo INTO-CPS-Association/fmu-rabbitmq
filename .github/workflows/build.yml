@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'windows-latest'
         with:
           arch: x64
           
