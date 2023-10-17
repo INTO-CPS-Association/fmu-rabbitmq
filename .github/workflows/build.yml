@@ -27,6 +27,11 @@ jobs:
         #os: [windows-latest]
 
     steps:
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        if: matrix.os != 'windows-latest'
+        with:
+          arch: x64
+          
       - uses: actions/checkout@v2
         if: matrix.os == 'ubuntu-20.04'
         with:
@@ -160,15 +165,13 @@ jobs:
           lsb_release -a
           echo Dependencies
           ldd build/linux-x64/rabbitmq-fmu/rabbitmq.so
-          
+        
       - name: List dependencies for windows
         if: matrix.os == 'windows-latest'
         run: | 
           echo "$RUNNER_OS"
           systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
           echo Dependencies
-          Install-Module -Name Microsoft.WinGet.Client
-          winget install -e --id Microsoft.VisualStudio.2022.BuildTools --override "--passive --wait --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended"
           dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
           
       - name: List dependencies for macos
