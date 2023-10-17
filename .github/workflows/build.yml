@@ -27,6 +27,11 @@ jobs:
         #os: [windows-latest]
 
     steps:
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        if: matrix.os == 'windows-latest'
+        with:
+          arch: x64
+          
       - uses: actions/checkout@v2
         if: matrix.os == 'ubuntu-20.04'
         with:
@@ -153,6 +158,30 @@ jobs:
           echo Done
           echo $(pwd)
           ls
+
+      - name: List dependencies for ubuntu
+        if: matrix.os == 'ubuntu-20.04'
+        run: | 
+          echo "$RUNNER_OS"
+          lsb_release -a
+          echo Dependencies
+          ldd build/linux-x64/rabbitmq-fmu/rabbitmq.so
+        
+      - name: List dependencies for windows
+        if: matrix.os == 'windows-latest'
+        run: | 
+          echo "$RUNNER_OS"
+          systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
+          echo Dependencies
+          dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
+          
+      - name: List dependencies for macos
+        if: matrix.os == 'macos-latest'
+        run: | 
+          echo "$RUNNER_OS"
+          sw_vers
+          echo Dependencies
+          otool -L build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Run unit tests on UNIX
         if: matrix.os != 'windows-latest'
