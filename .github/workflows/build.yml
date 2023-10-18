@@ -166,7 +166,7 @@ jobs:
           echo "$RUNNER_OS"
           lsb_release -a
           echo Dependencies
-          ldd build/linux-x64/rabbitmq-fmu/rabbitmq.so
+          ldd -v build/linux-x64/rabbitmq-fmu/rabbitmq.so
         
       - name: List dependencies for windows
         if: matrix.os == 'windows-latest'
