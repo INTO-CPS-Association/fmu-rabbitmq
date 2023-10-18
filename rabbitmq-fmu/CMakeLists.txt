@@ -64,7 +64,7 @@ endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 
 if(UNIX AND NOT APPLE)
-    SET(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic")
+    SET(CMAKE_EXE_LINKER_FLAGS "-static -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
 elseif(APPLE)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
