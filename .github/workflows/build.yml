@@ -86,6 +86,7 @@ jobs:
         run: |
           dir "C:\Program Files\OpenSSL\bin\"
           dir "C:\Program Files\OpenSSL\"
+          dir "C:\Program Files\OpenSSL\lib"
           echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
