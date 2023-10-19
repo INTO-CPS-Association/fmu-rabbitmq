@@ -75,7 +75,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           which openssl
-          ls /mingw64/bin/openssl
+          dir /mingw64/bin/openssl
           echo "win-x64" > target
           echo "win-x86_64" > install_name
           echo -G > cmakeFlag
