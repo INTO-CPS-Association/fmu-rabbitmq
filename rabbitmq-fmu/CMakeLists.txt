@@ -75,7 +75,7 @@ else()
     set(OPENSSL_USE_STATIC_LIBS TRUE)
     set(OPENSSL_ROOT_DIR "C:\\Program Files\\OpenSSL\\lib")
     find_package(OpenSSL REQUIRED)
-    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static OpenSSL::Crypto )
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static OpenSSL::Crypto -static )
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 endif()
 
