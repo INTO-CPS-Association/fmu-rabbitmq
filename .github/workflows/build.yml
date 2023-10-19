@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-20.04, windows-latest, macos-latest ]
-        openssl_ver: [1.1.1s]
+        openssl_ver: [1.1.1]
         #os: [ubuntu-20.04]
         #os: [windows-latest]
 
