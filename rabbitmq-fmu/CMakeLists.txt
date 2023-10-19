@@ -72,8 +72,10 @@ elseif(APPLE)
 else()
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-
-    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static )
+    set(OPENSSL_ROOT_DIR "C:\\Strawberry\\c\\lib")
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+    find_package(OpenSSL REQUIRED)
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads OpenSSL::SSL OpenSSL::Crypto -static )
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 endif()
 
