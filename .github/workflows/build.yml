@@ -23,9 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, windows-latest, macos-latest ]
+        #os: [ ubuntu-20.04, windows-latest, macos-latest ]
         #os: [ubuntu-20.04]
-        #os: [ubuntu-latest]
+        os: [windows-latest]
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
@@ -75,6 +75,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           which openssl
+          ls /mingw64/bin/openssl
           echo "win-x64" > target
           echo "win-x86_64" > install_name
           echo -G > cmakeFlag
