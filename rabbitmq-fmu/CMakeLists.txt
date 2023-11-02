@@ -71,7 +71,8 @@ if(UNIX AND NOT APPLE)
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)
     #libpthread.a
     find_library(PTHREAD_LIBRARYAA NAMES libpthread.a)
-target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core ${PTHREAD_LIBRARYAA})
+#target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core ${PTHREAD_LIBRARYAA})
+target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
    # target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
    
 elseif(APPLE)
