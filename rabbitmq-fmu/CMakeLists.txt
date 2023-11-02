@@ -70,8 +70,10 @@ if(UNIX AND NOT APPLE)
     find_package(Threads REQUIRED)
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)
     #libpthread.a
-    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++ -static-libgcc -Wl,-Bstatic,--whole-archive -lpthread -Wl,--no-whole-archive")
+    find_library(PTHREAD_LIBRARY NAMES libpthread.a)
+target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core ${PTHREAD_LIBRARY})
+   # target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
+   
 elseif(APPLE)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 else()
