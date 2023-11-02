@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(rabbitmq CXX)
 
-# lets try to prefer static libs
-set(CMAKE_FIND_LIBRARY_SUFFIXES  ".a" ".so")
+
 
 enable_testing()
 include(CheckCXXCompilerFlag)
@@ -71,7 +70,7 @@ if(UNIX AND NOT APPLE)
     find_package(Threads REQUIRED)
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)
     #libpthread.a
-    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
+    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core /usr/lib/x86_64-linux-gnu/libpthread.a)
 elseif(APPLE)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 else()
