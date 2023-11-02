@@ -165,7 +165,7 @@ jobs:
 
           echo Compiling
 
-          make -C$working_dir -j8
+          make -C$working_dir 
           make -C$working_dir/rabbitmq-fmu install
           cd $current_dir
 
