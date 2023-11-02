@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(rabbitmq CXX)
 
+# lets try to prefer static libs
+set(CMAKE_FIND_LIBRARY_SUFFIXES  ".a" ".so")
+
 enable_testing()
 include(CheckCXXCompilerFlag)
 
