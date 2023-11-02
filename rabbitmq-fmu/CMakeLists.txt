@@ -66,12 +66,12 @@ endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 
 if(UNIX AND NOT APPLE)
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
+   # set(THREADS_PREFER_PTHREAD_FLAG ON)
+   # find_package(Threads REQUIRED)
     #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)
     #libpthread.a
-    find_library(PTHREAD_LIBRARY NAMES libpthread.a)
-target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core ${PTHREAD_LIBRARY})
+    find_library(PTHREAD_LIBRARYAA NAMES libpthread.a)
+target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core ${PTHREAD_LIBRARYAA})
    # target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
    
 elseif(APPLE)
