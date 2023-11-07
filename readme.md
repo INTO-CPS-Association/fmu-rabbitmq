@@ -25,7 +25,7 @@ System health data are auxilliary, that is the fmu will publish it's current tim
 
 ## Running a simple example
 
-In the following README [example](rmqfmu-example/README.md) you will be shown how to setup a co-simulation with two FMUS, of which one is the RMQFMU, and how to feed data to this co-simulation through a python publisher script.
+In the following [README](rmqfmu-example/README.md) you will be shown how to setup a co-simulation with two FMUS, of which one is the RMQFMU, and how to feed data to this co-simulation through a python publisher script.
 All files for running the example can be found in ```rmqfmu-example```.
 
 ## Configuring the RMQFMU
