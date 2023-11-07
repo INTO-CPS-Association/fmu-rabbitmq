@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(rabbitmq CXX)
 
+
+
 enable_testing()
 include(CheckCXXCompilerFlag)
 
@@ -64,9 +66,15 @@ endif ()
 add_library(rabbitmq SHARED ${C_FILES} ${CPP_FILES})
 
 if(UNIX AND NOT APPLE)
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
-    target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)  
+   # set(THREADS_PREFER_PTHREAD_FLAG ON)
+   # find_package(Threads REQUIRED)
+    #target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core Threads::Threads -static)
+    #libpthread.a
+    find_library(PTHREAD_LIBRARYAA NAMES libpthread.a)
+#target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core ${PTHREAD_LIBRARYAA})
+target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
+   # target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core )
+   
 elseif(APPLE)
     target_link_libraries(rabbitmq XercesC::XercesC rabbitmq-static tz rabbitmq-core)
 else()
