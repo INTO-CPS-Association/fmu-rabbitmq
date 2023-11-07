@@ -12,6 +12,8 @@ The rest of this guide covers the following topics:
 * An example showing how to include the RMQFMU into a co-simulation, how to run the latter (through the Maestro co-orchestration engine), how to setup a rabbitMQ server on localhost, and how to publish/receive data from the server. 
 * An overview of how the RMQFMU can be configured through its parameters, as well as how to specify inputs and outputs, all three in the model description file.
 * How to use `rabbitmq_fmu_configure.py` to add the desired inputs and outputs without decompressing the FMU, and dealing the model description file.
+* Set up a dockerised rabbitMQ server at localhost.
+* Notes on how the RMQFMU creates connections to the rabbitMQ server.
 * Development notes for those who wish to contribute to the RMQFMU project.
 
 
@@ -83,10 +85,6 @@ The RabbitMQ FMU can be configured by setting the following parameters (note, va
 </ScalarVariable>
 ```
 
-OPTIONAL PARAMETERS:
-* Value reference `14` is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
-* Value reference `15` is reserved for input `enable send input`, that allows a user to send a control signal to RMQFMU to enable/disable its ability to send messages outside of the co-sim.  This input can be removed if not needed.
-
 ### Adding outputs manually
 
 ```xml
@@ -128,6 +126,9 @@ OPTIONAL PARAMETERS:
 Remember to add the outputs before the configuration variables, for the indexing to match the snippet above.
 If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is system health data provided, the rabbitmq fmu will set these values. If the outputs are not given, the rabbitmq fmu will proceed as usual.
 
+OPTIONAL output:
+* Value reference `14` is reserved for output `seqno`, that refers to the sequence number of the message.  This output can be removed if not needed.
+
 ### Adding inputs manually
 
 ```xml
@@ -146,13 +147,16 @@ If outputs `time_discrepancy` and `simtime_discrepancy` are given, and there is 
   </ScalarVariable>
 ```
 
+OPTIONAL input:
+* Value reference `15` is reserved for input `enable send input`, that allows a user to send a control signal to RMQFMU to enable/disable its ability to send messages outside of the co-sim.  This input can be removed if not needed.
+
 ### Placing the `modelDescription.xml` 
 
 Note that this file should be present in the zip at both the root and `resources` folders.
 
-### Configuring the inputs/outputs through the script `rabbitmq_fmu_configure.py`
+### Automate configuration for inputs/outputs 
 
-It is possible to automate the configuration of inputs and outputs, without manually modyfing the model description file:
+It is possible to automate the configuration of inputs and outputs through the script `rabbitmq_fmu_configure.py`, without manually modyfing the model description file:
 
 To add outputs and specify type and variability:
 ```bash
