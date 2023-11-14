@@ -309,7 +309,10 @@ namespace {
             const char *stringVals[] = {"localhost", "guest", "guest", "linefollower.data.to_cosim", "/"};
             fmi2SetString(c, vrefsString, 5, stringVals);
 
-            //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
+            fmi2Boolean *boolVals = new fmi2Boolean[1];
+            boolVals[0] = 1;
+            fmi2ValueReference vrefsBool[] = {RABBITMQ_FMU_HOW_TO_SEND};
+            fmi2SetBoolean(c, vrefsBool, 1, boolVals);
 
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
@@ -431,6 +434,7 @@ namespace {
 #define RABBITMQ_FMU_USE_SSL 16
 #define RABBITMQ_FMU_QUEUE_UPPER_BOUND 17
 #define RABBITMQ_FMU_VHOST 18
+#define RABBITMQ_FMU_HOW_TO_SEND 19
 
 #define RABBITMQ_FMU_XPOS 20
 #define RABBITMQ_FMU_YPOS 21
@@ -448,6 +452,10 @@ namespace {
         fmi2SetString(c, vrefsString, 5, stringVals);
 
         //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
+        fmi2Boolean *boolVals = new fmi2Boolean[1];
+            boolVals[0] = 1;
+            fmi2ValueReference vrefsBool[] = {RABBITMQ_FMU_HOW_TO_SEND};
+            fmi2SetBoolean(c, vrefsBool, 1, boolVals);
 
         showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
         showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
