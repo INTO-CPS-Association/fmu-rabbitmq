@@ -291,6 +291,7 @@ namespace {
 #define RABBITMQ_FMU_PRECISION 6
 #define RABBITMQ_FMU_MAXAGE 7
 #define RABBITMQ_FMU_SEND_ENABLE 15
+#define RABBITMQ_FMU_VHOST 18
 
 #define RABBITMQ_FMU_XPOS 20
 #define RABBITMQ_FMU_YPOS 21
@@ -303,9 +304,9 @@ namespace {
 
 
             fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
-                                                RABBITMQ_FMU_ROUTING_KEY};
-            const char *stringVals[] = {"localhost", "guest", "guest", "linefollower.data.to_cosim"};
-            fmi2SetString(c, vrefsString, 4, stringVals);
+                                                RABBITMQ_FMU_ROUTING_KEY, RABBITMQ_FMU_VHOST};
+            const char *stringVals[] = {"localhost", "guest", "guest", "linefollower.data.to_cosim", "/"};
+            fmi2SetString(c, vrefsString, 5, stringVals);
 
             //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
 

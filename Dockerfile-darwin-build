@@ -1,0 +1,17 @@
+FROM ubuntu:20.04
+WORKDIR /usr/src/fmu-rabbitmq
+COPY ./googletest /usr/src/fmu-rabbitmq/googletest
+COPY ./rabbitmq-core /usr/src/fmu-rabbitmq/rabbitmq-core
+COPY ./rabbitmq-fmu /usr/src/fmu-rabbitmq/rabbitmq-fmu
+COPY ./thirdparty /usr/src/fmu-rabbitmq/thirdparty
+COPY ./arch.c /usr/src/fmu-rabbitmq/
+COPY ./CMakeLists.txt /usr/src/fmu-rabbitmq/
+COPY ./scripts/build_locally_darwin.sh /usr/src/fmu-rabbitmq/
+COPY ./TargetArch.cmake /usr/src/fmu-rabbitmq/
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y cmake
+RUN apt-get install -y gcc 
+RUN apt-get install -y g++
+RUN apt-get install -y build-essential
+RUN apt-get install -y libssl-dev
+ENTRYPOINT  /bin/bash -c ./build_locally_darwin.sh
