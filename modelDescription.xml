@@ -90,6 +90,9 @@
         <ScalarVariable name="config.vhost" valueReference="18" variability="fixed" causality="parameter" initial="exact">
             <String start="/"/>
         </ScalarVariable>
+        <ScalarVariable name="config.howtosend" valueReference="19" variability="fixed" causality="parameter" initial="exact">
+            <Boolean start="1"/> <!-- options, on event (0), or always (1)-->
+        </ScalarVariable>
 
 
     </ModelVariables>

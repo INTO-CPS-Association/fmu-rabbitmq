@@ -40,6 +40,7 @@
 #define RABBITMQ_FMU_USE_SSL 16
 #define RABBITMQ_FMU_QUEUE_UPPER_BOUND 17
 #define RABBITMQ_FMU_VHOST 18
+#define RABBITMQ_FMU_HOW_TO_SEND 19
 
 using namespace std;
 
@@ -95,6 +96,7 @@ private:
 
     bool seqnoPresent;
     bool sendEnablePresent;
+    bool howtosend;
     int queueUpperBound;
 
     FmuContainerCore *core;
