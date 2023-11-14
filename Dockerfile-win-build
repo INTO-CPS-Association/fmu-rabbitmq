@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM mcr.microsoft.com/windows/servercore/insider:10.0.20348.1
 WORKDIR /usr/src/fmu-rabbitmq
 COPY ./googletest /usr/src/fmu-rabbitmq/googletest
 COPY ./rabbitmq-core /usr/src/fmu-rabbitmq/rabbitmq-core

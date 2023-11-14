@@ -13,7 +13,7 @@ Make sure that docker is installed and that the current user has sufficient perm
 Use the provided docker files for cross compilation.
 
 ```bash
-# darwin - TBD
+# darwin - ?
 
 # linux: ubuntu:20.04
 docker build -t linux-build --no-cache -f Dockerfile-linux-build .    
