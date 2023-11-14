@@ -34,7 +34,7 @@ class RabbitmqHandler {
 
 public :
     RabbitmqHandler(const string &hostname, int port, const string& username, const string &password,const string &exchange,const string &exchangetype,
-    const string &queueBindingKey, const string &queueBindingKey_from_cosim);
+    const string &queueBindingKey, const string &queueBindingKey_from_cosim, const string &vhost);
 
     ~RabbitmqHandler();
 
@@ -77,6 +77,7 @@ private:
     int port;
     string username;
     string password;
+    string vhost;
 
     //Obsolete********************
     string queueBindinngKey;

@@ -7,26 +7,21 @@ The project uses CMake and is intended to be build for multiple platforms; Mac, 
 
 A number of tools are required.
 
-#### Docker and dockcross
-
+#### Docker
 Make sure that docker is installed and that the current user has sufficient permissions.
 
-Prepare dockcross helper scripts, for building across the three platforms locally
+Use the provided docker files for cross compilation.
 
 ```bash
-# darwin
-docker run --rm docker.sweng.au.dk/dockcross-darwin-x64-clang:latest > ./darwin-x64-dockcross
-chmod +x ./darwin-x64-dockcross
+# darwin - TBD
 
-# linux
-docker run --rm dockcross/linux-x64:latest > ./linux-x64-dockcross
-chmod +x ./linux-x64-dockcross
+# linux: ubuntu:20.04
+docker build -t linux-build --no-cache -f Dockerfile-linux-build .    
+docker run --rm -v $(pwd)/volume:/usr/src/fmu-rabbitmq/build linux-build
 
-# windows
-docker run --rm dockcross/windows-static-x64:latest > ./win-x64-dockcross
-chmod +x ./win-x64-dockcross
+# windows - TBD
 ```
-
+The results of the build are in the volume folder.
 #### Preparing dependencies
 To compile the dependencies first make sure that the checkout contains submodules:
 

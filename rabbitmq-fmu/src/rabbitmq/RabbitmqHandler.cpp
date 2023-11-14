@@ -37,12 +37,14 @@ RabbitmqHandler::RabbitmqHandler(const string &hostname, int port, const string 
                                  const string &exchange,
                                  const string &exchangetype,
                                  const string &queueBindingKey,
-                                 const string &queueBindingKey_from_cosim) {
+                                 const string &queueBindingKey_from_cosim,
+                                 const string &vhost) {
     this->hostname = hostname;
     this->port = port;
     this->username = username;
     this->password = password;
     this->connected = false;
+    this->vhost = vhost;
 
     //Obsolete********************************
     this->exchange = exchange;
@@ -126,7 +128,7 @@ bool RabbitmqHandler::open() {
         throw RabbitMqHandlerException("opening TCP socket");
     }
 
-    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
+    throw_on_amqp_error(amqp_login(conn, this->vhost.c_str(), 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
                                    this->username.c_str(), this->password.c_str()),
                         "Logging in");
     amqp_channel_open(conn, 1);
@@ -263,7 +265,7 @@ bool RabbitmqHandler::createSSLConnection(){
         throw RabbitMqHandlerException("opening SSL/TLS connection");
     }
 
-    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
+    throw_on_amqp_error(amqp_login(conn, this->vhost.c_str(), 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
                                    this->username.c_str(), this->password.c_str()),
                         "Logging in");
 
@@ -288,7 +290,7 @@ bool RabbitmqHandler::createConnection(){
         throw RabbitMqHandlerException("opening TCP socket");
     }
 
-    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
+    throw_on_amqp_error(amqp_login(conn, this->vhost.c_str(), 0, 131072, 0, AMQP_SASL_METHOD_PLAIN,
                                    this->username.c_str(), this->password.c_str()),
                         "Logging in");
 

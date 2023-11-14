@@ -245,7 +245,8 @@ bool FmuContainer::initialize() {
                           std::make_pair(RABBITMQ_FMU_EXCHANGE_TYPE, "exchangetype"),
                           std::make_pair(RABBITMQ_FMU_ROUTING_KEY_FROM_COSIM, "routing key from cosim"),
                           std::make_pair(RABBITMQ_FMU_SH_EXCHANGE_NAME, "exchangename_system_health"),
-                          std::make_pair(RABBITMQ_FMU_SH_EXCHANGE_TYPE, "exchangetype_system_health")};
+                          std::make_pair(RABBITMQ_FMU_SH_EXCHANGE_TYPE, "exchangetype_system_health"),
+                          std::make_pair(RABBITMQ_FMU_VHOST, "virtual host")};
 
 
     auto allParametersPresent = true;
@@ -328,6 +329,7 @@ bool FmuContainer::initialize() {
     auto exchangeType = stringMap[RABBITMQ_FMU_EXCHANGE_TYPE];
     auto exchangeNameSH = stringMap[RABBITMQ_FMU_SH_EXCHANGE_NAME];
     auto exchangeTypeSH = stringMap[RABBITMQ_FMU_SH_EXCHANGE_TYPE];
+    auto vhost = stringMap[RABBITMQ_FMU_VHOST];
 
     auto port = this->currentData.integerValues[RABBITMQ_FMU_PORT];
     this->communicationTimeout = this->currentData.integerValues[RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT];
@@ -353,13 +355,13 @@ bool FmuContainer::initialize() {
 #ifdef USE_RBMQ_FMU_THREAD
     // create a separate connection that deals with publishing to the rabbitmq server
     this->rabbitMqHandler = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey, routingKeyFromCosim, PUB, useSSL);
+                                                       routingKey, routingKeyFromCosim, PUB, useSSL, vhost);
     if (!this->rabbitMqHandler)
         return false;
 
     // create a separate connection that deals with consuming from the rabbitmq server
     this->rabbitMqHandlerConsume = createCommunicationHandler(hostname, port, username, password, exchangeName, exchangeType,
-                                                       routingKey, routingKeyFromCosim, SUB, useSSL);
+                                                       routingKey, routingKeyFromCosim, SUB, useSSL, vhost);
     if (!this->rabbitMqHandlerConsume)
         return false;
 #else
@@ -373,13 +375,13 @@ bool FmuContainer::initialize() {
 #ifdef USE_RBMQ_FMU_HEALTH_THREAD
     // create a separate connection that deals with publishing to the rabbitmq server
     this->rabbitMqHandlerSystemHealth = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
-                                                       routingKey, routingKeyFromCosim, PUB, useSSL);
+                                                       routingKey, routingKeyFromCosim, PUB, useSSL, vhost);
     if (!this->rabbitMqHandlerSystemHealth)
         return false;
 
     // create a separate connection that deals with consuming from the rabbitmq server
     this->rabbitMqHandlerSystemHealthConsume = createCommunicationHandler(hostname, port, username, password, exchangeNameSH, exchangeTypeSH,
-                                                       routingKey, routingKeyFromCosim, SUB, useSSL);
+                                                       routingKey, routingKeyFromCosim, SUB, useSSL, vhost);
     if (!this->rabbitMqHandlerSystemHealthConsume)
         return false;
 #else
@@ -462,8 +464,9 @@ RabbitmqHandler *FmuContainer::createCommunicationHandler(const string &hostname
                                                           const string &queueBindingKey,
                                                           const string &queueBindingKey_from_cosim,
                                                           const int type,
-                                                          const bool ssl) {
-    RabbitmqHandler *hdl =  new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey, queueBindingKey_from_cosim);
+                                                          const bool ssl,
+                                                          const string &vhost) {
+    RabbitmqHandler *hdl =  new RabbitmqHandler(hostname, port, username, password, exchange, exchangetype, queueBindingKey, queueBindingKey_from_cosim, vhost);
 
     try {
         if (!((!ssl) ? hdl->createConnection() : hdl->createSSLConnection())) {
@@ -608,7 +611,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     string cosim_time;
     this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
     string healthmessage = R"({"simAtTime":")" + cosim_time + R"("})";
-    FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", healthmessage.c_str());
+    //FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", healthmessage.c_str());
 
     bool disable = false;
     //Enable or Disable the send function
@@ -631,8 +634,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
-    this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, healthmessage,
-                                        this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange);
+    //this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, healthmessage,this->rabbitMqHandlerSystemHealth->channelPub, this->rabbitMqHandlerSystemHealth->rbmqExchange);
     if (this->core->process(simulationTime)) {
         FmuContainer_LOG(fmi2OK, "logAll", "Step reached target time %.0f [ms]", simulationTime);
 

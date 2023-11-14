@@ -6,10 +6,7 @@ install_name=linux-x86_64
 
 echo "Configuration Target=${target}, DependencyInstallName=${install_name}"
 
-repo=$(git rev-parse --show-toplevel)
 current_dir=$(pwd)
-cd $repo
-
 
 working_dir=build/$target
 
@@ -51,5 +48,6 @@ echo $current_dir
 
 ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq
 
+ldd build/install/rabbitmqfmu/binaries/linux64/rabbitmq.so
 
 echo Done

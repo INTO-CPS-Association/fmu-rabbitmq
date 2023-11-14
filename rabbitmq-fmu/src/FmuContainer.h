@@ -39,6 +39,7 @@
 #define RABBITMQ_FMU_ENABLE_SEND_INPUT 15
 #define RABBITMQ_FMU_USE_SSL 16
 #define RABBITMQ_FMU_QUEUE_UPPER_BOUND 17
+#define RABBITMQ_FMU_VHOST 18
 
 using namespace std;
 
@@ -127,7 +128,7 @@ private:
 
     virtual RabbitmqHandler * createCommunicationHandler( const string &hostname, int port, const string& username, const string &password,
     const string &exchange,const string &exchangetype,const string &queueBindingKey, const string &queueBindingKey_from_cosim, const int type,
-    const bool ssl);
+    const bool ssl, const string &vhost);
 
     const bool loggingOn;
 

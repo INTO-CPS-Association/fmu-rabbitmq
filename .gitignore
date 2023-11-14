@@ -21,6 +21,7 @@ src/main/resources/*.json
 *.log.*
 *.dot
 *.csv
+volume/
 
 bin
 build

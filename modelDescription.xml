@@ -87,6 +87,9 @@
         <ScalarVariable name="config.queueupperbound" valueReference="17" variability="fixed" causality="parameter" initial="exact">
             <Integer start="100"/>
         </ScalarVariable>
+        <ScalarVariable name="config.vhost" valueReference="18" variability="fixed" causality="parameter" initial="exact">
+            <Integer start="/"/>
+        </ScalarVariable>
 
 
     </ModelVariables>
