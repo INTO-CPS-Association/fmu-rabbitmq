@@ -629,11 +629,11 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         this->checkInputs(message);
         FmuContainer_LOG(fmi2OK, "logAll", "Send enabled on this step, for message %s", message.c_str());
         //if anything to send, publish to rabbitmq
-        if(!message.empty()){
+        //if(!message.empty()){
             message = R"({)" + message + R"( "time":")" + cosim_time + R"(", "simstep":")" + to_string(simulationTime) + R"("})";
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
-        }
+        //}
     }
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
