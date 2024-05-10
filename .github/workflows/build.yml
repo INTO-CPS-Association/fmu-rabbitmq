@@ -25,7 +25,7 @@ jobs:
       matrix:
         #os: [ ubuntu-20.04, windows-latest, macos-latest ]
         #os: [ubuntu-20.04]
-        os: [windows-latest, ubuntu-20.04]
+        os: [windows-latest, ubuntu-22.04]
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
