@@ -24,8 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         #os: [ ubuntu-20.04, windows-latest, macos-latest ]
-        os: [ubuntu-20.04]
-        #os: [windows-latest, ubuntu-22.04]
+        #os: [ubuntu-20.04]
+        os: [windows-latest, ubuntu-20.04]
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
@@ -329,11 +329,11 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      #- name: Download dll
-      #  uses: actions/download-artifact@v2
-      #  with:
-      #    name: rabbitmq.dll
-      #    path: rabbitmq/binaries/win64/
+      - name: Download dll
+        uses: actions/download-artifact@v2
+        with:
+          name: rabbitmq.dll
+          path: rabbitmq/binaries/win64/
 
       - name: Download shared library
         uses: actions/download-artifact@v2
