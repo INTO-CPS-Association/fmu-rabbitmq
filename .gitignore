@@ -75,3 +75,12 @@ _deps
 *.exe
 *.out
 *.app
+*logs*
+venv/
+
+# Local tests
+rmqfmu-example/fmus/rmqfmuv1.2.5-114.fmu
+rmqfmu-example/md-test.xml
+
+*generate/
+*results/
