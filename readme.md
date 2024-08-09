@@ -69,7 +69,7 @@ System health data are auxilliary, that is the fmu will publish it's current tim
 
 ## Running a simple example
 
-In the following [README](rmqfmu-example/README.md) you will be shown how to setup a co-simulation with two FMUS, of which one is the RMQFMU, and how to feed data to this co-simulation through a python publisher script.
+In the following [README](rmqfmu-example/README.md) you will be shown how to setup a co-simulation with two FMUs, of which one is the RMQFMU, and how to feed data to this co-simulation through a python publisher script.
 All files for running the example can be found in ```rmqfmu-example```.
 
 ## Configuring the RMQFMU
@@ -236,7 +236,7 @@ This will launch it at localhost `5672` for TCP communication and http://localho
 
 * If the RMQFMU is configured to build with the threaded option on (the default behaviour, and what you get with the release package), then for each type of data, two connections are created, one for publishing to the server, and one for consuming from the server. This is to ensure that there is no bottleneck at the socket level. 
 
-* Otherwise the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connecetions.
+* Otherwise the fmu creates two connections with which the rabbitmq communicates with an external entity, for the content data and system health data respecitvely. Note that the variables with value reference=4 and 13 mean that the same routing keys are created for both connections.
 
 * The connection for content data is configured through: `config.exchangename`, `config.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
 * The connection for health data is configured through: `config.healthdata.exchangename`, `config.healthdata.exchangetype`, `config.routingkey`, `config.routingkey.from_cosim`.
