@@ -5,7 +5,7 @@ int main()
 {
     std::cout << "Testing...\n";
     const char* dllPath1 = "C:\\WINDOWS\\system32\\ws2_32.dll";
-    const char* dllPath2 = "C:\\Users\\au674354\\source\\repos\\libcrypto-1_1-x64.dll";
+    const char* dllPath2 = "C:\\work\\github\\fmu-rabbitmq\\local_tests\\unifmu.dll";
     std::cout << "Value of flag (load_with_altered_search_path): " << LOAD_WITH_ALTERED_SEARCH_PATH << "\n";
 
     std::cout << "Value of flag (search user dirs): " << LOAD_LIBRARY_SEARCH_USER_DIRS << "\n";
