@@ -243,49 +243,49 @@ jobs:
 
       #- name: Upload artifact macos
       #  if: matrix.os == 'macos-latest'
-      #  uses: actions/upload-artifact@v2
+      #  uses: actions/upload-artifact@v4
       #  with:
       #    name: rabbitmq.dylib
       #    path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Upload artifact linux 
         if: matrix.os == 'ubuntu-20.04'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rabbitmq.so
           path: build/linux-x64/rabbitmq-fmu/rabbitmq.so
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rabbitmq.dll
           path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: it-test-rabbitmq.exe
           path: build/win-x64/rabbitmq-fmu/it-test-rabbitmq.exe
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-rabbitmq.exe
           path: build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-rabbitmq-core.exe
           path: build/win-x64/rabbitmq-core/unit-test-rabbitmq-core.exe
 
       - name: Upload artifact windows
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: it-test-rabbitmq-core.exe
           path: build/win-x64/rabbitmq-core/it-test-rabbitmq-core.exe
@@ -299,21 +299,21 @@ jobs:
 
       - name: Upload modelDescription.xml
         if: matrix.os == 'ubuntu-20.04'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: modelDescription.xml
           path: rabbitmq-fmu/modelDescription.xml
 
       - name: Upload rabbitmq configuration script
         if: matrix.os == 'ubuntu-20.04'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rabbitmq_fmu_configure.py
           path: scripts/rabbitmq_fmu_configure.py
 
       - name: Upload readme
         if: matrix.os == 'ubuntu-20.04'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: readme.md
           path: readme.md
@@ -376,7 +376,7 @@ jobs:
         id: version
 
       - name: Upload FMU
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rabbitmq-${{steps.version.outputs.VERSION}}.fmu
           path: rabbitmq
