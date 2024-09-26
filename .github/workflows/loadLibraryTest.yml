@@ -68,9 +68,7 @@ jobs:
 
           openssl version
           openssl version -d
-          dir "C:\mingw64\etc\ssl"
-
-          dir "C:\Program Files\OpenSSL\bin"
+          dir "C:\Program Files\Common Files\SSL"
 
       - name: Build
         if: matrix.os == 'windows-latest'
@@ -78,7 +76,7 @@ jobs:
         run: |
 
           echo $OPENSSL_ROOT_DIR
-          export OPENSSL_ROOT_DIR="C:\mingw64\etc\ssl"
+          export OPENSSL_ROOT_DIR="C:\Program Files\Common Files\SSL"
           echo $OPENSSL_ROOT_DIR
           export target=$(cat target)
           export install_name=$(cat install_name)
