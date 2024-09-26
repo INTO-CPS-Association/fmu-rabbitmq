@@ -59,6 +59,12 @@ jobs:
           echo "win-x86_64" > install_name
           echo -G > cmakeFlag
           echo Unix Makefiles > cmakeFlagValue
+      - name: Install OpenSSL (Windows)
+        if: runner.os == 'windows-latest'
+        shell: powershell
+        run: |
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+          vcpkg install openssl:x64-windows-static-md
 
       - name: Other win prep
         if: matrix.os == 'windows-latest'
