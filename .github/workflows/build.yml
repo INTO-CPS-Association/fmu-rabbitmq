@@ -6,9 +6,7 @@ name: rabbitmq
 on:
   # Triggers the workflow on push or pull request events but only for the development branch
   push:
-    branches: [ master, development]
-  pull_request:
-    branches: [ master, development]
+    branches: [gf/testingLoadLibrary]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -23,9 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: [ ubuntu-20.04, windows-latest, macos-latest ]
-        #os: [ubuntu-20.04]
-        os: [windows-latest, ubuntu-20.04]
+        os: [windows-latest]
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
