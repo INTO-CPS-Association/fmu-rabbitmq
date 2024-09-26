@@ -79,6 +79,7 @@ jobs:
         continue-on-error: true
 
       - name: Build
+        if: matrix.os == 'windows-latest'
         shell: bash
         run: |
           export target=$(cat target)
