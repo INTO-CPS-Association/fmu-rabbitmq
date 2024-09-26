@@ -55,7 +55,7 @@ jobs:
         shell: bash
         if: matrix.os == 'windows-latest'
         run: |
-          openssl version
+          openssl version -d
           which libcrypto-1_1-x64.dll
           which libcrypto-3-x64.dll
           echo "win-x64" > target
