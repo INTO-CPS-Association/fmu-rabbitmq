@@ -55,9 +55,8 @@ jobs:
         shell: bash
         if: matrix.os == 'windows-latest'
         run: |
+          openssl version
           openssl version -d
-          which libcrypto-1_1-x64.dll
-          which libcrypto-3-x64.dll
           echo "win-x64" > target
           echo "win-x86_64" > install_name
           echo -G > cmakeFlag
@@ -73,6 +72,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
+
+          echo $OPENSSL_ROOT_DIR
+          export OPENSSL_ROOT_DIR="/mingw64/etc/ssl"
+          echo $OPENSSL_ROOT_DIR
           export target=$(cat target)
           export install_name=$(cat install_name)
           export cmakeFlag=$(cat cmakeFlag)
