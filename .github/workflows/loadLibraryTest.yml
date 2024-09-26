@@ -54,12 +54,12 @@ jobs:
       - name: Other win prep
         if: matrix.os == 'windows-latest'
         run: |
-          choco install openssl
+          openssl version
+          openssl version -d
+          choco upgrade openssl
           openssl version
           openssl version -d
           which openssl
-          ls "/bin/openssl"
-          C:\msys64\usr\bin\openssl.exe version
 
       - name: Build
         if: matrix.os == 'windows-latest'
