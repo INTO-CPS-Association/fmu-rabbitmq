@@ -67,7 +67,7 @@ jobs:
         shell: msys2 {0}
         run: |
           wget https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-openssl-3.2.1-1-any.pkg.tar.zst
-          pacman -Uy mingw-w64-x86_64-openssl-3.2.1-1-any.pkg.tar.zst
+          pacman -U --refresh mingw-w64-x86_64-openssl-3.2.1-1-any.pkg.tar.zst
 
       - name: Other win prep
         if: matrix.os == 'windows-latest'
