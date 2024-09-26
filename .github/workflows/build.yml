@@ -330,43 +330,43 @@ jobs:
           fetch-depth: 0
 
       - name: Download dll
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: rabbitmq.dll
           path: rabbitmq/binaries/win64/
 
       - name: Download shared library
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: rabbitmq.so
           path: rabbitmq/binaries/linux64/
 
       #- name: Download dylib
-      #  uses: actions/download-artifact@v2
+      #  uses: actions/download-artifact@v4
       #  with:
       #    name: rabbitmq.dylib
       #    path: rabbitmq/binaries/darwin64/
 
       - name: Download model description file
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: modelDescription.xml
           path: rabbitmq/
 
       - name: Download model description file to resources folder
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: modelDescription.xml
           path: rabbitmq/resources
 
       - name: Download readme
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: readme.md
           path: rabbitmq/
 
       - name: Download configuration script
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: rabbitmq_fmu_configure.py
           path: rabbitmq/
