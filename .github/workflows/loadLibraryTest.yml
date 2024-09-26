@@ -40,15 +40,6 @@ jobs:
         with:
           submodules: true
 
-      - name: get rabbitmq Ubuntu ONLY
-        if: matrix.os == 'ubuntu-20.04'
-        uses: getong/rabbitmq-action@v1.2
-        with:
-          rabbitmq version: '3.8.2-management'
-          host port: 5672
-          rabbitmq user: 'guest'
-          rabbitmq password: 'guest'
-
       - uses: lukka/get-cmake@v3.20.1
 
       - name: Prepare variables for windows
@@ -75,7 +66,7 @@ jobs:
 
           openssl version
           openssl version -d
-
+          which openssl
           C:\msys64\usr\bin\openssl.exe version
 
       - name: Build
