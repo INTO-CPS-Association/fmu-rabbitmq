@@ -78,11 +78,8 @@ jobs:
           openssl version
           openssl version -d
 
-          dir "C:\Program Files\"
-
           dir "C:\msys64\mingw64\bin" 
-          dir "C:\msys64\usr\bin" 
-          dir "C:\Program Files\Common Files\SSL"
+          C:\msys64\usr\bin\openssl.exe version
 
       - name: Build
         if: matrix.os == 'windows-latest'
