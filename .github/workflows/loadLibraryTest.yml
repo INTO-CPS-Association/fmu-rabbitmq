@@ -67,6 +67,7 @@ jobs:
           openssl version
           openssl version -d
           which openssl
+          dir "C:\bin\openssl"
           C:\msys64\usr\bin\openssl.exe version
 
       - name: Build
