@@ -55,8 +55,6 @@ jobs:
         shell: bash
         if: matrix.os == 'windows-latest'
         run: |
-          openssl version
-          openssl version -d
           echo "win-x64" > target
           echo "win-x86_64" > install_name
           echo -G > cmakeFlag
@@ -68,6 +66,8 @@ jobs:
           echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+          openssl version
+          openssl version -d
           dir "C:\mingw64\etc\ssl"
 
           dir "C:\Program Files\OpenSSL\bin"
