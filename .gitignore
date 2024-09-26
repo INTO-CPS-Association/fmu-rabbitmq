@@ -82,5 +82,5 @@ venv/
 rmqfmu-example/fmus/rmqfmuv1.2.5-114.fmu
 rmqfmu-example/md-test.xml
 
-*generate/
-*results/
+rmqfmu-example/generate/
+rmqfmu-example/results/
