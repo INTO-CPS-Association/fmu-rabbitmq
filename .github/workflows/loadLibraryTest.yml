@@ -77,6 +77,11 @@ jobs:
 
           openssl version
           openssl version -d
+
+          dir "C:\Program Files\"
+
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           dir "C:\Program Files\Common Files\SSL"
 
       - name: Build
