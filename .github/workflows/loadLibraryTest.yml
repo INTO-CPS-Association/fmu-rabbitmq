@@ -40,7 +40,7 @@ jobs:
         with:
           submodules: true
 
-      - uses: lukka/get-cmake@v3.22.x
+      - uses: lukka/get-cmake@v3.22
 
       - name: Prepare variables for windows
         shell: bash
