@@ -66,6 +66,8 @@ jobs:
           openssl version -d
           which openssl
 
+          cmake --version
+
       - name: Build
         if: matrix.os == 'windows-latest'
         shell: bash
