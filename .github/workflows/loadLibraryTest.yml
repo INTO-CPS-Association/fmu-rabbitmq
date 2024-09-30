@@ -63,12 +63,13 @@ jobs:
           openssl version -d
           which openssl
 
-          choco upgrade cmake
+          
 
       - name: Build
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
+          choco upgrade cmake
           cmake --version
           export target=$(cat target)
           export install_name=$(cat install_name)
