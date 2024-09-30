@@ -40,7 +40,10 @@ jobs:
         with:
           submodules: true
 
-      - uses: lukka/get-cmake@v3.22.1
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.22.0"  # <--= optional, use most recent 3.25.x version
+          ninjaVersion: "^1.11.1"  # <--= optional, use most recent 1.x version
 
       - name: Prepare variables for windows
         shell: bash
