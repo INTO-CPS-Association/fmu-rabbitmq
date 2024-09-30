@@ -61,7 +61,7 @@ jobs:
           openssl version -d
           choco uninstall openssl -x
 
-          choco install openssl
+          choco install openssl --version 3.0.0
           openssl version
           openssl version -d
           which openssl
