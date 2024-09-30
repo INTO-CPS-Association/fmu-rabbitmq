@@ -40,7 +40,7 @@ jobs:
         with:
           submodules: true
 
-      - uses: lukka/get-cmake@v3.20.1
+      - uses: lukka/get-cmake@v3.22.x
 
       - name: Prepare variables for windows
         shell: bash
@@ -67,11 +67,6 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          choco install cmake  --installargs '"ADD_CMAKE_TO_PATH=System"'
-          refreshenv
-          cmake --version
-          which cmake
-
           export target=$(cat target)
           export install_name=$(cat install_name)
           export cmakeFlag=$(cat cmakeFlag)
