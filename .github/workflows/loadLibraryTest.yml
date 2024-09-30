@@ -68,6 +68,7 @@ jobs:
         shell: bash
         run: |
           choco install cmake  --installargs '"ADD_CMAKE_TO_PATH=System"'
+          refreshenv
           cmake --version
           which cmake
 
