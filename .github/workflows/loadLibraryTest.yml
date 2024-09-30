@@ -69,6 +69,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
+          cmake --version
           export target=$(cat target)
           export install_name=$(cat install_name)
           export cmakeFlag=$(cat cmakeFlag)
