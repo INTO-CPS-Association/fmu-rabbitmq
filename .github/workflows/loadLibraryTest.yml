@@ -71,6 +71,7 @@ jobs:
         run: |
           choco upgrade cmake
           cmake --version
+          which cmake
           export target=$(cat target)
           export install_name=$(cat install_name)
           export cmakeFlag=$(cat cmakeFlag)
