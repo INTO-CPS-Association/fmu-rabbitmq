@@ -67,7 +67,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          choco install cmake.install --installargs '"ADD_CMAKE_TO_PATH=System"'
+          choco install cmake  --installargs '"ADD_CMAKE_TO_PATH=System"'
           cmake --version
           which cmake
 
