@@ -56,7 +56,9 @@ jobs:
         run: |
           openssl version
           openssl version -d
-          choco upgrade openssl
+          choco uninstall openssl -x
+
+          choco install openssl
           openssl version
           openssl version -d
           which openssl
