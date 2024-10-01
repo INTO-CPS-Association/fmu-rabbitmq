@@ -1,0 +1,262 @@
+# This is a basic workflow to help you get started with Actions
+
+name: openssl-tests
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the development branch
+  push:
+    branches: [gf/update-rabbitmq-c]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest,ubuntu-20.04]
+
+    steps:
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        if: matrix.os == 'windows-latest'
+        with:
+          arch: x64
+          
+      - uses: actions/checkout@v2
+        if: matrix.os == 'ubuntu-20.04'
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - uses: actions/checkout@v2
+        if: matrix.os != 'ubuntu-20.04'
+        with:
+          submodules: true
+
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.22.0"  # <--= optional, use most recent 3.25.x version
+          ninjaVersion: "^1.11.1"  # <--= optional, use most recent 1.x version
+
+      - name: Prepare variables for windows
+        shell: bash
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "win-x64" > target
+          echo "win-x86_64" > install_name
+          echo -G > cmakeFlag
+          echo Unix Makefiles > cmakeFlagValue
+
+      - name: Other win prep
+        if: matrix.os == 'windows-latest'
+        run: |
+          openssl version
+          openssl version -d
+          choco uninstall openssl -x
+
+          choco install openssl
+          openssl version
+          openssl version -d
+          which openssl
+
+          cmake --version
+
+      - name: Build
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          export target=$(cat target)
+          export install_name=$(cat install_name)
+          export cmakeFlag=$(cat cmakeFlag)
+          export cmakeFlagValue=$(cat cmakeFlagValue)
+          echo $target
+          echo $install_name
+          repo=$(git rev-parse --show-toplevel)
+          current_dir=$(pwd)
+          cd $repo
+
+          working_dir=build/$target
+
+          mkdir -p $working_dir
+          echo Build dependencies
+
+          build_xercersc()
+          {
+            if [ $target == "linux-x64" ]; then
+               transcoder_option="-Dtranscoder=gnuiconv"
+            else
+               transcoder_option=""
+            fi
+            echo cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
+            cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
+            make -C$1 -j8
+            make -C$1 install
+          }
+          if [ ! -d build/external/$install_name ]
+          then
+
+          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag "$cmakeFlagValue"
+          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag "$cmakeFlagValue"
+          else
+          echo "Dependency already generated"
+          fi
+
+          echo Running CMake
+          rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
+          cmake $cmakeFlag "$cmakeFlagValue" -B$working_dir -H.
+
+          echo Compiling
+
+          make -C$working_dir 
+          make -C$working_dir/rabbitmq-fmu install
+          cd $current_dir
+
+          echo Done
+          echo $(pwd)
+          ls
+        
+      - name: List dependencies for windows
+        if: matrix.os == 'windows-latest'
+        run: | 
+          echo "$RUNNER_OS"
+          systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
+          echo Dependencies
+          dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
+
+      - name: Run unit tests on WIN
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          export target=$(cat target)
+          echo $(pwd)
+          pacman -S --noconfirm mingw-w64-x86_64-gcc-libs
+          cmake --install build/$target
+          echo check for dll dependencies for the core test
+          ldd build/$target/rabbitmq-core/unit-test-rabbitmq-core.exe
+          echo check for dll dependencies for the container test
+          ldd build/$target/rabbitmq-fmu/unit-test-rabbitmq.exe
+          #Call ctest
+          ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq
+          echo Tests complete
+
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rabbitmq.dll
+          path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
+
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: it-test-rabbitmq.exe
+          path: build/win-x64/rabbitmq-fmu/it-test-rabbitmq.exe
+
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-rabbitmq.exe
+          path: build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe
+
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-rabbitmq-core.exe
+          path: build/win-x64/rabbitmq-core/unit-test-rabbitmq-core.exe
+
+      - name: Upload artifact windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: it-test-rabbitmq-core.exe
+          path: build/win-x64/rabbitmq-core/it-test-rabbitmq-core.exe
+
+      - name: Update version on modelDescription.xml
+        shell: bash
+        if: matrix.os == 'ubuntu-20.04'
+        run: |
+          cd rabbitmq-fmu/
+          ../scripts/set_fmu_version.sh modelDescription.xml
+
+      - name: Upload modelDescription.xml
+        if: matrix.os == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: modelDescription.xml
+          path: rabbitmq-fmu/modelDescription.xml
+
+      - name: Upload rabbitmq configuration script
+        if: matrix.os == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rabbitmq_fmu_configure.py
+          path: scripts/rabbitmq_fmu_configure.py
+
+      - name: Upload readme
+        if: matrix.os == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: readme.md
+          path: readme.md
+
+  pack-fmu:
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Download dll
+        uses: actions/download-artifact@v4
+        with:
+          name: rabbitmq.dll
+          path: rabbitmq/binaries/win64/
+
+      - name: Download model description file
+        uses: actions/download-artifact@v4
+        with:
+          name: modelDescription.xml
+          path: rabbitmq/
+
+      - name: Download model description file to resources folder
+        uses: actions/download-artifact@v4
+        with:
+          name: modelDescription.xml
+          path: rabbitmq/resources
+
+      - name: Download readme
+        uses: actions/download-artifact@v4
+        with:
+          name: readme.md
+          path: rabbitmq/
+
+      - name: Download configuration script
+        uses: actions/download-artifact@v4
+        with:
+          name: rabbitmq_fmu_configure.py
+          path: rabbitmq/
+
+      - name: Get version of the tool
+        run: |
+          cd rabbitmq-fmu/
+          echo "::set-output name=VERSION::$(git describe --tags --long)"
+        id: version
+
+      - name: Upload FMU
+        uses: actions/upload-artifact@v4
+        with:
+          name: rabbitmq-${{steps.version.outputs.VERSION}}.fmu
+          path: rabbitmq
+
