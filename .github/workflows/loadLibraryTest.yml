@@ -108,6 +108,18 @@ jobs:
           echo "Dependency already generated"
           fi
 
+          echo Contents of build sub folders
+          ls build/external/$target
+          echo --------------------------
+          ls build/external/$target/lib
+          echo --------------------------
+
+          ls build/external/$target/lib/cmake
+          echo --------------------------
+
+          ls build/external/$target/lib/cmake/XercesC
+          echo --------------------------
+
           echo Running CMake
           rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
           cmake $cmakeFlag "$cmakeFlagValue" -B$working_dir -H.
