@@ -38,7 +38,8 @@ include_directories(${gtest_SOURCE_DIR}/include)
 
 # I need this: -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic
 #message(path to xercesc is ${xercerc_lib_path})
-
+message("Path for XercesC_DIR is:")
+message($(XercesC_DIR))
 find_package(XercesC CONFIG PATHS ${THIRD_PARTY_LIBRARIES_ROOT} REQUIRED) # XSD DEPENDS ON ${XERCESC_FOUND}
 if (XercesC_FOUND)
     message(STATUS "Package Xerces-C++ found: ${XercesC_INCLUDE_DIR}")
