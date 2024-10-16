@@ -120,7 +120,7 @@ add_subdirectory(thirdparty/googletest)
 #execute_process(COMMAND ${CMAKE_EXECUTABLE} thirdparty/rapidjson -DCMAKE_INSTALL_PREFIX="${CMAKE_CURRENT_SOURCE_DIR}/build/install/thirdparty/rapidjson" WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/thirdparty/rapidjson")
 #execute_process(COMMAND ${CMAKE_EXECUTABLE} --build "${CMAKE_CURRENT_SOURCE_DIR}/build/thirdparty/rapidjson" --target install)
 
-#add_subdirectory(thirdparty/xerces-c)
+add_subdirectory(thirdparty/xerces-c)
 
 #set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 #set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
