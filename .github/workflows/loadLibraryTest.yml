@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest,ubuntu-20.04]
+        os: [windows-latest,ubuntu-latest]
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
@@ -69,7 +69,7 @@ jobs:
           cmake --version
 
       - name: Build
-        if: matrix.os == 'windows-latest'
+        #if: matrix.os == 'windows-latest'
         shell: bash
         run: |
           export target=$(cat target)
