@@ -21,41 +21,56 @@ echo Build dependencies
 
 build_xercersc()
 {
+	if [ ! -d $2 ]
+then
+
 	 if [ $target == "linux-x64" ]; then
 	   transcoder_option="-Dtranscoder=gnuiconv"
 	else
 	   transcoder_option=""
 	fi
-	echo cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
-	cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
+	#echo cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
+
+	if [[ "$target" == "win-x64" ]]
+	then
+		cmake -G "MSYS Makefiles" $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
+	else
+		cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_CXX_EXTENSIONS=ON -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
+	fi
 	make -C$1 -j8
 	make -C$1 install
+fi
 }
 
 build_openssl()
 {
 
+if [ ! -d $2 ]
+then
+
 	c_dir=$(pwd)
 	cd $1
-	./Configure --prefix=$2 --openssldir=/usr/local/ssl     '-Wl,-rpath,$(LIBRPATH)'
+	./Configure --prefix=$2 --openssldir=$2   '-Wl,-rpath,$(LIBRPATH)' no-docs no-tests
 	make -j 9
 	make install
 	cd $c_dir
+fi
 }
 
-if [ ! -d build/external/$install_name ]
-then
-
-build_xercersc $working_dir/xerces-c build/external/$install_name
-build_openssl $repo/thirdparty/openssl $(readlink -f "$working_dir/build/external/$install_name")
-else
-echo "Dependency already generated"
-fi
-
+ 
+mkdir -p build/external/$install_name
+build_xercersc $working_dir/xerces-c build/external/$install_name/xerces-c
+build_openssl $repo/thirdparty/openssl $(readlink -f "build/external/$install_name")/openssl
+#build_xercersc $working_dir/xerces-c build/external/$install_name/xerces-c
 
 echo Running CMake
 rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
-cmake -B$working_dir -H.
+if [[ "$target" == "win-x64" ]]
+then
+	cmake -G "MSYS Makefiles" -B$working_dir -H.
+else
+	cmake -B$working_dir -H.
+fi
 
 echo Compiling
 

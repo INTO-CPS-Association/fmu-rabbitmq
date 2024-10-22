@@ -11,11 +11,6 @@ set(CMAKE_PROJECT_VERSION_MAJOR "")
 set(CMAKE_PROJECT_VERSION_MINOR "")
 set(CMAKE_PROJECT_VERSION_PATCH "")
 
-#so that it can find the ssl stuff
-if (APPLE)
-    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
-    set(OPENSSL_LIBRARIES "/usr/local/opt/openssl/lib")
-ENDIF ()
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/install" )
 
@@ -59,19 +54,35 @@ if (NOT DEFINED THIRD_PARTY_LIBRARIES_ROOT)
     if (UNIX)
         if (APPLE)
             set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}/darwin)
-            set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/cmake")
-set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}")
-            #set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/lib/libxerces-c-3.2.a")
+            set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/xerces-c/lib/cmake/XercesC")
+
+
+            set(OPENSSL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/openssl/lib)
+            set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/openssl/include)
+            set(OPENSSL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/openssl/lib)
+
+
         ELSE ()
             set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}/linux)
-            set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/linux-${arch}/cmake")
-            #set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/external/linux-${arch}/lib/libxerces-c-3.2.a")
+            set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/linux-${arch}/xerces-c/lib/cmake/XercesC")
+
+
+            set(OPENSSL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/build/external/linux-${arch}/openssl/lib64)
+            set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/external/linux-${arch}/openssl/include)
+            set(OPENSSL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/external/linux-${arch}/openssl/lib64)
+
+
         ENDIF ()
         set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}-${arch})
         message("Thirdparty libraries root:")
         message(${THIRD_PARTY_LIBRARIES_ROOT})
     ELSEIF (WIN32)
-        set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/win-${arch}/cmake")
+        set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/win-${arch}/xerces-c/cmake")
+        set(OPENSSL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/build/external/win-${arch}/openssl/lib64)
+        set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/external/win-${arch}/openssl/include)
+        set(OPENSSL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/external/win-${arch}/openssl/lib64)
+
+
     ENDIF ()
 endif ()
 

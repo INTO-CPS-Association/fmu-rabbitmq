@@ -6,7 +6,7 @@ name: rabbitmq
 on:
   # Triggers the workflow on push or pull request events but only for the development branch
   push:
-    branches: [ master, development]
+    branches: [ master, development, kel/openssl]
   pull_request:
     branches: [ master, development]
 
@@ -23,29 +23,57 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, windows-latest, macos-13 ]
+        #os: [ ubuntu-22.04, windows-latest, macos-13 ]
+        os: [  windows-latest]
 
 
     steps:
-      - uses: TheMrMilchmann/setup-msvc-dev@v3
+#      - uses: TheMrMilchmann/setup-msvc-dev@v3
+#        if: matrix.os == 'windows-latest'
+#        with:
+#          arch: x64
+      #- name: Put MSYS2_MinGW64 on PATH for windows   
+        #if: matrix.os == 'windows-latest'
+        # there is not yet an environment variable for this path from msys2/setup-msys2
+        # We need this to get a gcc 11.2 that is new enough to compile the reference FMU3
+        #run: echo "C:\msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        #run: echo "C:\msys64/mingw64/bin" >> "$GITHUB_PATH"
+      - uses: msys2/setup-msys2@v2
         if: matrix.os == 'windows-latest'
         with:
-          arch: x64
-          
+          install: >-
+            curl
+            git
+            mingw-w64-x86_64-toolchain
+            base-devel
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+
       - uses: actions/checkout@v4
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         with:
           submodules: true
           fetch-depth: 0
 
       - uses: actions/checkout@v4
-        if: matrix.os != 'ubuntu-20.04'
+        if: matrix.os != 'ubuntu-22.04'
         with:
           submodules: true
 
-# why this one
+      - name: Restore external dependencies from cache
+        id: cache-external-deps
+        uses: actions/cache@v4
+        with:
+          path: build/external/
+          key: ${{ runner.os }}-external-deps
+
+      - name: Check if external dependencies are in the cache
+        if: steps.cache-external-deps.outputs.cache-hit == 'true'
+        run: echo External dependencies already generated
+
+# why this one: in order to run the integration test
       - name: get rabbitmq Ubuntu ONLY
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         uses: getong/rabbitmq-action@v1.2
         with:
           rabbitmq version: '3.8.2-management'
@@ -53,12 +81,13 @@ jobs:
           rabbitmq user: 'guest'
           rabbitmq password: 'guest'
 
-      - uses: lukka/get-cmake@v3.20.1
+      - uses: lukka/get-cmake@v3.22.2
+        if: matrix.os != 'windows-latest'
 
 
 # why not gcc
 #      - name: Set up CLANG
-#        if: matrix.os == 'ubuntu-20.04'
+#        if: matrix.os == 'ubuntu-22.04'
 #        uses: egor-tensin/setup-clang@v1
 #        with:
 #          version: latest
@@ -67,7 +96,7 @@ jobs:
 
 
       - name: Build linux
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: ./scripts/_build_base.sh linux-x64 linux-x86_64
 
@@ -76,14 +105,21 @@ jobs:
         shell: bash
         run: ./scripts/_build_base.sh darwin-x64 darwin-x86_64
 
-      - name: Build Mac
+ #     - name: Set Perl environment variables #  https://github.com/sfackler/rust-openssl/issues/2149
+ #       if: matrix.os == 'windows-latest'
+ #       run: |
+ #         cpan -i Locale::Maketext::Simple 
+ #         echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+ #         echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      
+      - name: Build Windows 
         if: matrix.os == 'windows-latest'
-        shell: bash
-        run: ./scripts/_build_base.sh win-x64 win-x86_64
-
+        shell: msys2 {0}
+        run: |
+          ./scripts/_build_base.sh win-x64 win-x86_64
 
       - name: List dependencies for ubuntu
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: | 
           echo "$RUNNER_OS"
           lsb_release -a
@@ -97,7 +133,7 @@ jobs:
           echo "$RUNNER_OS"
           systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
           echo Dependencies
-          dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
+ #            dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
           
       - name: List dependencies for macos
         if: matrix.os == 'macos-13'
@@ -124,33 +160,34 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          export target=$(cat target)
-          echo $(pwd)
-          pacman -S --noconfirm mingw-w64-x86_64-gcc-libs
-          cmake --install build/$target
-          echo check for dll dependencies for the core test
-          ldd build/$target/rabbitmq-core/unit-test-rabbitmq-core.exe
-          echo check for dll dependencies for the container test
-          ldd build/$target/rabbitmq-fmu/unit-test-rabbitmq.exe
-          #Call ctest
-          ctest --test-dir build/$target --output-on-failure -R unit-test-rabbitmq
+          ls
+          ls build/
+          ctest --test-dir build/win-x64 --output-on-failure -R unit-test-rabbitmq
           echo Tests complete
+#          pacman -S --noconfirm mingw-w64-x86_64-gcc-libs
+#          cmake --install build/win-x64
+#          echo check for dll dependencies for the core test
+#          ldd build/win-x64/rabbitmq-core/unit-test-rabbitmq-core.exe
+#          echo check for dll dependencies for the container test
+#          ldd build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe
+#           Call ctest
 
-      - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server
-        if: matrix.os == 'ubuntu-20.04'
+      - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server; add -u to see script output
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           cd rmqfmu-example/old_scripts
-          ls
           python3 -m pip install pika --upgrade
+          echo Run playback_gazebo_data-test.py
           nohup python3 playback_gazebo_data-test.py & exit
 
       - name: Run integration tests UBUNTU # there are no integration tests yet for the core.
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04' 
         run: |
-          export target=$(cat target)
-          cp modelDescription.xml build/$target/rabbitmq-fmu/
-          ./build/$target/rabbitmq-core/it-test-rabbitmq-core
-          ./build/$target/rabbitmq-fmu/it-test-rabbitmq
+          cp modelDescription.xml build/linux-x64/rabbitmq-fmu/
+          echo Running it-test-rabbitmq-core
+          ./build/linux-x64/rabbitmq-core/it-test-rabbitmq-core
+          echo Running it-test-rabbitmq
+          ./build/linux-x64/rabbitmq-fmu/it-test-rabbitmq
 
       #- name: Upload artifact macos
       #  if: matrix.os == 'macos-latest'
@@ -160,7 +197,7 @@ jobs:
       #    path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Upload artifact linux 
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: rabbitmq.so
@@ -203,34 +240,34 @@ jobs:
 
       - name: Update version on modelDescription.xml
         shell: bash
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           cd rabbitmq-fmu/
           ../scripts/set_fmu_version.sh modelDescription.xml
 
       - name: Upload modelDescription.xml
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: modelDescription.xml
           path: rabbitmq-fmu/modelDescription.xml
 
       - name: Upload rabbitmq configuration script
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: rabbitmq_fmu_configure.py
           path: scripts/rabbitmq_fmu_configure.py
 
       - name: Upload readme
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: readme.md
           path: readme.md
 
   pack-fmu:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - uses: actions/checkout@v4
