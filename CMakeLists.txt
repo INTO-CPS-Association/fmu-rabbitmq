@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7.2)
 
-
+#cmake_policy(SET CMP0002 OLD)
 set(CMAKE_POLICY_DEFAULT_CMP0079 NEW)
 
 set(CMAKE_MACOSX_RPATH 1)
@@ -60,6 +60,7 @@ if (NOT DEFINED THIRD_PARTY_LIBRARIES_ROOT)
         if (APPLE)
             set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}/darwin)
             set(XercesC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/cmake")
+set(OPENSSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}")
             #set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/external/darwin-${arch}/lib/libxerces-c-3.2.a")
         ELSE ()
             set(THIRD_PARTY_LIBRARIES_ROOT ${THIRD_PARTY_LIBRARIES_ROOT}/linux)
@@ -118,6 +119,9 @@ message("ENABLE_RBMQ_FMU_TESTS: ${ENABLE_RBMQ_FMU_TESTS}")
 set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 
+set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "" FORCE)
+set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(thirdparty/rapidjson)
 #add_subdirectory(thirdparty/amqp-cpp)
 #### Comment line 118 to build locally.

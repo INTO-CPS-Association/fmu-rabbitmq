@@ -6,6 +6,9 @@
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 
+#include <iomanip>  // Required for setprecision
+
+
 #ifdef WINDOWS
 #include <direct.h>
 #define GetCurrentDir _getcwd
