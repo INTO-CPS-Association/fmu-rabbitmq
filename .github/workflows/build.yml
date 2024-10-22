@@ -23,9 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: [ ubuntu-20.04, windows-latest, macos-latest ]
-        #os: [ubuntu-20.04]
-        os: [windows-latest, ubuntu-20.04]
+        os: [ ubuntu-20.04, windows-latest, macos-13 ]
+
 
     steps:
       - uses: TheMrMilchmann/setup-msvc-dev@v3
@@ -44,6 +43,7 @@ jobs:
         with:
           submodules: true
 
+# why this one
       - name: get rabbitmq Ubuntu ONLY
         if: matrix.os == 'ubuntu-20.04'
         uses: getong/rabbitmq-action@v1.2
@@ -55,123 +55,32 @@ jobs:
 
       - uses: lukka/get-cmake@v3.20.1
 
-      - name: Prepare variables for ubuntu
+
+# why not gcc
+#      - name: Set up CLANG
+#        if: matrix.os == 'ubuntu-20.04'
+#        uses: egor-tensin/setup-clang@v1
+#        with:
+#          version: latest
+#          platform: x64
+
+
+
+      - name: Build linux
         if: matrix.os == 'ubuntu-20.04'
-        run: | 
-          openssl version
-          echo "linux-x64" > target
-          echo "linux-x86_64" > install_name
-          echo " " > cmakeFlag
-          echo " " > cmakeFlagValue
-
-      - name: Set up CLANG
-        if: matrix.os == 'ubuntu-20.04'
-        uses: egor-tensin/setup-clang@v1
-        with:
-          version: latest
-          platform: x64
-
-      - name: Prepare variables for windows
         shell: bash
-        if: matrix.os == 'windows-latest'
-        run: |
-          openssl version
-          which libcrypto-1_1-x64.dll
-          echo "win-x64" > target
-          echo "win-x86_64" > install_name
-          echo -G > cmakeFlag
-          echo Unix Makefiles > cmakeFlagValue
+        run: ./scripts/_build_base.sh linux-x64 linux-x86_64
 
-      - name: Other win prep
-        if: matrix.os == 'windows-latest'
-        run: |
-          dir "C:\Program Files\OpenSSL\lib"
-          dir "C:\Program Files\OpenSSL\bin"
-
-          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Other win prep
-        if: matrix.os == 'windows-latest'
-        run: |
-          C:\Strawberry\c\bin\openssl.exe version
-          dir C:\Strawberry\c\lib
-        continue-on-error: true
-
-      - name: Prepare variables for macos
-        if: matrix.os == 'macos-latest'
-        run: |
-          echo "darwin-x64" > target
-          echo "darwin-x86_64" > install_name
-          echo " " > cmakeFlag
-          echo " " > cmakeFlagValue
-
-      - name: Fix openssl
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install openssl
-          brew upgrade openssl
-          brew link --force openssl
-          echo '' >> /Users/runner/.bash_profile
-          echo 'export LDFLAGS="-L/usr/local/opt/openssl@3/lib"' >> /Users/runner/.bash_profile
-          echo 'export CPPFLAGS="-I/usr/local/opt/openssl@3/include"' >> /Users/runner/.bash_profile
-          echo 'export PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig"' >> /Users/runner/.bash_profile
-          echo 'export PATH="/usr/local/opt/openssl@3/bin:$PATH"' >> /Users/runner/.bash_profile
-          tail /Users/runner/.bash_profile
-          openssl version
-
-      - name: Build
+      - name: Build Mac
+        if: matrix.os == 'macos-13'
         shell: bash
-        run: |
-          export target=$(cat target)
-          export install_name=$(cat install_name)
-          export cmakeFlag=$(cat cmakeFlag)
-          export cmakeFlagValue=$(cat cmakeFlagValue)
-          echo $target
-          echo $install_name
-          repo=$(git rev-parse --show-toplevel)
-          current_dir=$(pwd)
-          cd $repo
+        run: ./scripts/_build_base.sh darwin-x64 darwin-x86_64
 
-          working_dir=build/$target
+      - name: Build Mac
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: ./scripts/_build_base.sh win-x64 win-x86_64
 
-          mkdir -p $working_dir
-          echo Build dependencies
-
-          build_xercersc()
-          {
-            if [ $target == "linux-x64" ]; then
-               transcoder_option="-Dtranscoder=gnuiconv"
-            else
-               transcoder_option=""
-            fi
-            echo cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
-            cmake $3 "$4" -B$1 -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_INSTALL_PREFIX=$2 -Dthreads:BOOL=OFF -Dnetwork:BOOL=OFF $transcoder_option -Hthirdparty/xerces-c
-            make -C$1 -j8
-            make -C$1 install
-          }
-          if [ ! -d build/external/$install_name ]
-          then
-
-          echo build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag "$cmakeFlagValue"
-          build_xercersc $working_dir/xerces-c build/external/$install_name $cmakeFlag "$cmakeFlagValue"
-          else
-          echo "Dependency already generated"
-          fi
-
-          echo Running CMake
-          rm -f thirdparty/rabbitmq-c/rabbitmq-c/librabbitmq/config.h
-          cmake $cmakeFlag "$cmakeFlagValue" -B$working_dir -H.
-
-          echo Compiling
-
-          make -C$working_dir 
-          make -C$working_dir/rabbitmq-fmu install
-          cd $current_dir
-
-          echo Done
-          echo $(pwd)
-          ls
 
       - name: List dependencies for ubuntu
         if: matrix.os == 'ubuntu-20.04'
@@ -191,7 +100,7 @@ jobs:
           dumpbin /dependents build/win-x64/rabbitmq-fmu/rabbitmq.dll
           
       - name: List dependencies for macos
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         run: | 
           echo "$RUNNER_OS"
           sw_vers
