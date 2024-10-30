@@ -61,16 +61,16 @@ jobs:
         with:
           submodules: true
 
-      - name: Restore external dependencies from cache
-        id: cache-external-deps
-        uses: actions/cache@v4
-        with:
-          path: build/external/
-          key: ${{ runner.os }}-external-deps
+      # - name: Restore external dependencies from cache
+      #   id: cache-external-deps
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: build/external/
+      #     key: ${{ runner.os }}-external-deps
 
-      - name: Check if external dependencies are in the cache
-        if: steps.cache-external-deps.outputs.cache-hit == 'true'
-        run: echo External dependencies already generated
+      # - name: Check if external dependencies are in the cache
+      #   if: steps.cache-external-deps.outputs.cache-hit == 'true'
+      #   run: echo External dependencies already generated
 
 # why this one: in order to run the integration test
       - name: get rabbitmq Ubuntu ONLY
