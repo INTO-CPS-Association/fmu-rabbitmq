@@ -125,8 +125,8 @@ jobs:
           echo Dependencies
           otool -L build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
-      - name: Run unit tests on LINUX
-        if: matrix.os != 'ubuntu-22.04'
+      - name: Run unit tests on UBUNTU
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
