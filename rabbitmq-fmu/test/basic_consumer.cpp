@@ -226,7 +226,7 @@ namespace{
         int count = 0;
 
         amqp_basic_properties_t props;
-        std::string routingkey = "linefollower.system_health.from_cosim";
+        std::string routingkey = "system_health.from_cosim";
 
         ////// create consumer on same connection different channel
         int channelSub = 2;
@@ -234,7 +234,7 @@ namespace{
         printText = "Opening channel with ID: " + std::to_string(channelSub);
 
         const char* qnametest = "boasorte";
-        const char* queueBindingKey = "linefollower.system_health.to_cosim";
+        const char* queueBindingKey = "system_health.to_cosim";
         printText = "Declaring queue on channel with ID: " + std::to_string(channelSub);
         printf("\n%s\n", printText.c_str());
         amqp_queue_declare_ok_t *res = amqp_queue_declare(

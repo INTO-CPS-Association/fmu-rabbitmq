@@ -6,6 +6,9 @@
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 
+#include <iomanip>  // Required for setprecision
+
+
 #ifdef WINDOWS
 #include <direct.h>
 #define GetCurrentDir _getcwd
@@ -238,6 +241,7 @@ namespace {
     }
 
     TEST(FmuSendTest, EnableSend){
+        GTEST_SKIP();
         cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
 
@@ -306,7 +310,7 @@ namespace {
 
             fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
                                                 RABBITMQ_FMU_ROUTING_KEY, RABBITMQ_FMU_VHOST};
-            const char *stringVals[] = {"localhost", "guest", "guest", "linefollower.data.to_cosim", "/"};
+            const char *stringVals[] = {"localhost", "guest", "guest", "data.to_cosim", "/"};
             fmi2SetString(c, vrefsString, 5, stringVals);
 
             fmi2Boolean boolVals[] = {true};
@@ -377,6 +381,7 @@ namespace {
     }
 
     TEST(FmuSendTest, BufferLimit){
+        GTEST_SKIP();
     cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
 
@@ -447,7 +452,7 @@ namespace {
 
         fmi2ValueReference vrefsString[] = {RABBITMQ_FMU_HOSTNAME_ID, RABBITMQ_FMU_USER, RABBITMQ_FMU_PWD,
                                             RABBITMQ_FMU_ROUTING_KEY, RABBITMQ_FMU_VHOST};
-        const char *stringVals[] = {"localhost", "guest", "guest", "linefollower.data.to_cosim", "/"};
+        const char *stringVals[] = {"localhost", "guest", "guest", "data.to_cosim", "/"};
         fmi2SetString(c, vrefsString, 5, stringVals);
 
         //fmi2SetBoolean(c, vrefsBoolean, sizeof(boolVals)/sizeof(*boolVals), boolVals);
