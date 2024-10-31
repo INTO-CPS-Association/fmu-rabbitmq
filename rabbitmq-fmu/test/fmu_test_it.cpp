@@ -19,6 +19,23 @@
 #define GetCurrentDir getcwd
 #endif
 
+#define RABBITMQ_FMU_HOSTNAME_ID 0
+#define RABBITMQ_FMU_PORT 1
+#define RABBITMQ_FMU_USER 2
+#define RABBITMQ_FMU_PWD 3
+#define RABBITMQ_FMU_ROUTING_KEY 4
+#define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
+#define RABBITMQ_FMU_PRECISION 6
+#define RABBITMQ_FMU_MAXAGE 7
+#define RABBITMQ_FMU_SEND_ENABLE 15
+#define RABBITMQ_FMU_USE_SSL 16
+#define RABBITMQ_FMU_QUEUE_UPPER_BOUND 17
+#define RABBITMQ_FMU_VHOST 18
+#define RABBITMQ_FMU_HOW_TO_SEND 19
+
+#define RABBITMQ_FMU_XPOS 100
+#define RABBITMQ_FMU_YPOS 101
+#define RABBITMQ_FMU_COMMAND_STOP 22
 
 using namespace std;
 
@@ -35,7 +52,7 @@ namespace {
     TEST(FmuTest, BasicFlow
     ) {
 
-        GTEST_SKIP();
+        //GTEST_SKIP();
         cout << " Simulation test for FMI " << fmi2GetVersion() << endl;
 
 
@@ -286,22 +303,6 @@ namespace {
                     c, toleranceDefined, tolerance,
                     startTime, stopTimeDefined, stopTime));
 
-#define RABBITMQ_FMU_HOSTNAME_ID 0
-#define RABBITMQ_FMU_PORT 1
-#define RABBITMQ_FMU_USER 2
-#define RABBITMQ_FMU_PWD 3
-#define RABBITMQ_FMU_ROUTING_KEY 4
-#define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
-#define RABBITMQ_FMU_PRECISION 6
-#define RABBITMQ_FMU_MAXAGE 7
-#define RABBITMQ_FMU_SEND_ENABLE 15
-#define RABBITMQ_FMU_VHOST 18
-#define RABBITMQ_FMU_HOW_TO_SEND 19
-
-#define RABBITMQ_FMU_XPOS 100
-#define RABBITMQ_FMU_YPOS 101
-#define RABBITMQ_FMU_COMMAND_STOP 22
-
             fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
                                           RABBITMQ_FMU_PORT, RABBITMQ_FMU_MAXAGE };
             int intVals[] = {60, 10, 5672, 1000};
@@ -426,23 +427,7 @@ namespace {
                 c, toleranceDefined, tolerance,
                 startTime, stopTimeDefined, stopTime));
 
-#define RABBITMQ_FMU_HOSTNAME_ID 0
-#define RABBITMQ_FMU_PORT 1
-#define RABBITMQ_FMU_USER 2
-#define RABBITMQ_FMU_PWD 3
-#define RABBITMQ_FMU_ROUTING_KEY 4
-#define RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT 5
-#define RABBITMQ_FMU_PRECISION 6
-#define RABBITMQ_FMU_MAXAGE 7
-#define RABBITMQ_FMU_SEND_ENABLE 15
-#define RABBITMQ_FMU_USE_SSL 16
-#define RABBITMQ_FMU_QUEUE_UPPER_BOUND 17
-#define RABBITMQ_FMU_VHOST 18
-#define RABBITMQ_FMU_HOW_TO_SEND 19
 
-#define RABBITMQ_FMU_XPOS 100
-#define RABBITMQ_FMU_YPOS 101
-#define RABBITMQ_FMU_COMMAND_STOP 22
 
         fmi2ValueReference vrefs[] = {RABBITMQ_FMU_COMMUNICATION_READ_TIMEOUT, RABBITMQ_FMU_PRECISION,
                                         RABBITMQ_FMU_PORT, RABBITMQ_FMU_MAXAGE, RABBITMQ_FMU_QUEUE_UPPER_BOUND };

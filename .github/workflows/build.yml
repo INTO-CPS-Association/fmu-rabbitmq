@@ -190,7 +190,7 @@ jobs:
           ./build/linux-x64/rabbitmq-fmu/it-test-rabbitmq
 
       - name: Upload artifact macos
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         uses: actions/upload-artifact@v4
         with:
           name: rabbitmq.dylib
