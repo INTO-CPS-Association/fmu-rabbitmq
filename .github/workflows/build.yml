@@ -61,16 +61,16 @@ jobs:
         with:
           submodules: true
 
-      # - name: Restore external dependencies from cache
-      #   id: cache-external-deps
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: build/external/
-      #     key: ${{ runner.os }}-external-deps
+      - name: Restore external dependencies from cache
+        id: cache-external-deps
+        uses: actions/cache@v4
+        with:
+          path: build/external/
+          key: ${{ runner.os }}-external-deps
 
-      # - name: Check if external dependencies are in the cache
-      #   if: steps.cache-external-deps.outputs.cache-hit == 'true'
-      #   run: echo External dependencies already generated
+      - name: Check if external dependencies are in the cache
+        if: steps.cache-external-deps.outputs.cache-hit == 'true'
+        run: echo External dependencies already generated
 
 # why this one: in order to run the integration test
       - name: get rabbitmq Ubuntu ONLY
@@ -190,12 +190,12 @@ jobs:
           echo Running it-test-rabbitmq
           ./build/linux-x64/rabbitmq-fmu/it-test-rabbitmq
 
-      #- name: Upload artifact macos
-      #  if: matrix.os == 'macos-latest'
-      #  uses: actions/upload-artifact@v2
-      #  with:
-      #    name: rabbitmq.dylib
-      #    path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
+      - name: Upload artifact macos
+        if: matrix.os == 'macos-13'
+        uses: actions/upload-artifact@v2
+        with:
+          name: rabbitmq.dylib
+          path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Upload artifact linux 
         if: matrix.os == 'ubuntu-22.04'
@@ -288,11 +288,11 @@ jobs:
           name: rabbitmq.so
           path: rabbitmq/binaries/linux64/
 
-      #- name: Download dylib
-      #  uses: actions/download-artifact@v2
-      #  with:
-      #    name: rabbitmq.dylib
-      #    path: rabbitmq/binaries/darwin64/
+      - name: Download dylib
+        uses: actions/download-artifact@v2
+        with:
+          name: rabbitmq.dylib
+          path: rabbitmq/binaries/darwin64/
 
       - name: Download model description file
         uses: actions/download-artifact@v4
