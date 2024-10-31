@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload artifact macos
         if: matrix.os == 'macos-13'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rabbitmq.dylib
           path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
@@ -289,7 +289,7 @@ jobs:
           path: rabbitmq/binaries/linux64/
 
       - name: Download dylib
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: rabbitmq.dylib
           path: rabbitmq/binaries/darwin64/
