@@ -2,47 +2,7 @@
 
 ## Binary dependencies
 
-The RMQFMU has been built on the following github actions images: ```windows-latest```, ```macos-latest```, and ```ubuntu-20.04```.
-Depending on the OS the following dependencies apply:
-
-Windows (rabbitmq.dll) -- libcrypto and libssl might need to be added manually
-
-    ADVAPI32.dll
-    KERNEL32.dll
-    api-ms-win-crt-convert-l1-1-0.dll
-    api-ms-win-crt-environment-l1-1-0.dll
-    api-ms-win-crt-filesystem-l1-1-0.dll
-    api-ms-win-crt-heap-l1-1-0.dll
-    api-ms-win-crt-locale-l1-1-0.dll
-    api-ms-win-crt-math-l1-1-0.dll
-    api-ms-win-crt-private-l1-1-0.dll
-    api-ms-win-crt-runtime-l1-1-0.dll
-    api-ms-win-crt-stdio-l1-1-0.dll
-    api-ms-win-crt-string-l1-1-0.dll
-    api-ms-win-crt-time-l1-1-0.dll
-    api-ms-win-crt-utility-l1-1-0.dll
-    WS2_32.dll
-    libcrypto-1_1-x64.dll
-    libssl-1_1-x64.dll
-
-MACOS (rabbitmq.dylib)
-
-	/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices (compatibility version 1.0.0, current version 1228.0.0)
-	/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1300.36.0)
-	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1319.0.0)
-	/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 1953.255.0)
-
-UBUNTU 20.04 (rabbitmq.so) -- libpthread might need to be added manually
-
-    linux-vdso.so.1 
-	libdl.so.2 
-	libpthread.so.0 
-	librt.so.1 
-	libstdc++.so.6 
-	libm.so.6 
-	libgcc_s.so.1
-	libc.so.6 
-	/lib64/ld-linux-x86-64.so.2 
+The RMQFMU has been built on the following github actions images: ```windows-latest```, ```macos-13```, and ```ubuntu-22.04```.
  
 ## Prerequisites
 Concepts of FMI/FMU, co-simulation, multi-model, digital twin (DT), physical twin (PT)
