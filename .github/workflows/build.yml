@@ -134,9 +134,12 @@ jobs:
           echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
           ctest --test-dir build/$target -R unit-test-rabbitmq
           echo Running unit-test-rabbitmq-core
-          ./build/linux-x64/rabbitmq-core/unit-test-rabbitmq-core
+          ./build/$target/rabbitmq-core/unit-test-rabbitmq-core
           echo Running unit-test-rabbitmq
-          ls ./build/linux-x64/rabbitmq-core/
+          echo core stuff
+          ls ./build/$target/rabbitmq-core/
+          echo fmu stuff
+          ls ./build/$target/rabbitmq-fmu
           echo Tests complete
 
       - name: Run unit tests on WIN
