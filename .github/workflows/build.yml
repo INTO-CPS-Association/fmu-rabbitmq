@@ -125,21 +125,34 @@ jobs:
           echo Dependencies
           otool -L build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
-      - name: Run unit tests on UNIX
-        if: matrix.os != 'windows-latest'
+      - name: Run unit tests on LINUX
+        if: matrix.os != 'ubuntu-22.04'
         shell: bash
         run: |
-          export target=$(cat target)
-          echo $(pwd)
           echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
-          ctest --test-dir build/$target -R unit-test-rabbitmq
+          ctest --test-dir build/linux-x64 -R unit-test-rabbitmq
           echo Running unit-test-rabbitmq-core
-          ./build/$target/rabbitmq-core/unit-test-rabbitmq-core
+          ./build/linux-x64/rabbitmq-core/unit-test-rabbitmq-core
           echo Running unit-test-rabbitmq
           echo core stuff
-          ls ./build/$target/rabbitmq-core/
+          ls ./build/linux-x64/rabbitmq-core/
           echo fmu stuff
-          ls ./build/$target/rabbitmq-fmu
+          ls ./build/linux-x64/rabbitmq-fmu
+          echo Tests complete
+
+      - name: Run unit tests on MACOS
+        if: matrix.os == 'macos-13'
+        shell: bash
+        run: |
+          echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
+          ctest --test-dir build/darwin-x64 -R unit-test-rabbitmq
+          echo Running unit-test-rabbitmq-core
+          ./build/darwin-x64/rabbitmq-core/unit-test-rabbitmq-core
+          echo Running unit-test-rabbitmq
+          echo core stuff
+          ls ./build/darwin-x64/rabbitmq-core/
+          echo fmu stuff
+          ls ./build/darwin-x64/rabbitmq-fmu
           echo Tests complete
 
       - name: Run unit tests on WIN
