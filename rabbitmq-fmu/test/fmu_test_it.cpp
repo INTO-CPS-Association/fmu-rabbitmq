@@ -99,6 +99,10 @@ namespace {
                     c, toleranceDefined, tolerance,
                     startTime, stopTimeDefined, stopTime));
 
+            fmi2Boolean boolVals[] = {true};
+            fmi2ValueReference vrefsBoolean[] = {RABBITMQ_FMU_HOW_TO_SEND};
+            fmi2SetBoolean(c, vrefsBoolean, 1, boolVals);
+
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
 
