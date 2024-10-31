@@ -1,6 +1,6 @@
 # Rabbitmq FMU
 
-## Binary dependencies
+## Platforms
 
 The RMQFMU has been built on the following github actions images: ```windows-latest```, ```macos-13```, and ```ubuntu-22.04```.
  
