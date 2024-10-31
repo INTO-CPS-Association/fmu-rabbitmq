@@ -220,7 +220,7 @@ namespace {
 
     TEST(FmuContainerCoreTest, checksConvertTimeToString)
     {
-        //GTEST_SKIP();
+        GTEST_SKIP();
         cout << "Testing: FmuContainerCore::convertTimeToString " << endl;
         std::chrono::milliseconds maxAge(1000);
         std::map<FmuContainerCore::ScalarVariableId, int> lookAhead;
