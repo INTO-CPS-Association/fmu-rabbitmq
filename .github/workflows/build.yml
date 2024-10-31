@@ -48,6 +48,7 @@ jobs:
             base-devel
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-gcc
+            mingw-w64-icu
 
       - uses: actions/checkout@v4
         if: matrix.os == 'ubuntu-22.04'

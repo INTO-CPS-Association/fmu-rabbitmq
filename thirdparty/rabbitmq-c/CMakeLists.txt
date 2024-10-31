@@ -20,6 +20,10 @@ set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 
 add_subdirectory(rabbitmq-c)
 
+if (WIN32)
+   target_compile_options(rabbitmq-static PRIVATE -Wno-error=incompatible-pointer-types)
+endif ()
+
 #target_include_directories(rabbitmq-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/rabbitmq-c/librabbitmq)
 
 target_include_directories(rabbitmq-static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rabbitmq-c/librabbitmq>)
