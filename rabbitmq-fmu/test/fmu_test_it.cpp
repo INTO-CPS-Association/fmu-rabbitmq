@@ -140,7 +140,7 @@ namespace {
 
     TEST(FmuTest, SetsLookaheadAndMaxAge){
 
-        GTEST_SKIP();
+        //GTEST_SKIP();
         cout << " Simulation test that includes setting lookahead and max ageissue " << fmi2GetVersion() << endl;
 
 
@@ -196,12 +196,14 @@ namespace {
                     c, toleranceDefined, tolerance,
                     startTime, stopTimeDefined, stopTime));
 
-
+            fmi2Boolean boolVals[] = {true};
+            fmi2ValueReference vrefsBoolean[] = {RABBITMQ_FMU_HOW_TO_SEND};
+            fmi2SetBoolean(c, vrefsBoolean, 1, boolVals);
 
             showStatus("fmi2EnterInitializationMode", fmi2EnterInitializationMode(c));
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
 
-            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{20};
+            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{100};
             fmi2Real *value = new fmi2Real[nvr];
 
             showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
@@ -241,7 +243,7 @@ namespace {
 
     TEST(FmuContainerCoreTest, checksConvertTimeToString)
     {
-        GTEST_SKIP();
+        //GTEST_SKIP();
         cout << "Testing: FmuContainerCore::convertTimeToString " << endl;
         std::chrono::milliseconds maxAge(1000);
         std::map<FmuContainerCore::ScalarVariableId, int> lookAhead;
