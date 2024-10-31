@@ -107,7 +107,7 @@ namespace {
             showStatus("fmi2ExitInitializationMode", fmi2ExitInitializationMode(c));
 
             size_t nvr = 1;
-            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{20};
+            const fmi2ValueReference *vr = new fmi2ValueReference[nvr]{100};
             fmi2Real *value = new fmi2Real[nvr];
 
             showStatus("fmi2GetReal", fmi2GetReal(c, vr, nvr, value));
