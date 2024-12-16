@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <fmiModelDescription fmiVersion="2.0" modelName="RabbitMq" guid="{cfc65592-ffff-4563-9705-1581b6e7071c}"
-                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="INTO-CPS"
-                     license="INTO-CPS">
+                     generationTool="RabbitMQ digital twin generator" numberOfEventIndicators="0" copyright="AU"
+                     license="-">
     <CoSimulation modelIdentifier="rabbitmq" needsExecutionTool="true"
                   canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false"
                   maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="true"
@@ -70,9 +70,22 @@
         <ScalarVariable name="config.routingkey.from_cosim" valueReference="13" variability="fixed" causality="parameter" initial="exact">
             <String start="data.from_cosim"/>
         </ScalarVariable>
+        <ScalarVariable name="config.ssl" valueReference="16" variability="fixed" causality="parameter" initial="exact">
+            <Boolean start="0"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.queueupperbound" valueReference="17" variability="fixed" causality="parameter" initial="exact">
+            <Integer start="100"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.vhost" valueReference="18" variability="fixed" causality="parameter" initial="exact">
+            <String start="/"/>
+        </ScalarVariable>
+        <ScalarVariable name="config.howtosend" valueReference="19" variability="fixed" causality="parameter" initial="exact">
+            <Boolean start="1"/> <!-- options, on event (0), or always (1)-->
+        </ScalarVariable>
 
-      </ModelVariables>
-      <ModelStructure>
+
+    </ModelVariables>
+ <ModelStructure>
          <Outputs>
             <Unknown index="1"/>
             <Unknown index="2"/>
@@ -82,5 +95,6 @@
             <Unknown index="2"/>
          </InitialUnknowns>
       </ModelStructure>
+
 
 </fmiModelDescription>
