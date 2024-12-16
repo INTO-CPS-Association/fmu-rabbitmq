@@ -1,6 +1,6 @@
 {
     "fmus": {
-        "{rbmq}": "fmus/rabbitmq-v2.1.5-nologs.fmu",
+        "{rbmq}": "fmus/rmqfmuv2.1.6.fmu",
         "{distance}": "fmus/distance_from_zero.fmu"
     },
     "connections": {

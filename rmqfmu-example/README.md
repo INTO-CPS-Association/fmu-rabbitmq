@@ -30,6 +30,9 @@ In another terminal run:
 $ python3 ./consume.py
 ```
 
+Before running the co-simulation make sure the dependencies in ```requirements.txt``` are installed (e.g. using pip).
+These are needed from the fmus which have been produced using UNIFMU.
+
 Create the mabl specification for the co-simulation with two FMUs. Run in a new terminal:
 
 ```bash
