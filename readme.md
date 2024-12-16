@@ -5,6 +5,8 @@
 The RMQFMU has been built on the following github actions images: ```windows-latest```, ```macos-13```, and ```ubuntu-22.04```.
  
 ## Prerequisites
+The RMQFMU relies on correct locale setup for date parsing. It expects any locale setup where the decimal point is the dot ```.```. Setting the locale to English US or GB works alright.
+
 Concepts of FMI/FMU, co-simulation, multi-model, digital twin (DT), physical twin (PT)
 
 ## Purpose
