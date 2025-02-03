@@ -619,17 +619,17 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
         FmuContainer_LOG(fmi2OK, "logAll", "disable send status: %d", disable);
     }
     //Check which of the inputs of the fmu has changed since the last step
-    if(disable==false){
+    //if(disable==false){
         string message;
         this->checkInputs(message);
         FmuContainer_LOG(fmi2OK, "logAll", "Send enabled on this step, for message %s", message.c_str());
         //if anything to send, publish to rabbitmq
-        if(!message.empty()){
+        //if(!message.empty()){
             message = R"({)" + message + R"( "timestep":")" + cosim_time + R"(", "simstep":")" + to_string(simulationTime) + R"("})";
             this->rabbitMqHandler->publish(this->rabbitMqHandler->routingKey, message, this->rabbitMqHandler->channelPub, this->rabbitMqHandler->rbmqExchange);
             FmuContainer_LOG(fmi2OK, "logAll", "This is the message sent to rabbitmq: %s", message.c_str());
-        }
-    }
+        //}
+    //}
 
     //FmuContainer_LOG(fmi2OK, "logAll", "Real time in [ms] %.0f, and formatted %s", milliSecondsSinceEpoch, cosim_time.c_str());
     this->rabbitMqHandlerSystemHealth->publish(this->rabbitMqHandlerSystemHealth->routingKey, healthmessage,

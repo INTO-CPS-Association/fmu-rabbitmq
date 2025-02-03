@@ -6,7 +6,7 @@ name: rabbitmq
 on:
   # Triggers the workflow on push or pull request events but only for the development branch
   push:
-    branches: [ master, development]
+    branches: [ master, development,gf/updatingv2.1.5 ]
   pull_request:
     branches: [ master, development]
 
