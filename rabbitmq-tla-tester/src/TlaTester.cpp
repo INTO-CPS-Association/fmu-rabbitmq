@@ -617,13 +617,13 @@ void ttt() {
     date::sys_time<std::chrono::milliseconds> valueTimeZero;
     FmuContainerCoreTestProxy::State post = {
             .maxAge=std::chrono::milliseconds(0),
-            .lookahead={{static_cast<int>(sv0), 1},
-                        {static_cast<int>(sv1), 1}},
+            .lookahead={{sv0, 1},
+                        {sv1, 1}},
             .incomingUnprocessed={
-                    {static_cast<int>(sv1), {std::make_pair(
+                    {sv1, {std::make_pair(
                             valueTimeZero + std::chrono::milliseconds(1), 1)}}},
-            .incomingLookahead={{static_cast<int>(sv0), {std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}}},
-            .currentData = {{static_cast<int>(sv0), std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}},
+            .incomingLookahead={{sv0, {std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}}},
+            .currentData = {{sv0, std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}},
             .startOffsetTime=valueTimeZero + std::chrono::milliseconds(2)
 
 
