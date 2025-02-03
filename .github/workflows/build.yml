@@ -193,12 +193,12 @@ jobs:
           ./build/$target/rabbitmq-core/it-test-rabbitmq-core
           ./build/$target/rabbitmq-fmu/it-test-rabbitmq
           
-      - name: Upload artifact macos
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: rabbitmq.dylib
-          path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
+#      - name: Upload artifact macos
+#        if: matrix.os == 'macos-latest'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: rabbitmq.dylib
+#          path: build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Upload artifact linux 
         if: matrix.os == 'ubuntu-20.04'
@@ -207,40 +207,40 @@ jobs:
           name: rabbitmq.so
           path: build/linux-x64/rabbitmq-fmu/rabbitmq.so
 
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: rabbitmq.dll
-          path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
+#      - name: Upload artifact windows
+#        if: matrix.os == 'windows-latest'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: rabbitmq.dll
+#          path: build/win-x64/rabbitmq-fmu/rabbitmq.dll
           
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: it-test-rabbitmq.exe  
-          path: build/win-x64/rabbitmq-fmu/it-test-rabbitmq.exe  
+#      - name: Upload artifact windows
+#        if: matrix.os == 'windows-latest'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: it-test-rabbitmq.exe  
+#          path: build/win-x64/rabbitmq-fmu/it-test-rabbitmq.exe  
           
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-rabbitmq.exe  
-          path: build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe  
+#      - name: Upload artifact windows
+#        if: matrix.os == 'windows-latest'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: unit-test-rabbitmq.exe  
+#          path: build/win-x64/rabbitmq-fmu/unit-test-rabbitmq.exe  
         
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-rabbitmq-core.exe  
-          path: build/win-x64/rabbitmq-core/unit-test-rabbitmq-core.exe  
+#      - name: Upload artifact windows
+#        if: matrix.os == 'windows-latest'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: unit-test-rabbitmq-core.exe  
+#          path: build/win-x64/rabbitmq-core/unit-test-rabbitmq-core.exe  
         
-      - name: Upload artifact windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: it-test-rabbitmq-core.exe 
-          path: build/win-x64/rabbitmq-core/it-test-rabbitmq-core.exe  
+#     - name: Upload artifact windows
+#        if: matrix.os == 'windows-latest'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: it-test-rabbitmq-core.exe 
+#          path: build/win-x64/rabbitmq-core/it-test-rabbitmq-core.exe  
 
       - name: Update version on modelDescription.xml
         shell: bash
@@ -279,11 +279,11 @@ jobs:
           submodules: true
           fetch-depth: 0
           
-      - name: Download dll
-        uses: actions/download-artifact@v4
-        with:
-          name: rabbitmq.dll
-          path: rabbitmq/binaries/win64/
+#      - name: Download dll
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: rabbitmq.dll
+#          path: rabbitmq/binaries/win64/
 
       - name: Download shared library
         uses: actions/download-artifact@v4
@@ -291,11 +291,11 @@ jobs:
           name: rabbitmq.so
           path: rabbitmq/binaries/linux64/
 
-      - name: Download dylib
-        uses: actions/download-artifact@v4
-        with:
-          name: rabbitmq.dylib
-          path: rabbitmq/binaries/darwin64/
+#      - name: Download dylib
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: rabbitmq.dylib
+#          path: rabbitmq/binaries/darwin64/
 
       - name: Download model description file
         uses: actions/download-artifact@v4
