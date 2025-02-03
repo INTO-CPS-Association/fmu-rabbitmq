@@ -612,18 +612,18 @@ namespace tla {
 using namespace tla;
 
 void ttt() {
-    unsigned int sv1 = 1;
-    unsigned int sv0 = 0;
+    int sv1 = 1;
+    int sv0 = 0;
     date::sys_time<std::chrono::milliseconds> valueTimeZero;
     FmuContainerCoreTestProxy::State post = {
             .maxAge=std::chrono::milliseconds(0),
-            .lookahead={{sv0, 1},
-                        {sv1, 1}},
+            .lookahead={{static_cast<int>(sv0), 1},
+                        {static_cast<int>(sv1), 1}},
             .incomingUnprocessed={
-                    {sv1, {std::make_pair(
+                    {static_cast<int>(sv1), {std::make_pair(
                             valueTimeZero + std::chrono::milliseconds(1), 1)}}},
-            .incomingLookahead={{sv0, {std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}}},
-            .currentData = {{sv0, std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}},
+            .incomingLookahead={{static_cast<int>(sv0), {std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}}},
+            .currentData = {{static_cast<int>(sv0), std::make_pair(valueTimeZero + std::chrono::milliseconds(2), 2)}},
             .startOffsetTime=valueTimeZero + std::chrono::milliseconds(2)
 
 
