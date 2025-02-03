@@ -612,8 +612,8 @@ namespace tla {
 using namespace tla;
 
 void ttt() {
-    const unsigned int sv1 = 1;
-    const unsigned int sv0 = 0;
+    unsigned int sv1 = 1;
+    unsigned int sv0 = 0;
     date::sys_time<std::chrono::milliseconds> valueTimeZero;
     FmuContainerCoreTestProxy::State post = {
             .maxAge=std::chrono::milliseconds(0),
