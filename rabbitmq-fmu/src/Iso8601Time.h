@@ -13,8 +13,9 @@ using namespace std::chrono;
 using namespace date;
 
 namespace Iso8601 {
+    std::chrono::system_clock::time_point parseIso8601String(const std::string &input);
 
-    date::sys_time<std::chrono::milliseconds> parseIso8601ToMilliseconds(const std::string input) ;
+    string toIso8601ToString(system_clock::time_point timePoint);
 }
 
 #endif //RABBITMQFMUPROJECT_ISO8601TIMEPARSER_H

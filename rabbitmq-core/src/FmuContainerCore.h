@@ -178,7 +178,7 @@ public:
 
     std::chrono::milliseconds simTimeToReal(long long simTime);
     
-    void convertTimeToString(long long milliSecondsSinceEpoch, string &message);
+
     
     //void setTimeDiscrepancyOutput(double time, int vref);
     void setTimeDiscrepancyOutput(bool valid, double timeDiffNew, double timeDiffOld, int vref);

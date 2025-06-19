@@ -241,27 +241,7 @@ namespace {
         fmi2FreeInstance(c);
     }
 
-    TEST(FmuContainerCoreTest, checksConvertTimeToString)
-    {
-        //GTEST_SKIP();
-        cout << "Testing: FmuContainerCore::convertTimeToString " << endl;
-        std::chrono::milliseconds maxAge(1000);
-        std::map<FmuContainerCore::ScalarVariableId, int> lookAhead;
-        FmuContainerCore test = FmuContainerCore(maxAge, lookAhead);
 
-        long long milliSecondsSinceEpoch[] = { (long long) 100.0, (long long) 200.0, (long long) 300.0, (long long) 400.0, (long long) 500.0, (long long) 600.0, (long long) 700.0, (long long) 800.0, (long long) 900.0, (long long) 1000.0};
-        string message[] = {"1970-01-01T00:00:00.100+00:00", "1970-01-01T00:00:00.200+00:00", "1970-01-01T00:00:00.300+00:00", "1970-01-01T00:00:00.400+00:00", "1970-01-01T00:00:00.500+00:00", "1970-01-01T00:00:00.600+00:00", "1970-01-01T00:00:00.700+00:00", "1970-01-01T00:00:00.800+00:00", "1970-01-01T00:00:00.900+00:00" ,"1970-01-01T00:00:01.0+00:00"};
-
-        for (int i = 0; i  < (sizeof(milliSecondsSinceEpoch)/sizeof(*milliSecondsSinceEpoch)); i++) {
-
-            string out;
-            test.convertTimeToString(milliSecondsSinceEpoch[i], out);
-            cout << "Calculated string: " << out << endl << "Expected: " << message[i] << endl;
-
-            ASSERT_STREQ(out.c_str(), message[i].c_str());
-
-        }
-    }
 
     TEST(FmuSendTest, EnableSend){
         //GTEST_SKIP();

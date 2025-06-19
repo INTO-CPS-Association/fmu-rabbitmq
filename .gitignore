@@ -84,3 +84,5 @@ rmqfmu-example/md-test.xml
 
 *generate/
 *results/
+cmake-examples
+cmake-build-debug
