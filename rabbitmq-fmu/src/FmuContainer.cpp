@@ -8,7 +8,7 @@
 #include <thread>
 #include <chrono>
 #include <message/MessageParser.h>
-#include "Iso8601TimeParser.h"
+#include "Iso8601Time.h"
 
 
 #define FmuContainer_LOG(status, category, message, args...)       \
@@ -610,9 +610,7 @@ bool FmuContainer::step(fmi2Real currentCommunicationPoint, fmi2Real communicati
     FmuContainer_LOG(fmi2OK, "logAll", "************ Enter FmuContainer::step ***************%s", "");
     FmuContainer_LOG(fmi2OK, "logAll", "Step time %f s converted time %f ms", currentCommunicationPoint + communicationStepSize, simulationTime);
 
-    long long int milliSecondsSinceEpoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    string cosim_time;
-    this->core->convertTimeToString(milliSecondsSinceEpoch, cosim_time);
+    string cosim_time=    Iso8601::toIso8601ToString(system_clock::time_point{system_clock::now().time_since_epoch()});
     string healthmessage = R"({"simAtTime":")" + cosim_time + R"("})";
     //FmuContainer_LOG(fmi2OK, "logAll", "Sending to rabbitmq: COSIM TIME: %s", healthmessage.c_str());
 

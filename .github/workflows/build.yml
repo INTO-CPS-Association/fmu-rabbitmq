@@ -6,9 +6,9 @@ name: rabbitmq
 on:
   # Triggers the workflow on push or pull request events but only for the development branch
   push:
-    branches: [ master, development, kel/openssl]
+#    branches: [ master, development, kel/openssl]
   pull_request:
-    branches: [ master, development]
+#    branches: [ master, development]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -50,13 +50,6 @@ jobs:
             mingw-w64-x86_64-gcc
 
       - uses: actions/checkout@v4
-        if: matrix.os == 'ubuntu-22.04'
-        with:
-          submodules: true
-          fetch-depth: 0
-
-      - uses: actions/checkout@v4
-        if: matrix.os != 'ubuntu-22.04'
         with:
           submodules: true
 
@@ -73,7 +66,7 @@ jobs:
 
 # why this one: in order to run the integration test
       - name: get rabbitmq Ubuntu ONLY
-        if: matrix.os == 'ubuntu-22.04'
+        if: startsWith(matrix.os, 'ubuntu-')
         uses: getong/rabbitmq-action@v1.2
         with:
           rabbitmq version: '3.8.2-management'
@@ -81,11 +74,8 @@ jobs:
           rabbitmq user: 'guest'
           rabbitmq password: 'guest'
 
-      - uses: lukka/get-cmake@v3.22.2
-        if: matrix.os != 'windows-latest'
-
       - name: Build linux
-        if: matrix.os == 'ubuntu-22.04'
+        if: startsWith(matrix.os, 'ubuntu-')
         shell: bash
         run: ./scripts/_build_base.sh linux-x64 linux-x86_64
 
@@ -101,7 +91,7 @@ jobs:
           ./scripts/_build_base.sh win-x64 win-x86_64
 
       - name: List dependencies for ubuntu
-        if: matrix.os == 'ubuntu-22.04'
+        if: startsWith(matrix.os, 'ubuntu-')
         run: | 
           echo "$RUNNER_OS"
           lsb_release -a
@@ -126,7 +116,7 @@ jobs:
           otool -L build/darwin-x64/rabbitmq-fmu/rabbitmq.dylib
 
       - name: Run unit tests on UBUNTU
-        if: matrix.os == 'ubuntu-22.04'
+        if: startsWith(matrix.os, 'ubuntu-')
         shell: bash
         run: |
           echo About to run unit-test-rabbitmq and unit-test-rabbitmq-core
@@ -149,7 +139,7 @@ jobs:
           echo Tests complete
 
       - name : Prep for integration tests UBUNTU # these need additional scripts that produce data to the rabbitmq, require rabbitmq server; add -u to see script output
-        if: matrix.os == 'ubuntu-22.04'
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           cd rmqfmu-example/old_scripts
           python3 -m pip install pika --upgrade
@@ -157,7 +147,7 @@ jobs:
           nohup python3 playback_gazebo_data-test.py & exit
 
       - name: Run integration tests UBUNTU # there are no integration tests yet for the core.
-        if: matrix.os == 'ubuntu-22.04' 
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           cp modelDescription.xml build/linux-x64/rabbitmq-fmu/
           echo Running it-test-rabbitmq-core

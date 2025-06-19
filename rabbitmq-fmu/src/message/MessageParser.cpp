@@ -8,7 +8,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include <iostream>
-#include "Iso8601TimeParser.h"
+#include "Iso8601Time.h"
 
 using namespace std;
 using namespace rapidjson;
@@ -37,7 +37,7 @@ MessageParser::parse(map<string, ModelDescriptionParser::ScalarVariable> *nameTo
 
         if (std::string("time") == memberName && d["time"].IsString()) {
             const char *timeString = d["time"].GetString();
-            result.time = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
+            result.time =date::floor<std::chrono::milliseconds>( Iso8601::parseIso8601String(std::string(timeString)));
 
         } else {
 
@@ -121,11 +121,11 @@ MessageParser::parseSystemHealthMessage(date::sys_time<std::chrono::milliseconds
             
         if (std::string("rtime") == memberName && d["rtime"].IsString()) {
             const char *timeString = d["rtime"].GetString();
-            rTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
+            rTime =date::floor<std::chrono::milliseconds>(Iso8601::parseIso8601String(std::string(timeString)));
 
         } else if (std::string("cosimtime") == memberName && d["cosimtime"].IsString()) {
             const char *timeString = d["cosimtime"].GetString();
-            simTime = Iso8601::parseIso8601ToMilliseconds(std::string(timeString));
+            simTime = date::floor<std::chrono::milliseconds>(Iso8601::parseIso8601String(std::string(timeString)));
 
         }
         else{

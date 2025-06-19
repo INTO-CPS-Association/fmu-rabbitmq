@@ -8,7 +8,7 @@
 #include "FmuContainerCore.h"
 
 #include <iostream>
-#include <iomanip>
+
 #include <chrono>
 #include <cmath>
 #include <string>
@@ -65,45 +65,7 @@ std::chrono::milliseconds FmuContainerCore::simTimeToReal(long long simTime) {
     return (this->startOffsetTime.time_since_epoch() + std::chrono::milliseconds(simTime));
 }
 
-void FmuContainerCore::convertTimeToString(long long milliSecondsSinceEpoch, string &message){                
-    const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
-    const std::chrono::time_point<std::chrono::system_clock> tp_after_duration(durationSinceEpoch);
-    time_t time_after_duration = std::chrono::system_clock::to_time_t(tp_after_duration);
-    std::tm* formattedTime = std::gmtime(&time_after_duration);
-    long long int milliseconds_remainder = milliSecondsSinceEpoch % 1000;
-    stringstream transTime, formatString;
-    //transTime << put_time(std::localtime(&time_after_duration), "%Y-%m-%dT%H:%M:%S.") << milliseconds_remainder << "+01:00";
-    int no_digits = 0;
-    string appendZeros = "";
-    if(milliseconds_remainder>0){
-        no_digits = floor(log10(milliseconds_remainder))+1;
-        //cout << "Number of digits: " << no_digits << endl;
-        if(no_digits==1)appendZeros.append("00");
-        if(no_digits==2)appendZeros.append("0");
-    }
-    #ifdef _WIN32
-    cout <<"SIM time to REAL time - windows"<< endl;
-    TIME_ZONE_INFORMATION time_zone;
-    GetTimeZoneInformation(&time_zone);
-    //UTC = localtime + bias; bias is in minutes
-    int utc_offset_hours = time_zone.Bias / 60;
-    int utc_offset_minutes = abs(time_zone.Bias - (utc_offset_hours * 60));
-    char offset_sign = time_zone.Bias > 0 ? '-' : '+';
-    formatString << setfill('0') << "%Y-%m-%dT%H:%M:%S."<< appendZeros.c_str() << milliseconds_remainder << offset_sign << setw(2) << abs(utc_offset_hours) << ":" << utc_offset_minutes<< utc_offset_minutes ;
 
-    transTime << put_time(localtime(&time_after_duration), formatString.str().c_str());
-    message = transTime.str();
-    #endif
-
-    #ifndef _WIN32
-
-    formatString << "%FT%T."<< appendZeros.c_str() << milliseconds_remainder <<"%Ez";
-    //cout << "Format string: " << formatString.str().c_str() << endl;
-    transTime << put_time(formattedTime, formatString.str().c_str());
-    message = transTime.str().insert(transTime.str().length()-2, ":");
-    //cout <<"SIM time to REAL time"<< message << endl;
-    #endif
-}
 
 void showL(list<FmuContainerCore::TimedScalarBasicValue> &list) {
     for (auto &p : list){
